@@ -173,6 +173,12 @@ test: 주문 생성 서비스 테스트 추가
 - push, PR 생성, 리뷰 흐름을 실무 연습으로 진행한다.
 - PR 생성 후 Codex는 리뷰어 관점으로 핵심 이슈를 확인한다.
 - 리뷰는 학습 흐름을 해치지 않는 선에서 핵심 문제 중심으로 진행한다.
+- PR merge 여부는 사용자가 GitHub에서 최종 판단한다.
+- 사용자가 PR을 merge했다고 알리면 Codex는 로컬 `main`을 원격과 동기화한다.
+- PR merge 후 로컬 동기화는 `git fetch origin --prune`, `git switch main`, `git pull --ff-only origin main` 순서로 진행한다.
+- `git pull --ff-only`가 실패하면 로컬 `main`에 원격과 다른 변경이 있다는 뜻이므로, Codex는 임의로 merge commit을 만들지 않고 상황을 보고한 뒤 rebase, stash, 별도 브랜치 분리 중 적절한 방법을 제안한다.
+- PR merge가 완료된 작업 브랜치는 보통 삭제한다. 원격 브랜치는 GitHub의 Delete branch 또는 사용자의 요청에 따른 Codex 작업으로 정리하고, 로컬 브랜치는 `git branch -d <branch>`로 안전하게 삭제한다.
+- PR 없이 `main`에 직접 반영하는 작업은 사용자가 명시적으로 요청한 간단한 문서 수정에 한정한다. 이 경우 Codex는 `main`이 최신인지 확인한 뒤 커밋하고 `origin/main`에 push한다.
 - 인증이나 권한 문제로 push 또는 PR 생성이 막히면 사용자에게 보고하고 다음 행동을 확인한다.
 
 ## 13. PR 템플릿 원칙
