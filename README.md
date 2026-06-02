@@ -23,11 +23,26 @@ CS 지식을 활용해 주문 처리 성능을 개선하는 이커머스 백엔�
 
 ## 실행 방법
 
-작성 예정
+PostgreSQL을 실행합니다.
+
+```powershell
+docker compose up -d
+```
+
+기본 로컬 DB 포트는 `15432`입니다.
+
+애플리케이션을 실행합니다.
+
+```powershell
+.\gradlew.bat bootRun
+```
 
 ## 테스트 방법
 
-작성 예정
+```powershell
+.\gradlew.bat test
+.\gradlew.bat build
+```
 
 ## 성능 개선 기록
 

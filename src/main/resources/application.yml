@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: ecommerce
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:15432/ecommerce}
+    username: ${SPRING_DATASOURCE_USERNAME:ecommerce}
+    password: ${SPRING_DATASOURCE_PASSWORD:ecommerce}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+  flyway:
+    enabled: true
+
+server:
+  port: 8080
