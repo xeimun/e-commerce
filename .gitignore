@@ -1,0 +1,55 @@
+# Gradle
+.gradle/
+build/
+out/
+
+# Gradle wrapper generated files
+!gradle/wrapper/gradle-wrapper.jar
+
+# Java
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+hs_err_pid*
+replay_pid*
+
+# Spring Boot
+logs/
+*.log
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# VS Code
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+application-local.yml
+application-local.yaml
+application-secret.yml
+application-secret.yaml
+
+# Docker local data
+docker-data/
+data/
+
+# Test reports and coverage
+coverage/
+htmlcov/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
