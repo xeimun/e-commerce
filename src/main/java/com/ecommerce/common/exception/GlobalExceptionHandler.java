@@ -1,5 +1,7 @@
 package com.ecommerce.common.exception;
 
+import com.ecommerce.cart.exception.CartItemNotFoundException;
+import com.ecommerce.cart.exception.CartItemQuantityExceededException;
 import com.ecommerce.product.exception.ProductNotFoundException;
 import java.util.List;
 import org.springframework.http.HttpStatus;
@@ -21,6 +23,28 @@ public class GlobalExceptionHandler {
         );
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
+    @ExceptionHandler(CartItemNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleCartItemNotFound(CartItemNotFoundException exception) {
+        ApiErrorResponse response = ApiErrorResponse.of(
+                "CART_ITEM_NOT_FOUND",
+                "장바구니 상품을 찾을 수 없습니다.",
+                List.of(ErrorDetail.cartItem(exception.getCartItemId(), "CART_ITEM_NOT_FOUND"))
+        );
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
+    @ExceptionHandler(CartItemQuantityExceededException.class)
+    public ResponseEntity<ApiErrorResponse> handleCartItemQuantityExceeded(CartItemQuantityExceededException exception) {
+        ApiErrorResponse response = ApiErrorResponse.of(
+                "OUT_OF_STOCK",
+                "상품 재고가 부족합니다.",
+                List.of(ErrorDetail.productStock(exception.getProductId(), "OUT_OF_STOCK", exception.getCurrentStock()))
+        );
+
+        return ResponseEntity.badRequest().body(response);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

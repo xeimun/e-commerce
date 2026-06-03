@@ -22,4 +22,8 @@ public record ErrorDetail(
     public static ErrorDetail productStock(Long productId, String reason, long currentStock) {
         return new ErrorDetail("PRODUCT", productId, reason, null, currentStock);
     }
+
+    public static ErrorDetail cartItem(Long cartItemId, String reason) {
+        return new ErrorDetail("CART_ITEM", cartItemId, reason, null, null);
+    }
 }
