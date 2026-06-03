@@ -181,12 +181,24 @@ public class OrderService {
             return;
         }
 
-        Set<Long> sourceCartItemIds = order.getItems()
+        Map<Long, Long> orderedQuantitiesByCartItemId = order.getItems()
                 .stream()
-                .map(OrderItem::getSourceCartItemId)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toSet());
-        sourceCartItemIds.forEach(cartItemId -> cart.findItemById(cartItemId).ifPresent(cart::removeItem));
+                .filter(orderItem -> orderItem.getSourceCartItemId() != null)
+                .collect(Collectors.groupingBy(
+                        OrderItem::getSourceCartItemId,
+                        Collectors.summingLong(OrderItem::getQuantity)
+                ));
+        orderedQuantitiesByCartItemId.forEach((cartItemId, orderedQuantity) -> cart.findItemById(cartItemId)
+                .ifPresent(cartItem -> removeOrderedQuantity(cart, cartItem, orderedQuantity)));
+    }
+
+    private void removeOrderedQuantity(Cart cart, CartItem cartItem, long orderedQuantity) {
+        if (cartItem.getQuantity() <= orderedQuantity) {
+            cart.removeItem(cartItem);
+            return;
+        }
+
+        cartItem.changeQuantity(cartItem.getQuantity() - orderedQuantity);
     }
 
     private List<CartItem> findSelectedItems(List<Long> cartItemIds, Map<Long, CartItem> cartItemsById) {

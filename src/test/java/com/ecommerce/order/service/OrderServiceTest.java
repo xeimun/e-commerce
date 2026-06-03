@@ -190,6 +190,23 @@ class OrderServiceTest {
     }
 
     @Test
+    void completePaymentKeepsQuantityAddedToSourceCartItemAfterOrderCreation() {
+        Product product = productFixture(1L, ProductStatus.ON_SALE, 3);
+        Order order = orderFixture(1L, 7L, product, 2, 10L, LocalDateTime.now().plusMinutes(5));
+        Cart cart = cartFixture(7L);
+        CartItem cartItem = cart.addItem(product, 3);
+        ReflectionTestUtils.setField(cartItem, "id", 10L);
+        when(orderRepository.findByIdAndCustomerIdForUpdate(1L, 7L)).thenReturn(Optional.of(order));
+        when(cartRepository.findForOrderByCustomerId(7L)).thenReturn(Optional.of(cart));
+
+        orderService.completePayment(7L, 1L);
+
+        assertThat(cart.getItems()).hasSize(1);
+        assertThat(cart.getItems().get(0).getId()).isEqualTo(10L);
+        assertThat(cart.getItems().get(0).getQuantity()).isEqualTo(1);
+    }
+
+    @Test
     void completePaymentDoesNotRemoveReaddedCartItemWithSameProduct() {
         Product product = productFixture(1L, ProductStatus.ON_SALE, 3);
         Order order = orderFixture(1L, 7L, product, 2, 10L, LocalDateTime.now().plusMinutes(5));

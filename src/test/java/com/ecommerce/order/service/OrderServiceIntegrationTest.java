@@ -121,6 +121,31 @@ class OrderServiceIntegrationTest {
     }
 
     @Test
+    void completePaymentKeepsQuantityAddedToSourceCartItemAfterOrderCreation() {
+        Product product = productRepository.save(productFixture(ProductStatus.ON_SALE, 5));
+        Cart cart = Cart.create(7L);
+        CartItem cartItem = cart.addItem(product, 2);
+        cartRepository.save(cart);
+        Long sourceCartItemId = cartItem.getId();
+        OrderCreateResponse orderResponse = orderService.createOrder(
+                7L,
+                new OrderCreateRequest(List.of(sourceCartItemId), null, List.of())
+        );
+
+        Cart cartAfterOrder = cartRepository.findByCustomerId(7L).orElseThrow();
+        Product cartProduct = cartAfterOrder.findItemById(sourceCartItemId).orElseThrow().getProduct();
+        cartAfterOrder.addItem(cartProduct, 1);
+        cartRepository.saveAndFlush(cartAfterOrder);
+
+        orderService.completePayment(7L, orderResponse.orderId());
+
+        Cart foundCart = cartRepository.findByCustomerId(7L).orElseThrow();
+        assertThat(foundCart.getItems()).hasSize(1);
+        assertThat(foundCart.getItems().get(0).getId()).isEqualTo(sourceCartItemId);
+        assertThat(foundCart.getItems().get(0).getQuantity()).isEqualTo(1);
+    }
+
+    @Test
     void completePaymentDoesNotRemoveReaddedCartItemWithSameProduct() {
         Product product = productRepository.save(productFixture(ProductStatus.ON_SALE, 5));
         Cart cart = Cart.create(7L);
