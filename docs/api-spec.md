@@ -366,6 +366,8 @@ X-Customer-Id: 1
 - `cartItemIds`: 주문할 장바구니 상품 ID 목록
 - `orderCouponId`: 주문 전체에 적용할 고객 보유 쿠폰 ID. 선택 값이다.
 - `productCoupons`: 특정 상품에 적용할 고객 보유 쿠폰 목록. 선택 값이다.
+- 고객 보유 쿠폰 기능 구현 전까지 `orderCouponId` 또는 `productCoupons`가 포함되면 `ORDER_VALIDATION_FAILED`로 실패한다.
+- 상품 즉시 할인과 쿠폰 할인 기능 구현 전까지 할인 금액은 0으로 응답한다.
 
 응답 예시:
 
