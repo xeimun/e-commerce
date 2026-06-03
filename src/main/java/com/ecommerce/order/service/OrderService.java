@@ -18,6 +18,8 @@ import com.ecommerce.product.entity.Product;
 import com.ecommerce.product.entity.ProductStatus;
 import com.ecommerce.product.entity.Stock;
 import com.ecommerce.product.repository.StockRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -41,15 +43,18 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final CartRepository cartRepository;
     private final StockRepository stockRepository;
+    private final EntityManager entityManager;
 
     public OrderService(
             OrderRepository orderRepository,
             CartRepository cartRepository,
-            StockRepository stockRepository
+            StockRepository stockRepository,
+            EntityManager entityManager
     ) {
         this.orderRepository = orderRepository;
         this.cartRepository = cartRepository;
         this.stockRepository = stockRepository;
+        this.entityManager = entityManager;
     }
 
     @Transactional
@@ -58,7 +63,7 @@ public class OrderService {
         OrderCreateRequest validRequest = Objects.requireNonNull(request, "주문 생성 요청은 필수입니다.");
         List<Long> cartItemIds = requireUniqueCartItemIds(validRequest.cartItemIds());
 
-        Cart cart = cartRepository.findByCustomerId(validCustomerId).orElse(null);
+        Cart cart = cartRepository.findForOrderByCustomerId(validCustomerId).orElse(null);
         Map<Long, CartItem> cartItemsById = getCartItemsById(cart);
         List<CartItem> selectedItems = findSelectedItems(cartItemIds, cartItemsById);
         List<ErrorDetail> details = new ArrayList<>(validateSelectedItems(cartItemIds, selectedItems));
@@ -142,9 +147,13 @@ public class OrderService {
                 .map(Product::getId)
                 .collect(Collectors.toSet());
 
-        return stockRepository.findAllByProductIdInForUpdate(productIds)
+        Map<Long, Stock> lockedStocksByProductId = stockRepository.findAllByProductIdInForUpdate(productIds)
                 .stream()
                 .collect(Collectors.toMap(stock -> stock.getProduct().getId(), Function.identity()));
+        lockedStocksByProductId.values()
+                .forEach(stock -> entityManager.refresh(stock, LockModeType.PESSIMISTIC_WRITE));
+
+        return lockedStocksByProductId;
     }
 
     private List<ErrorDetail> validateOrderableItems(List<CartItem> selectedItems, Map<Long, Stock> lockedStocksByProductId) {

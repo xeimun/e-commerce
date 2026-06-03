@@ -23,6 +23,8 @@ import com.ecommerce.product.entity.Product;
 import com.ecommerce.product.entity.ProductStatus;
 import com.ecommerce.product.entity.Stock;
 import com.ecommerce.product.repository.StockRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
@@ -45,11 +47,14 @@ class OrderServiceTest {
     @Mock
     private StockRepository stockRepository;
 
+    @Mock
+    private EntityManager entityManager;
+
     private OrderService orderService;
 
     @BeforeEach
     void setUp() {
-        orderService = new OrderService(orderRepository, cartRepository, stockRepository);
+        orderService = new OrderService(orderRepository, cartRepository, stockRepository, entityManager);
     }
 
     @Test
@@ -58,7 +63,7 @@ class OrderServiceTest {
         Cart cart = cartFixture(7L);
         CartItem cartItem = cart.addItem(product, 2);
         ReflectionTestUtils.setField(cartItem, "id", 10L);
-        when(cartRepository.findByCustomerId(7L)).thenReturn(Optional.of(cart));
+        when(cartRepository.findForOrderByCustomerId(7L)).thenReturn(Optional.of(cart));
         when(stockRepository.findAllByProductIdInForUpdate(any())).thenReturn(List.of(product.getStock()));
         when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> {
             Order order = invocation.getArgument(0);
@@ -73,12 +78,13 @@ class OrderServiceTest {
         assertThat(response.totalProductAmount()).isEqualByComparingTo("70000.00");
         assertThat(response.finalPaymentAmount()).isEqualByComparingTo("70000.00");
         assertThat(product.getStock().getQuantity()).isEqualTo(3);
+        verify(entityManager).refresh(product.getStock(), LockModeType.PESSIMISTIC_WRITE);
         verify(orderRepository).save(any(Order.class));
     }
 
     @Test
     void createOrderThrowsExceptionWhenCartItemDoesNotExist() {
-        when(cartRepository.findByCustomerId(7L)).thenReturn(Optional.empty());
+        when(cartRepository.findForOrderByCustomerId(7L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> orderService.createOrder(7L, new OrderCreateRequest(List.of(10L), null, List.of())))
                 .isInstanceOfSatisfying(OrderValidationException.class, exception -> {
@@ -95,7 +101,7 @@ class OrderServiceTest {
         Cart cart = cartFixture(7L);
         CartItem cartItem = cart.addItem(product, 2);
         ReflectionTestUtils.setField(cartItem, "id", 10L);
-        when(cartRepository.findByCustomerId(7L)).thenReturn(Optional.of(cart));
+        when(cartRepository.findForOrderByCustomerId(7L)).thenReturn(Optional.of(cart));
         when(stockRepository.findAllByProductIdInForUpdate(any())).thenReturn(List.of(product.getStock()));
 
         assertThatThrownBy(() -> orderService.createOrder(7L, new OrderCreateRequest(List.of(10L), null, List.of())))
@@ -104,6 +110,7 @@ class OrderServiceTest {
                     assertThat(exception.getDetails().get(0).reason()).isEqualTo("PRODUCT_NOT_ON_SALE");
                 });
         assertThat(product.getStock().getQuantity()).isEqualTo(5);
+        verify(entityManager).refresh(product.getStock(), LockModeType.PESSIMISTIC_WRITE);
         verify(orderRepository, never()).save(any());
     }
 
@@ -113,7 +120,7 @@ class OrderServiceTest {
         Cart cart = cartFixture(7L);
         CartItem cartItem = cart.addItem(product, 2);
         ReflectionTestUtils.setField(cartItem, "id", 10L);
-        when(cartRepository.findByCustomerId(7L)).thenReturn(Optional.of(cart));
+        when(cartRepository.findForOrderByCustomerId(7L)).thenReturn(Optional.of(cart));
         when(stockRepository.findAllByProductIdInForUpdate(any())).thenReturn(List.of(product.getStock()));
 
         assertThatThrownBy(() -> orderService.createOrder(7L, new OrderCreateRequest(List.of(10L), null, List.of())))
@@ -123,6 +130,7 @@ class OrderServiceTest {
                     assertThat(exception.getDetails().get(0).currentStock()).isEqualTo(1);
                 });
         assertThat(product.getStock().getQuantity()).isEqualTo(1);
+        verify(entityManager).refresh(product.getStock(), LockModeType.PESSIMISTIC_WRITE);
         verify(orderRepository, never()).save(any());
     }
 
@@ -132,7 +140,7 @@ class OrderServiceTest {
         Cart cart = cartFixture(7L);
         CartItem cartItem = cart.addItem(product, 2);
         ReflectionTestUtils.setField(cartItem, "id", 10L);
-        when(cartRepository.findByCustomerId(7L)).thenReturn(Optional.of(cart));
+        when(cartRepository.findForOrderByCustomerId(7L)).thenReturn(Optional.of(cart));
 
         OrderCreateRequest request = new OrderCreateRequest(
                 List.of(10L),
