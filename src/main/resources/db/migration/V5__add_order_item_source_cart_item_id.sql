@@ -1,6 +1,7 @@
 alter table order_items
     add column source_cart_item_id bigint;
 
+-- Backfill only cart items that existed when the pending order was created.
 update order_items oi
 set source_cart_item_id = (
     select ci.id
@@ -10,6 +11,7 @@ set source_cart_item_id = (
         and ci.product_id = oi.product_id
     where o.id = oi.order_id
         and o.status = 'PAYMENT_PENDING'
+        and ci.created_at <= o.created_at
 )
 where oi.source_cart_item_id is null
     and exists (
@@ -20,6 +22,7 @@ where oi.source_cart_item_id is null
             and ci.product_id = oi.product_id
         where o.id = oi.order_id
             and o.status = 'PAYMENT_PENDING'
+            and ci.created_at <= o.created_at
     );
 
 alter table order_items
