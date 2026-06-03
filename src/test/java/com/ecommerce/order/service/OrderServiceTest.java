@@ -170,7 +170,7 @@ class OrderServiceTest {
     @Test
     void completePaymentCompletesPendingOrderAndRemovesOrderedCartItems() {
         Product product = productFixture(1L, ProductStatus.ON_SALE, 3);
-        Order order = orderFixture(1L, 7L, product, 2, LocalDateTime.now().plusMinutes(5));
+        Order order = orderFixture(1L, 7L, product, 2, 10L, LocalDateTime.now().plusMinutes(5));
         Cart cart = cartFixture(7L);
         CartItem cartItem = cart.addItem(product, 2);
         ReflectionTestUtils.setField(cartItem, "id", 10L);
@@ -190,9 +190,26 @@ class OrderServiceTest {
     }
 
     @Test
+    void completePaymentDoesNotRemoveReaddedCartItemWithSameProduct() {
+        Product product = productFixture(1L, ProductStatus.ON_SALE, 3);
+        Order order = orderFixture(1L, 7L, product, 2, 10L, LocalDateTime.now().plusMinutes(5));
+        Cart cart = cartFixture(7L);
+        CartItem readdedCartItem = cart.addItem(product, 1);
+        ReflectionTestUtils.setField(readdedCartItem, "id", 11L);
+        when(orderRepository.findByIdAndCustomerIdForUpdate(1L, 7L)).thenReturn(Optional.of(order));
+        when(cartRepository.findForOrderByCustomerId(7L)).thenReturn(Optional.of(cart));
+
+        orderService.completePayment(7L, 1L);
+
+        assertThat(cart.getItems()).hasSize(1);
+        assertThat(cart.getItems().get(0).getId()).isEqualTo(11L);
+        assertThat(cart.getItems().get(0).getProduct().getId()).isEqualTo(1L);
+    }
+
+    @Test
     void cancelPaymentCancelsPendingOrderAndRestoresReservedStock() {
         Product product = productFixture(1L, ProductStatus.ON_SALE, 3);
-        Order order = orderFixture(1L, 7L, product, 2, LocalDateTime.now().plusMinutes(5));
+        Order order = orderFixture(1L, 7L, product, 2, null, LocalDateTime.now().plusMinutes(5));
         when(orderRepository.findByIdAndCustomerIdForUpdate(1L, 7L)).thenReturn(Optional.of(order));
         when(stockRepository.findAllByProductIdInForUpdate(any())).thenReturn(List.of(product.getStock()));
 
@@ -212,7 +229,7 @@ class OrderServiceTest {
     @Test
     void completePaymentThrowsExceptionAndCancelsOrderWhenPaymentIsExpired() {
         Product product = productFixture(1L, ProductStatus.ON_SALE, 3);
-        Order order = orderFixture(1L, 7L, product, 2, LocalDateTime.now().minusMinutes(1));
+        Order order = orderFixture(1L, 7L, product, 2, null, LocalDateTime.now().minusMinutes(1));
         when(orderRepository.findByIdAndCustomerIdForUpdate(1L, 7L)).thenReturn(Optional.of(order));
         when(stockRepository.findAllByProductIdInForUpdate(any())).thenReturn(List.of(product.getStock()));
 
@@ -230,7 +247,7 @@ class OrderServiceTest {
     @Test
     void completePaymentThrowsExceptionWhenOrderIsNotPaymentPending() {
         Product product = productFixture(1L, ProductStatus.ON_SALE, 3);
-        Order order = orderFixture(1L, 7L, product, 2, LocalDateTime.now().plusMinutes(5));
+        Order order = orderFixture(1L, 7L, product, 2, null, LocalDateTime.now().plusMinutes(5));
         order.completePayment(LocalDateTime.now());
         when(orderRepository.findByIdAndCustomerIdForUpdate(1L, 7L)).thenReturn(Optional.of(order));
 
@@ -253,9 +270,10 @@ class OrderServiceTest {
             Long customerId,
             Product product,
             long quantity,
+            Long sourceCartItemId,
             LocalDateTime expiresAt
     ) {
-        Order order = Order.create(customerId, expiresAt, List.of(OrderItem.create(product, quantity)));
+        Order order = Order.create(customerId, expiresAt, List.of(OrderItem.create(product, quantity, sourceCartItemId)));
         ReflectionTestUtils.setField(order, "id", orderId);
 
         return order;

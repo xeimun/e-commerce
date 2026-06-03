@@ -74,6 +74,7 @@ class OrderServiceIntegrationTest {
         assertThat(foundProduct.getStock().getQuantity()).isEqualTo(3);
         assertThat(foundOrder.getItems()).hasSize(1);
         assertThat(foundOrder.getItems().get(0).getProductName()).isEqualTo("달빛 상점 한정판 아트북");
+        assertThat(foundOrder.getItems().get(0).getSourceCartItemId()).isEqualTo(cartItem.getId());
     }
 
     @Test
@@ -117,6 +118,37 @@ class OrderServiceIntegrationTest {
         assertThat(foundOrder.getPaidAt()).isNotNull();
         assertThat(foundProduct.getStock().getQuantity()).isEqualTo(3);
         assertThat(foundCart.getItems()).isEmpty();
+    }
+
+    @Test
+    void completePaymentDoesNotRemoveReaddedCartItemWithSameProduct() {
+        Product product = productRepository.save(productFixture(ProductStatus.ON_SALE, 5));
+        Cart cart = Cart.create(7L);
+        CartItem originalCartItem = cart.addItem(product, 2);
+        cartRepository.save(cart);
+        Long originalCartItemId = originalCartItem.getId();
+        OrderCreateResponse orderResponse = orderService.createOrder(
+                7L,
+                new OrderCreateRequest(List.of(originalCartItemId), null, List.of())
+        );
+
+        Cart cartAfterOrder = cartRepository.findByCustomerId(7L).orElseThrow();
+        CartItem itemToDelete = cartAfterOrder.findItemById(originalCartItemId).orElseThrow();
+        cartAfterOrder.removeItem(itemToDelete);
+        cartRepository.saveAndFlush(cartAfterOrder);
+
+        Product foundProduct = productRepository.findById(product.getId()).orElseThrow();
+        Cart cartAfterDelete = cartRepository.findByCustomerId(7L).orElseThrow();
+        cartAfterDelete.addItem(foundProduct, 1);
+        Cart savedCart = cartRepository.saveAndFlush(cartAfterDelete);
+        Long readdedCartItemId = savedCart.findItemByProductId(product.getId()).orElseThrow().getId();
+
+        orderService.completePayment(7L, orderResponse.orderId());
+
+        Cart foundCart = cartRepository.findByCustomerId(7L).orElseThrow();
+        assertThat(foundCart.getItems()).hasSize(1);
+        assertThat(foundCart.getItems().get(0).getId()).isEqualTo(readdedCartItemId);
+        assertThat(foundCart.getItems().get(0).getProduct().getId()).isEqualTo(product.getId());
     }
 
     @Test

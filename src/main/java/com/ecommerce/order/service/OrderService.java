@@ -181,12 +181,12 @@ public class OrderService {
             return;
         }
 
-        Set<Long> orderedProductIds = order.getItems()
+        Set<Long> sourceCartItemIds = order.getItems()
                 .stream()
-                .map(OrderItem::getProduct)
-                .map(Product::getId)
+                .map(OrderItem::getSourceCartItemId)
+                .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
-        orderedProductIds.forEach(productId -> cart.findItemByProductId(productId).ifPresent(cart::removeItem));
+        sourceCartItemIds.forEach(cartItemId -> cart.findItemById(cartItemId).ifPresent(cart::removeItem));
     }
 
     private List<CartItem> findSelectedItems(List<Long> cartItemIds, Map<Long, CartItem> cartItemsById) {
@@ -264,7 +264,7 @@ public class OrderService {
         Product product = cartItem.getProduct();
         lockedStocksByProductId.get(product.getId()).decrease(cartItem.getQuantity());
 
-        return OrderItem.create(product, cartItem.getQuantity());
+        return OrderItem.create(product, cartItem.getQuantity(), cartItem.getId());
     }
 
     private Map<Long, CartItem> getCartItemsById(Cart cart) {
