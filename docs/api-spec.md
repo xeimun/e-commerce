@@ -53,6 +53,10 @@ X-Customer-Id: 1
 | --- | --- | --- |
 | GET | `/api/v1/products` | 상품 목록 조회 |
 | GET | `/api/v1/products/{productId}` | 상품 상세 조회 |
+| POST | `/api/v1/products` | 상품 생성 |
+| PUT | `/api/v1/products/{productId}` | 상품 기본 정보 수정 |
+| PATCH | `/api/v1/products/{productId}/status` | 상품 판매 상태 변경 |
+| PATCH | `/api/v1/products/{productId}/stock` | 상품 재고 수량 변경 |
 
 ### 장바구니
 
@@ -103,6 +107,10 @@ GET /api/v1/products
     "name": "상품 A",
     "price": 10000,
     "status": "ON_SALE",
+    "contentTitle": "달빛 상점",
+    "contentType": "WEBTOON",
+    "category": "ARTBOOK",
+    "description": "달빛 상점 한정판 아트북",
     "stockQuantity": 10,
     "instantDiscountAmount": 1000
   }
@@ -123,10 +131,108 @@ GET /api/v1/products/1
   "name": "상품 A",
   "price": 10000,
   "status": "ON_SALE",
+  "contentTitle": "달빛 상점",
+  "contentType": "WEBTOON",
+  "category": "ARTBOOK",
+  "description": "달빛 상점 한정판 아트북",
   "stockQuantity": 10,
   "instantDiscountAmount": 1000
 }
 ```
+
+### 상품 생성
+
+초기 버전에서는 별도 관리자 인증을 구현하지 않는다.
+운영자용 API라는 전제를 두고 상품과 초기 재고를 함께 생성한다.
+
+```http
+POST /api/v1/products
+```
+
+요청 예시:
+
+```json
+{
+  "name": "달빛 상점 한정판 아트북",
+  "price": 35000,
+  "status": "ON_SALE",
+  "contentTitle": "달빛 상점",
+  "contentType": "WEBTOON",
+  "category": "ARTBOOK",
+  "description": "웹툰 달빛 상점의 시즌 1 한정판 아트북",
+  "stockQuantity": 100
+}
+```
+
+응답 예시:
+
+```json
+{
+  "productId": 1,
+  "name": "달빛 상점 한정판 아트북",
+  "price": 35000,
+  "status": "ON_SALE",
+  "contentTitle": "달빛 상점",
+  "contentType": "WEBTOON",
+  "category": "ARTBOOK",
+  "description": "웹툰 달빛 상점의 시즌 1 한정판 아트북",
+  "stockQuantity": 100,
+  "instantDiscountAmount": 0
+}
+```
+
+### 상품 기본 정보 수정
+
+```http
+PUT /api/v1/products/1
+```
+
+요청 예시:
+
+```json
+{
+  "name": "달빛 상점 한정판 아트북",
+  "price": 36000,
+  "contentTitle": "달빛 상점",
+  "contentType": "WEBTOON",
+  "category": "ARTBOOK",
+  "description": "웹툰 달빛 상점의 시즌 1 개정판 한정 아트북"
+}
+```
+
+응답 형식은 상품 상세 조회와 동일하다.
+
+### 상품 판매 상태 변경
+
+```http
+PATCH /api/v1/products/1/status
+```
+
+요청 예시:
+
+```json
+{
+  "status": "STOPPED"
+}
+```
+
+응답 형식은 상품 상세 조회와 동일하다.
+
+### 상품 재고 수량 변경
+
+```http
+PATCH /api/v1/products/1/stock
+```
+
+요청 예시:
+
+```json
+{
+  "stockQuantity": 50
+}
+```
+
+응답 형식은 상품 상세 조회와 동일하다.
 
 ## 4. 장바구니 API
 
@@ -470,6 +576,7 @@ X-Customer-Id: 1
 
 | Code | Description |
 | --- | --- |
+| `PRODUCT_NOT_FOUND` | 상품 없음 |
 | `PRODUCT_NOT_ON_SALE` | 판매 중이 아닌 상품 |
 | `OUT_OF_STOCK` | 재고 부족 |
 | `CART_ITEM_NOT_SELECTABLE` | 주문 선택 불가 장바구니 상품 |
