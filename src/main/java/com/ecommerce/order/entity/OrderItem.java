@@ -41,6 +41,9 @@ public class OrderItem {
     @Column(nullable = false)
     private long quantity;
 
+    @Column(name = "source_cart_item_id")
+    private Long sourceCartItemId;
+
     @Column(name = "original_amount", nullable = false, precision = 19, scale = 2)
     private BigDecimal originalAmount;
 
@@ -62,12 +65,13 @@ public class OrderItem {
     protected OrderItem() {
     }
 
-    private OrderItem(Product product, long quantity) {
+    private OrderItem(Product product, long quantity, Long sourceCartItemId) {
         Product targetProduct = Objects.requireNonNull(product, "주문 상품은 필수입니다.");
         this.product = targetProduct;
         this.productName = targetProduct.getName();
         this.productPrice = targetProduct.getPrice();
         this.quantity = requirePositiveQuantity(quantity);
+        this.sourceCartItemId = normalizeSourceCartItemId(sourceCartItemId);
         this.originalAmount = this.productPrice.multiply(BigDecimal.valueOf(this.quantity));
         this.instantDiscountAmount = BigDecimal.ZERO;
         this.productCouponDiscountAmount = BigDecimal.ZERO;
@@ -77,7 +81,11 @@ public class OrderItem {
     }
 
     public static OrderItem create(Product product, long quantity) {
-        return new OrderItem(product, quantity);
+        return new OrderItem(product, quantity, null);
+    }
+
+    public static OrderItem create(Product product, long quantity, Long sourceCartItemId) {
+        return new OrderItem(product, quantity, sourceCartItemId);
     }
 
     void assignOrder(Order order) {
@@ -120,6 +128,10 @@ public class OrderItem {
         return quantity;
     }
 
+    public Long getSourceCartItemId() {
+        return sourceCartItemId;
+    }
+
     public BigDecimal getOriginalAmount() {
         return originalAmount;
     }
@@ -142,5 +154,16 @@ public class OrderItem {
         }
 
         return quantity;
+    }
+
+    private static Long normalizeSourceCartItemId(Long sourceCartItemId) {
+        if (sourceCartItemId == null) {
+            return null;
+        }
+        if (sourceCartItemId <= 0) {
+            throw new IllegalArgumentException("원본 장바구니 상품 ID는 1 이상이어야 합니다.");
+        }
+
+        return sourceCartItemId;
     }
 }

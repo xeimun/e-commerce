@@ -42,6 +42,12 @@ public class Order {
     @Column(name = "cancel_reason", length = 30)
     private OrderCancelReason cancelReason;
 
+    @Column(name = "paid_at")
+    private LocalDateTime paidAt;
+
+    @Column(name = "payment_canceled_at")
+    private LocalDateTime paymentCanceledAt;
+
     @Column(name = "total_product_amount", nullable = false, precision = 19, scale = 2)
     private BigDecimal totalProductAmount;
 
@@ -109,6 +115,29 @@ public class Order {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
+    public void completePayment(LocalDateTime paidAt) {
+        requirePaymentPending();
+        this.status = OrderStatus.COMPLETED;
+        this.paidAt = Objects.requireNonNull(paidAt, "결제 성공 시간은 필수입니다.");
+        this.cancelReason = null;
+        this.paymentCanceledAt = null;
+    }
+
+    public void cancelPayment(OrderCancelReason cancelReason, LocalDateTime canceledAt) {
+        requirePaymentPending();
+        this.status = OrderStatus.CANCELED;
+        this.cancelReason = Objects.requireNonNull(cancelReason, "주문 취소 사유는 필수입니다.");
+        this.paymentCanceledAt = Objects.requireNonNull(canceledAt, "결제 취소 시간은 필수입니다.");
+    }
+
+    public boolean isPaymentPending() {
+        return status == OrderStatus.PAYMENT_PENDING;
+    }
+
+    public boolean isPaymentExpired(LocalDateTime now) {
+        return Objects.requireNonNull(now, "현재 시간은 필수입니다.").isAfter(expiresAt);
+    }
+
     @PrePersist
     void onCreate() {
         LocalDateTime now = LocalDateTime.now();
@@ -141,6 +170,14 @@ public class Order {
         return cancelReason;
     }
 
+    public LocalDateTime getPaidAt() {
+        return paidAt;
+    }
+
+    public LocalDateTime getPaymentCanceledAt() {
+        return paymentCanceledAt;
+    }
+
     public BigDecimal getTotalProductAmount() {
         return totalProductAmount;
     }
@@ -167,5 +204,11 @@ public class Order {
         }
 
         return customerId;
+    }
+
+    private void requirePaymentPending() {
+        if (!isPaymentPending()) {
+            throw new IllegalStateException("결제 대기 상태의 주문만 처리할 수 있습니다.");
+        }
     }
 }
