@@ -186,3 +186,31 @@ API 버전 관리는 요청/응답 형식이 크게 바뀌어도 기존 클라�
 - `BigDecimal` 생성 시 문자열 생성자와 `valueOf` 차이
 - `BigDecimal` 비교에서 `equals`와 `compareTo` 차이
 - 반올림 정책과 `RoundingMode`
+
+## JPA EntityGraph
+
+### 한 줄 정리
+
+`EntityGraph`는 JPA 조회 시 연관 엔티티를 함께 가져오도록 지정해 지연 로딩으로 인한 추가 쿼리를 줄이는 방법이다.
+
+### 왜 필요했나
+
+장바구니 조회 응답에는 장바구니 상품뿐 아니라 상품명, 가격, 판매 상태, 현재 재고가 함께 필요하다.
+장바구니 상품마다 상품과 재고를 따로 조회하면 상품 수가 늘어날수록 쿼리가 증가할 수 있다.
+
+### 핵심 개념
+
+- Lazy Loading: 연관 객체를 실제 사용할 때 조회하는 방식
+- N+1 문제: 목록 1번 조회 후 각 항목의 연관 데이터를 다시 조회해 쿼리가 많이 발생하는 문제
+- EntityGraph: 특정 조회에서 함께 로딩할 연관 경로를 명시하는 방식
+
+### 프로젝트 적용
+
+- `CartRepository.findByCustomerId`에서 `items`, `items.product`, `items.product.stock`을 함께 조회한다.
+- 장바구니 조회, 수정, 삭제에서 고객 소유 장바구니와 상품/재고 정보를 한 번의 서비스 흐름에서 검증한다.
+
+### 추가로 공부할 것
+
+- fetch join과 EntityGraph 비교
+- 컬렉션 fetch 시 페이징 주의점
+- Hibernate batch size

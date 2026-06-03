@@ -290,6 +290,9 @@ X-Customer-Id: 1
 }
 ```
 
+- 같은 상품이 이미 장바구니에 있으면 기존 수량에 요청 수량을 더한다.
+- 추가 후 최종 수량이 현재 재고보다 크면 `OUT_OF_STOCK`으로 실패한다.
+
 ### 장바구니 상품 수량 변경
 
 ```http
@@ -315,6 +318,9 @@ X-Customer-Id: 1
 }
 ```
 
+- 요청 고객의 장바구니에 속하지 않은 상품 ID이면 `CART_ITEM_NOT_FOUND`로 실패한다.
+- 변경 후 수량이 현재 재고보다 크면 `OUT_OF_STOCK`으로 실패한다.
+
 ### 장바구니 상품 삭제
 
 ```http
@@ -327,6 +333,8 @@ X-Customer-Id: 1
 ```http
 204 No Content
 ```
+
+- 요청 고객의 장바구니에 속하지 않은 상품 ID이면 `CART_ITEM_NOT_FOUND`로 실패한다.
 
 ## 5. 주문 API
 
@@ -579,6 +587,7 @@ X-Customer-Id: 1
 | `PRODUCT_NOT_FOUND` | 상품 없음 |
 | `PRODUCT_NOT_ON_SALE` | 판매 중이 아닌 상품 |
 | `OUT_OF_STOCK` | 재고 부족 |
+| `CART_ITEM_NOT_FOUND` | 장바구니 상품 없음 |
 | `CART_ITEM_NOT_SELECTABLE` | 주문 선택 불가 장바구니 상품 |
 | `COUPON_NOT_OWNED` | 고객이 보유하지 않은 쿠폰 |
 | `COUPON_NOT_AVAILABLE` | 사용할 수 없는 쿠폰 |
