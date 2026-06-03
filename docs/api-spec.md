@@ -481,6 +481,10 @@ X-Customer-Id: 1
 }
 ```
 
+- 결제 성공 시 주문 상태는 `COMPLETED`가 된다.
+- 결제 성공 시 주문한 장바구니 상품은 장바구니에서 제거된다.
+- 결제 성공 요청은 `PAYMENT_PENDING` 주문에만 허용된다.
+
 만료된 주문에 결제 성공을 요청한 경우:
 
 ```json
@@ -514,6 +518,10 @@ X-Customer-Id: 1
   "cancelReason": "PAYMENT_CANCELED"
 }
 ```
+
+- 결제 취소 시 주문 상태는 `CANCELED`가 된다.
+- 결제 취소 시 주문 생성으로 예약 차감했던 재고를 복구한다.
+- 결제 취소 요청은 `PAYMENT_PENDING` 주문에만 허용된다.
 
 ## 7. 쿠폰 API
 

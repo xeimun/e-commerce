@@ -2,7 +2,9 @@ package com.ecommerce.common.exception;
 
 import com.ecommerce.cart.exception.CartItemNotFoundException;
 import com.ecommerce.cart.exception.CartItemQuantityExceededException;
+import com.ecommerce.order.exception.OrderNotPaymentPendingException;
 import com.ecommerce.order.exception.OrderNotFoundException;
+import com.ecommerce.order.exception.OrderPaymentExpiredException;
 import com.ecommerce.order.exception.OrderValidationException;
 import com.ecommerce.product.exception.ProductNotFoundException;
 import java.util.List;
@@ -69,6 +71,28 @@ public class GlobalExceptionHandler {
         );
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
+    @ExceptionHandler(OrderNotPaymentPendingException.class)
+    public ResponseEntity<ApiErrorResponse> handleOrderNotPaymentPending(OrderNotPaymentPendingException exception) {
+        ApiErrorResponse response = ApiErrorResponse.of(
+                "ORDER_NOT_PAYMENT_PENDING",
+                "결제 대기 상태의 주문만 처리할 수 있습니다.",
+                List.of(ErrorDetail.order(exception.getOrderId(), "ORDER_NOT_PAYMENT_PENDING"))
+        );
+
+        return ResponseEntity.badRequest().body(response);
+    }
+
+    @ExceptionHandler(OrderPaymentExpiredException.class)
+    public ResponseEntity<ApiErrorResponse> handleOrderPaymentExpired(OrderPaymentExpiredException exception) {
+        ApiErrorResponse response = ApiErrorResponse.of(
+                "ORDER_PAYMENT_EXPIRED",
+                "결제 대기 시간이 만료되었습니다.",
+                List.of(ErrorDetail.order(exception.getOrderId(), "ORDER_PAYMENT_EXPIRED"))
+        );
+
+        return ResponseEntity.badRequest().body(response);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

@@ -13,9 +13,16 @@ import com.ecommerce.cart.repository.CartRepository;
 import com.ecommerce.common.exception.ErrorDetail;
 import com.ecommerce.order.dto.OrderCreateRequest;
 import com.ecommerce.order.dto.OrderCreateResponse;
+import com.ecommerce.order.dto.OrderPaymentCancelResponse;
+import com.ecommerce.order.dto.OrderPaymentSuccessResponse;
 import com.ecommerce.order.dto.OrderProductCouponRequest;
 import com.ecommerce.order.entity.Order;
+import com.ecommerce.order.entity.OrderCancelReason;
+import com.ecommerce.order.entity.OrderItem;
 import com.ecommerce.order.entity.OrderStatus;
+import com.ecommerce.order.entity.PaymentStatus;
+import com.ecommerce.order.exception.OrderNotPaymentPendingException;
+import com.ecommerce.order.exception.OrderPaymentExpiredException;
 import com.ecommerce.order.exception.OrderValidationException;
 import com.ecommerce.order.repository.OrderRepository;
 import com.ecommerce.product.entity.ContentType;
@@ -26,6 +33,7 @@ import com.ecommerce.product.repository.StockRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -159,11 +167,98 @@ class OrderServiceTest {
         verify(orderRepository, never()).save(any());
     }
 
+    @Test
+    void completePaymentCompletesPendingOrderAndRemovesOrderedCartItems() {
+        Product product = productFixture(1L, ProductStatus.ON_SALE, 3);
+        Order order = orderFixture(1L, 7L, product, 2, LocalDateTime.now().plusMinutes(5));
+        Cart cart = cartFixture(7L);
+        CartItem cartItem = cart.addItem(product, 2);
+        ReflectionTestUtils.setField(cartItem, "id", 10L);
+        when(orderRepository.findByIdAndCustomerIdForUpdate(1L, 7L)).thenReturn(Optional.of(order));
+        when(cartRepository.findForOrderByCustomerId(7L)).thenReturn(Optional.of(cart));
+
+        OrderPaymentSuccessResponse response = orderService.completePayment(7L, 1L);
+
+        assertThat(response.orderId()).isEqualTo(1L);
+        assertThat(response.status()).isEqualTo(OrderStatus.COMPLETED);
+        assertThat(response.paymentStatus()).isEqualTo(PaymentStatus.PAID);
+        assertThat(response.paidAt()).isNotNull();
+        assertThat(order.getStatus()).isEqualTo(OrderStatus.COMPLETED);
+        assertThat(cart.getItems()).isEmpty();
+        assertThat(product.getStock().getQuantity()).isEqualTo(3);
+        verify(stockRepository, never()).findAllByProductIdInForUpdate(any());
+    }
+
+    @Test
+    void cancelPaymentCancelsPendingOrderAndRestoresReservedStock() {
+        Product product = productFixture(1L, ProductStatus.ON_SALE, 3);
+        Order order = orderFixture(1L, 7L, product, 2, LocalDateTime.now().plusMinutes(5));
+        when(orderRepository.findByIdAndCustomerIdForUpdate(1L, 7L)).thenReturn(Optional.of(order));
+        when(stockRepository.findAllByProductIdInForUpdate(any())).thenReturn(List.of(product.getStock()));
+
+        OrderPaymentCancelResponse response = orderService.cancelPayment(7L, 1L);
+
+        assertThat(response.orderId()).isEqualTo(1L);
+        assertThat(response.status()).isEqualTo(OrderStatus.CANCELED);
+        assertThat(response.paymentStatus()).isEqualTo(PaymentStatus.CANCELED);
+        assertThat(response.cancelReason()).isEqualTo(OrderCancelReason.PAYMENT_CANCELED);
+        assertThat(order.getCancelReason()).isEqualTo(OrderCancelReason.PAYMENT_CANCELED);
+        assertThat(order.getPaymentCanceledAt()).isNotNull();
+        assertThat(product.getStock().getQuantity()).isEqualTo(5);
+        verify(entityManager).refresh(product.getStock(), LockModeType.PESSIMISTIC_WRITE);
+        verify(cartRepository, never()).findForOrderByCustomerId(7L);
+    }
+
+    @Test
+    void completePaymentThrowsExceptionAndCancelsOrderWhenPaymentIsExpired() {
+        Product product = productFixture(1L, ProductStatus.ON_SALE, 3);
+        Order order = orderFixture(1L, 7L, product, 2, LocalDateTime.now().minusMinutes(1));
+        when(orderRepository.findByIdAndCustomerIdForUpdate(1L, 7L)).thenReturn(Optional.of(order));
+        when(stockRepository.findAllByProductIdInForUpdate(any())).thenReturn(List.of(product.getStock()));
+
+        assertThatThrownBy(() -> orderService.completePayment(7L, 1L))
+                .isInstanceOf(OrderPaymentExpiredException.class);
+
+        assertThat(order.getStatus()).isEqualTo(OrderStatus.CANCELED);
+        assertThat(order.getCancelReason()).isEqualTo(OrderCancelReason.PAYMENT_EXPIRED);
+        assertThat(order.getPaymentCanceledAt()).isNotNull();
+        assertThat(product.getStock().getQuantity()).isEqualTo(5);
+        verify(entityManager).refresh(product.getStock(), LockModeType.PESSIMISTIC_WRITE);
+        verify(cartRepository, never()).findForOrderByCustomerId(7L);
+    }
+
+    @Test
+    void completePaymentThrowsExceptionWhenOrderIsNotPaymentPending() {
+        Product product = productFixture(1L, ProductStatus.ON_SALE, 3);
+        Order order = orderFixture(1L, 7L, product, 2, LocalDateTime.now().plusMinutes(5));
+        order.completePayment(LocalDateTime.now());
+        when(orderRepository.findByIdAndCustomerIdForUpdate(1L, 7L)).thenReturn(Optional.of(order));
+
+        assertThatThrownBy(() -> orderService.completePayment(7L, 1L))
+                .isInstanceOf(OrderNotPaymentPendingException.class);
+
+        verify(stockRepository, never()).findAllByProductIdInForUpdate(any());
+        verify(cartRepository, never()).findForOrderByCustomerId(7L);
+    }
+
     private Cart cartFixture(Long customerId) {
         Cart cart = Cart.create(customerId);
         ReflectionTestUtils.setField(cart, "id", 1L);
 
         return cart;
+    }
+
+    private Order orderFixture(
+            Long orderId,
+            Long customerId,
+            Product product,
+            long quantity,
+            LocalDateTime expiresAt
+    ) {
+        Order order = Order.create(customerId, expiresAt, List.of(OrderItem.create(product, quantity)));
+        ReflectionTestUtils.setField(order, "id", orderId);
+
+        return order;
     }
 
     private Product productFixture(Long productId, ProductStatus status, long stockQuantity) {

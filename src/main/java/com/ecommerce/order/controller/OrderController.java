@@ -3,6 +3,8 @@ package com.ecommerce.order.controller;
 import com.ecommerce.order.dto.OrderCreateRequest;
 import com.ecommerce.order.dto.OrderCreateResponse;
 import com.ecommerce.order.dto.OrderDetailResponse;
+import com.ecommerce.order.dto.OrderPaymentCancelResponse;
+import com.ecommerce.order.dto.OrderPaymentSuccessResponse;
 import com.ecommerce.order.dto.OrderSummaryResponse;
 import com.ecommerce.order.service.OrderService;
 import jakarta.validation.Valid;
@@ -47,5 +49,21 @@ public class OrderController {
             @PathVariable Long orderId
     ) {
         return orderService.getOrder(customerId, orderId);
+    }
+
+    @PostMapping("/{orderId}/payment/success")
+    public OrderPaymentSuccessResponse completePayment(
+            @RequestHeader("X-Customer-Id") Long customerId,
+            @PathVariable Long orderId
+    ) {
+        return orderService.completePayment(customerId, orderId);
+    }
+
+    @PostMapping("/{orderId}/payment/cancel")
+    public OrderPaymentCancelResponse cancelPayment(
+            @RequestHeader("X-Customer-Id") Long customerId,
+            @PathVariable Long orderId
+    ) {
+        return orderService.cancelPayment(customerId, orderId);
     }
 }
