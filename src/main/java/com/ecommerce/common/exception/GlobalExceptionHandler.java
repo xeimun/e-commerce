@@ -2,6 +2,8 @@ package com.ecommerce.common.exception;
 
 import com.ecommerce.cart.exception.CartItemNotFoundException;
 import com.ecommerce.cart.exception.CartItemQuantityExceededException;
+import com.ecommerce.order.exception.OrderNotFoundException;
+import com.ecommerce.order.exception.OrderValidationException;
 import com.ecommerce.product.exception.ProductNotFoundException;
 import java.util.List;
 import org.springframework.http.HttpStatus;
@@ -45,6 +47,28 @@ public class GlobalExceptionHandler {
         );
 
         return ResponseEntity.badRequest().body(response);
+    }
+
+    @ExceptionHandler(OrderValidationException.class)
+    public ResponseEntity<ApiErrorResponse> handleOrderValidation(OrderValidationException exception) {
+        ApiErrorResponse response = ApiErrorResponse.of(
+                "ORDER_VALIDATION_FAILED",
+                exception.getMessage(),
+                exception.getDetails()
+        );
+
+        return ResponseEntity.badRequest().body(response);
+    }
+
+    @ExceptionHandler(OrderNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleOrderNotFound(OrderNotFoundException exception) {
+        ApiErrorResponse response = ApiErrorResponse.of(
+                "ORDER_NOT_FOUND",
+                "주문을 찾을 수 없습니다.",
+                List.of(ErrorDetail.order(exception.getOrderId(), "ORDER_NOT_FOUND"))
+        );
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

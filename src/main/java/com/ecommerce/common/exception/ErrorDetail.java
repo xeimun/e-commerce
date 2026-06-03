@@ -26,4 +26,12 @@ public record ErrorDetail(
     public static ErrorDetail cartItem(Long cartItemId, String reason) {
         return new ErrorDetail("CART_ITEM", cartItemId, reason, null, null);
     }
+
+    public static ErrorDetail coupon(Long couponId, String reason) {
+        return new ErrorDetail("COUPON", couponId, reason, null, null);
+    }
+
+    public static ErrorDetail order(Long orderId, String reason) {
+        return new ErrorDetail("ORDER", orderId, reason, null, null);
+    }
 }
