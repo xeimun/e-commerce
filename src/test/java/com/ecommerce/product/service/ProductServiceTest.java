@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.ecommerce.product.dto.ProductCreateRequest;
+import com.ecommerce.product.dto.ProductInstantDiscountRequest;
 import com.ecommerce.product.dto.ProductResponse;
 import com.ecommerce.product.dto.ProductStatusUpdateRequest;
 import com.ecommerce.product.dto.ProductStockUpdateRequest;
@@ -18,6 +19,7 @@ import com.ecommerce.product.entity.Stock;
 import com.ecommerce.product.exception.ProductNotFoundException;
 import com.ecommerce.product.repository.ProductRepository;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -121,6 +123,40 @@ class ProductServiceTest {
         ProductResponse response = productService.updateStock(1L, new ProductStockUpdateRequest(7L));
 
         assertThat(response.stockQuantity()).isEqualTo(7);
+    }
+
+    @Test
+    void upsertInstantDiscountAppliesActiveDiscountToProductResponse() {
+        Product product = productFixture();
+        LocalDateTime now = LocalDateTime.now();
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+
+        ProductResponse response = productService.upsertInstantDiscount(
+                1L,
+                new ProductInstantDiscountRequest(
+                        "드롭 오픈 할인",
+                        new BigDecimal("3000.00"),
+                        now.minusDays(1),
+                        now.plusDays(1)
+                )
+        );
+
+        assertThat(response.instantDiscountAmount()).isEqualByComparingTo("3000.00");
+        assertThat(product.getProductDiscount()).isNotNull();
+        assertThat(product.getProductDiscount().isActive()).isTrue();
+    }
+
+    @Test
+    void deactivateInstantDiscountExcludesDiscountFromProductResponse() {
+        Product product = productFixture();
+        LocalDateTime now = LocalDateTime.now();
+        product.applyInstantDiscount("드롭 오픈 할인", new BigDecimal("3000.00"), now.minusDays(1), now.plusDays(1));
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+
+        ProductResponse response = productService.deactivateInstantDiscount(1L);
+
+        assertThat(response.instantDiscountAmount()).isZero();
+        assertThat(product.getProductDiscount().isActive()).isFalse();
     }
 
     @Test

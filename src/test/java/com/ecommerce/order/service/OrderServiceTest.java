@@ -221,6 +221,70 @@ class OrderServiceTest {
     }
 
     @Test
+    void createOrderAppliesInstantDiscountByQuantity() {
+        Product product = productFixture(1L, ProductStatus.ON_SALE, 5);
+        product.applyInstantDiscount(
+                "드롭 오픈 할인",
+                new BigDecimal("3000.00"),
+                LocalDateTime.now().minusDays(1),
+                LocalDateTime.now().plusDays(1)
+        );
+        Cart cart = cartFixture(7L);
+        CartItem cartItem = cart.addItem(product, 2);
+        ReflectionTestUtils.setField(cartItem, "id", 10L);
+        when(cartRepository.findForOrderByCustomerId(7L)).thenReturn(Optional.of(cart));
+        when(stockRepository.findAllByProductIdInForUpdate(any())).thenReturn(List.of(product.getStock()));
+        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> {
+            Order order = invocation.getArgument(0);
+            ReflectionTestUtils.setField(order, "id", 1L);
+            return order;
+        });
+
+        OrderCreateResponse response = orderService.createOrder(7L, new OrderCreateRequest(List.of(10L), null, List.of()));
+
+        assertThat(response.totalProductAmount()).isEqualByComparingTo("70000.00");
+        assertThat(response.totalInstantDiscountAmount()).isEqualByComparingTo("6000.00");
+        assertThat(response.finalPaymentAmount()).isEqualByComparingTo("64000.00");
+    }
+
+    @Test
+    void createOrderAppliesProductCouponAfterInstantDiscountForOneUnit() {
+        Product product = productFixture(1L, ProductStatus.ON_SALE, 5);
+        product.applyInstantDiscount(
+                "드롭 오픈 할인",
+                new BigDecimal("10000.00"),
+                LocalDateTime.now().minusDays(1),
+                LocalDateTime.now().plusDays(1)
+        );
+        Cart cart = cartFixture(7L);
+        CartItem cartItem = cart.addItem(product, 2);
+        ReflectionTestUtils.setField(cartItem, "id", 10L);
+        IssuedCoupon productCoupon = issuedProductCouponFixture(200L, 7L, product, new BigDecimal("50000.00"));
+        when(cartRepository.findForOrderByCustomerId(7L)).thenReturn(Optional.of(cart));
+        when(issuedCouponRepository.findAllByIdInForUpdate(any())).thenReturn(List.of(productCoupon));
+        when(stockRepository.findAllByProductIdInForUpdate(any())).thenReturn(List.of(product.getStock()));
+        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> {
+            Order order = invocation.getArgument(0);
+            ReflectionTestUtils.setField(order, "id", 1L);
+            return order;
+        });
+
+        OrderCreateResponse response = orderService.createOrder(
+                7L,
+                new OrderCreateRequest(
+                        List.of(10L),
+                        null,
+                        List.of(new OrderProductCouponRequest(10L, 200L))
+                )
+        );
+
+        assertThat(response.totalProductAmount()).isEqualByComparingTo("70000.00");
+        assertThat(response.totalInstantDiscountAmount()).isEqualByComparingTo("20000.00");
+        assertThat(response.totalCouponDiscountAmount()).isEqualByComparingTo("25000.00");
+        assertThat(response.finalPaymentAmount()).isEqualByComparingTo("25000.00");
+    }
+
+    @Test
     void createOrderThrowsExceptionWhenCouponIsExpired() {
         Product product = productFixture(1L, ProductStatus.ON_SALE, 5);
         Cart cart = cartFixture(7L);

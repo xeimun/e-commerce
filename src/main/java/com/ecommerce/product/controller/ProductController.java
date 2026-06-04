@@ -1,6 +1,7 @@
 package com.ecommerce.product.controller;
 
 import com.ecommerce.product.dto.ProductCreateRequest;
+import com.ecommerce.product.dto.ProductInstantDiscountRequest;
 import com.ecommerce.product.dto.ProductResponse;
 import com.ecommerce.product.dto.ProductStatusUpdateRequest;
 import com.ecommerce.product.dto.ProductStockUpdateRequest;
@@ -9,6 +10,7 @@ import com.ecommerce.product.service.ProductService;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -58,5 +60,18 @@ public class ProductController {
     @PatchMapping("/{productId}/stock")
     public ProductResponse updateProductStock(@PathVariable Long productId, @Valid @RequestBody ProductStockUpdateRequest request) {
         return productService.updateStock(productId, request);
+    }
+
+    @PutMapping("/{productId}/instant-discount")
+    public ProductResponse upsertInstantDiscount(
+            @PathVariable Long productId,
+            @Valid @RequestBody ProductInstantDiscountRequest request
+    ) {
+        return productService.upsertInstantDiscount(productId, request);
+    }
+
+    @DeleteMapping("/{productId}/instant-discount")
+    public ProductResponse deactivateInstantDiscount(@PathVariable Long productId) {
+        return productService.deactivateInstantDiscount(productId);
     }
 }

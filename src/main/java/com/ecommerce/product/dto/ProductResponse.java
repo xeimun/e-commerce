@@ -4,6 +4,7 @@ import com.ecommerce.product.entity.ContentType;
 import com.ecommerce.product.entity.Product;
 import com.ecommerce.product.entity.ProductStatus;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 public record ProductResponse(
         Long productId,
@@ -19,6 +20,10 @@ public record ProductResponse(
 ) {
 
     public static ProductResponse from(Product product) {
+        return from(product, LocalDateTime.now());
+    }
+
+    public static ProductResponse from(Product product, LocalDateTime now) {
         return new ProductResponse(
                 product.getId(),
                 product.getName(),
@@ -29,7 +34,7 @@ public record ProductResponse(
                 product.getCategory(),
                 product.getDescription(),
                 product.getStock().getQuantity(),
-                BigDecimal.ZERO
+                product.getInstantDiscountAmount(now)
         );
     }
 }

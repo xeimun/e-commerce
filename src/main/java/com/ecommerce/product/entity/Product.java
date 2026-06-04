@@ -51,6 +51,9 @@ public class Product {
     @OneToOne(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Stock stock;
 
+    @OneToOne(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private ProductDiscount productDiscount;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -114,6 +117,42 @@ public class Product {
         this.stock = Objects.requireNonNull(stock, "상품 재고는 필수입니다.");
     }
 
+    public void applyInstantDiscount(
+            String name,
+            BigDecimal discountAmount,
+            LocalDateTime startsAt,
+            LocalDateTime endsAt
+    ) {
+        if (productDiscount == null) {
+            this.productDiscount = ProductDiscount.create(this, name, discountAmount, startsAt, endsAt);
+            return;
+        }
+
+        productDiscount.update(name, discountAmount, startsAt, endsAt);
+    }
+
+    public void deactivateInstantDiscount() {
+        if (productDiscount != null) {
+            productDiscount.deactivate();
+        }
+    }
+
+    public BigDecimal getInstantDiscountAmount(LocalDateTime now) {
+        if (productDiscount == null) {
+            return BigDecimal.ZERO;
+        }
+
+        return productDiscount.getApplicableUnitDiscountAmount(now, price);
+    }
+
+    public BigDecimal calculateInstantDiscountAmount(LocalDateTime now, long quantity) {
+        if (quantity <= 0) {
+            throw new IllegalArgumentException("할인 계산 수량은 1 이상이어야 합니다.");
+        }
+
+        return getInstantDiscountAmount(now).multiply(BigDecimal.valueOf(quantity));
+    }
+
     @PrePersist
     void onCreate() {
         LocalDateTime now = LocalDateTime.now();
@@ -160,6 +199,10 @@ public class Product {
 
     public Stock getStock() {
         return stock;
+    }
+
+    public ProductDiscount getProductDiscount() {
+        return productDiscount;
     }
 
     private static String requireText(String value, String fieldName) {

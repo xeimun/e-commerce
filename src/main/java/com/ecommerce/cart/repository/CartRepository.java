@@ -9,10 +9,10 @@ import org.springframework.data.repository.query.Param;
 
 public interface CartRepository extends JpaRepository<Cart, Long> {
 
-    @EntityGraph(attributePaths = {"items", "items.product", "items.product.stock"})
+    @EntityGraph(attributePaths = {"items", "items.product", "items.product.stock", "items.product.productDiscount"})
     Optional<Cart> findByCustomerId(Long customerId);
 
-    @EntityGraph(attributePaths = {"items", "items.product"})
+    @EntityGraph(attributePaths = {"items", "items.product", "items.product.productDiscount"})
     @Query("select distinct c from Cart c where c.customerId = :customerId")
     Optional<Cart> findForOrderByCustomerId(@Param("customerId") Long customerId);
 }
