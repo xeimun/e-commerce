@@ -12,6 +12,17 @@ import org.springframework.data.repository.query.Param;
 
 public interface IssuedCouponRepository extends JpaRepository<IssuedCoupon, Long> {
 
+    boolean existsByCouponIdAndCustomerId(Long couponId, Long customerId);
+
+    @EntityGraph(attributePaths = {"coupon", "coupon.targetProduct"})
+    List<IssuedCoupon> findAllByCustomerIdOrderByIdDesc(Long customerId);
+
+    @Query("select ic.coupon.id from IssuedCoupon ic where ic.customerId = :customerId and ic.coupon.id in :couponIds")
+    List<Long> findIssuedCouponIdsByCustomerIdAndCouponIdIn(
+            @Param("customerId") Long customerId,
+            @Param("couponIds") Collection<Long> couponIds
+    );
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @EntityGraph(attributePaths = {"coupon", "coupon.targetProduct"})
     @Query("select ic from IssuedCoupon ic where ic.id in :ids")

@@ -2,6 +2,9 @@ package com.ecommerce.common.exception;
 
 import com.ecommerce.cart.exception.CartItemNotFoundException;
 import com.ecommerce.cart.exception.CartItemQuantityExceededException;
+import com.ecommerce.coupon.exception.CouponAlreadyIssuedException;
+import com.ecommerce.coupon.exception.CouponExpiredException;
+import com.ecommerce.coupon.exception.CouponNotFoundException;
 import com.ecommerce.order.exception.OrderNotPaymentPendingException;
 import com.ecommerce.order.exception.OrderNotFoundException;
 import com.ecommerce.order.exception.OrderPaymentExpiredException;
@@ -46,6 +49,39 @@ public class GlobalExceptionHandler {
                 "OUT_OF_STOCK",
                 "상품 재고가 부족합니다.",
                 List.of(ErrorDetail.productStock(exception.getProductId(), "OUT_OF_STOCK", exception.getCurrentStock()))
+        );
+
+        return ResponseEntity.badRequest().body(response);
+    }
+
+    @ExceptionHandler(CouponNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleCouponNotFound(CouponNotFoundException exception) {
+        ApiErrorResponse response = ApiErrorResponse.of(
+                "COUPON_NOT_FOUND",
+                "쿠폰을 찾을 수 없습니다.",
+                List.of(ErrorDetail.coupon(exception.getCouponId(), "COUPON_NOT_FOUND"))
+        );
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
+    @ExceptionHandler(CouponAlreadyIssuedException.class)
+    public ResponseEntity<ApiErrorResponse> handleCouponAlreadyIssued(CouponAlreadyIssuedException exception) {
+        ApiErrorResponse response = ApiErrorResponse.of(
+                "COUPON_ALREADY_ISSUED",
+                "이미 발급받은 쿠폰입니다.",
+                List.of(ErrorDetail.coupon(exception.getCouponId(), "COUPON_ALREADY_ISSUED"))
+        );
+
+        return ResponseEntity.badRequest().body(response);
+    }
+
+    @ExceptionHandler(CouponExpiredException.class)
+    public ResponseEntity<ApiErrorResponse> handleCouponExpired(CouponExpiredException exception) {
+        ApiErrorResponse response = ApiErrorResponse.of(
+                "COUPON_EXPIRED",
+                "만료된 쿠폰입니다.",
+                List.of(ErrorDetail.coupon(exception.getCouponId(), "COUPON_EXPIRED"))
         );
 
         return ResponseEntity.badRequest().body(response);

@@ -14,11 +14,18 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
 @Entity
-@Table(name = "issued_coupons")
+@Table(
+        name = "issued_coupons",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_issued_coupons_coupon_customer",
+                columnNames = {"coupon_id", "customer_id"}
+        )
+)
 public class IssuedCoupon {
 
     @Id
