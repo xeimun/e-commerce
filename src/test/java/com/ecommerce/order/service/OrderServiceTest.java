@@ -3,6 +3,7 @@ package com.ecommerce.order.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -259,6 +260,35 @@ class OrderServiceTest {
         assertThat(product.getStock().getQuantity()).isEqualTo(5);
         verify(entityManager).refresh(product.getStock(), LockModeType.PESSIMISTIC_WRITE);
         verify(cartRepository, never()).findForOrderByCustomerId(7L);
+    }
+
+    @Test
+    void expirePaymentPendingOrdersCancelsExpiredOrdersAndRestoresReservedStock() {
+        Product product = productFixture(1L, ProductStatus.ON_SALE, 3);
+        Order order = orderFixture(1L, 7L, product, 2, null, LocalDateTime.now().minusMinutes(1));
+        when(orderRepository.findExpiredOrdersForUpdate(eq(OrderStatus.PAYMENT_PENDING), any(LocalDateTime.class)))
+                .thenReturn(List.of(order));
+        when(stockRepository.findAllByProductIdInForUpdate(any())).thenReturn(List.of(product.getStock()));
+
+        int expiredCount = orderService.expirePaymentPendingOrders();
+
+        assertThat(expiredCount).isEqualTo(1);
+        assertThat(order.getStatus()).isEqualTo(OrderStatus.CANCELED);
+        assertThat(order.getCancelReason()).isEqualTo(OrderCancelReason.PAYMENT_EXPIRED);
+        assertThat(order.getPaymentCanceledAt()).isNotNull();
+        assertThat(product.getStock().getQuantity()).isEqualTo(5);
+        verify(entityManager).refresh(product.getStock(), LockModeType.PESSIMISTIC_WRITE);
+    }
+
+    @Test
+    void expirePaymentPendingOrdersDoesNothingWhenExpiredOrderDoesNotExist() {
+        when(orderRepository.findExpiredOrdersForUpdate(eq(OrderStatus.PAYMENT_PENDING), any(LocalDateTime.class)))
+                .thenReturn(List.of());
+
+        int expiredCount = orderService.expirePaymentPendingOrders();
+
+        assertThat(expiredCount).isZero();
+        verify(stockRepository, never()).findAllByProductIdInForUpdate(any());
     }
 
     @Test

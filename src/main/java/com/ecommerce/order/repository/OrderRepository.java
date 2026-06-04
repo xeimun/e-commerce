@@ -1,7 +1,9 @@
 package com.ecommerce.order.repository;
 
 import com.ecommerce.order.entity.Order;
+import com.ecommerce.order.entity.OrderStatus;
 import jakarta.persistence.LockModeType;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -22,4 +24,9 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     @EntityGraph(attributePaths = {"items", "items.product"})
     @Query("select o from Order o where o.id = :id and o.customerId = :customerId")
     Optional<Order> findByIdAndCustomerIdForUpdate(@Param("id") Long id, @Param("customerId") Long customerId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @EntityGraph(attributePaths = {"items", "items.product"})
+    @Query("select o from Order o where o.status = :status and o.expiresAt < :now order by o.id asc")
+    List<Order> findExpiredOrdersForUpdate(@Param("status") OrderStatus status, @Param("now") LocalDateTime now);
 }

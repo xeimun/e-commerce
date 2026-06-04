@@ -14,6 +14,7 @@ import com.ecommerce.order.dto.OrderSummaryResponse;
 import com.ecommerce.order.entity.Order;
 import com.ecommerce.order.entity.OrderCancelReason;
 import com.ecommerce.order.entity.OrderItem;
+import com.ecommerce.order.entity.OrderStatus;
 import com.ecommerce.order.exception.OrderNotPaymentPendingException;
 import com.ecommerce.order.exception.OrderNotFoundException;
 import com.ecommerce.order.exception.OrderPaymentExpiredException;
@@ -130,6 +131,15 @@ public class OrderService {
         return OrderPaymentCancelResponse.from(order);
     }
 
+    @Transactional
+    public int expirePaymentPendingOrders() {
+        LocalDateTime now = LocalDateTime.now();
+        List<Order> expiredOrders = orderRepository.findExpiredOrdersForUpdate(OrderStatus.PAYMENT_PENDING, now);
+        cancelOrdersAndRestoreStock(expiredOrders, OrderCancelReason.PAYMENT_EXPIRED, now);
+
+        return expiredOrders.size();
+    }
+
     private Order findPaymentTargetOrder(Long customerId, Long orderId) {
         Long validCustomerId = requirePositiveCustomerId(customerId);
         Long validOrderId = requirePositiveOrderId(orderId);
@@ -144,12 +154,21 @@ public class OrderService {
 
     private void cancelOrderAndRestoreStock(Order order, OrderCancelReason cancelReason, LocalDateTime canceledAt) {
         order.cancelPayment(cancelReason, canceledAt);
-        restoreReservedStocks(order);
+        restoreReservedStocks(List.of(order));
     }
 
-    private void restoreReservedStocks(Order order) {
-        Map<Long, Long> quantitiesByProductId = order.getItems()
-                .stream()
+    private void cancelOrdersAndRestoreStock(List<Order> orders, OrderCancelReason cancelReason, LocalDateTime canceledAt) {
+        if (orders.isEmpty()) {
+            return;
+        }
+
+        orders.forEach(order -> order.cancelPayment(cancelReason, canceledAt));
+        restoreReservedStocks(orders);
+    }
+
+    private void restoreReservedStocks(List<Order> orders) {
+        Map<Long, Long> quantitiesByProductId = orders.stream()
+                .flatMap(order -> order.getItems().stream())
                 .collect(Collectors.groupingBy(
                         item -> item.getProduct().getId(),
                         Collectors.summingLong(OrderItem::getQuantity)

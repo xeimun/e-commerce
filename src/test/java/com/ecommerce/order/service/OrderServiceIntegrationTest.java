@@ -227,6 +227,27 @@ class OrderServiceIntegrationTest {
         assertThat(foundCart.getItems()).hasSize(1);
     }
 
+    @Test
+    void expirePaymentPendingOrdersPersistsCanceledOrdersAndRestoresReservedStock() {
+        Product product = productRepository.save(productFixture(ProductStatus.ON_SALE, 3));
+        Order order = Order.create(
+                7L,
+                LocalDateTime.now().minusMinutes(1),
+                List.of(OrderItem.create(product, 2))
+        );
+        Order savedOrder = orderRepository.save(order);
+
+        int expiredCount = orderService.expirePaymentPendingOrders();
+
+        Product foundProduct = productRepository.findById(product.getId()).orElseThrow();
+        Order foundOrder = orderRepository.findByIdAndCustomerId(savedOrder.getId(), 7L).orElseThrow();
+        assertThat(expiredCount).isEqualTo(1);
+        assertThat(foundOrder.getStatus()).isEqualTo(OrderStatus.CANCELED);
+        assertThat(foundOrder.getCancelReason()).isEqualTo(OrderCancelReason.PAYMENT_EXPIRED);
+        assertThat(foundOrder.getPaymentCanceledAt()).isNotNull();
+        assertThat(foundProduct.getStock().getQuantity()).isEqualTo(5);
+    }
+
     private Product productFixture(ProductStatus status, long stockQuantity) {
         Product product = Product.create(
                 "달빛 상점 한정판 아트북",
