@@ -83,13 +83,22 @@ public class Order {
     }
 
     public static Order create(Long customerId, LocalDateTime expiresAt, List<OrderItem> orderItems) {
+        return create(customerId, expiresAt, orderItems, BigDecimal.ZERO);
+    }
+
+    public static Order create(
+            Long customerId,
+            LocalDateTime expiresAt,
+            List<OrderItem> orderItems,
+            BigDecimal orderCouponDiscountAmount
+    ) {
         if (orderItems == null || orderItems.isEmpty()) {
             throw new IllegalArgumentException("주문 상품은 1개 이상이어야 합니다.");
         }
 
         Order order = new Order(customerId, expiresAt);
         orderItems.forEach(order::addItem);
-        order.recalculateAmounts();
+        order.recalculateAmounts(orderCouponDiscountAmount);
 
         return order;
     }
@@ -100,19 +109,24 @@ public class Order {
         this.items.add(item);
     }
 
-    private void recalculateAmounts() {
+    private void recalculateAmounts(BigDecimal orderCouponDiscountAmount) {
         this.totalProductAmount = items.stream()
                 .map(OrderItem::getOriginalAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         this.totalInstantDiscountAmount = items.stream()
                 .map(OrderItem::getInstantDiscountAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-        this.totalCouponDiscountAmount = items.stream()
+        BigDecimal totalProductCouponDiscountAmount = items.stream()
                 .map(OrderItem::getProductCouponDiscountAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-        this.finalPaymentAmount = items.stream()
+        BigDecimal paymentAmountBeforeOrderCoupon = items.stream()
                 .map(OrderItem::getFinalAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal orderCouponDiscount = clampOrderCouponDiscount(orderCouponDiscountAmount, paymentAmountBeforeOrderCoupon);
+        this.totalCouponDiscountAmount = totalProductCouponDiscountAmount.add(orderCouponDiscount);
+        this.finalPaymentAmount = paymentAmountBeforeOrderCoupon
+                .subtract(orderCouponDiscount)
+                .max(BigDecimal.ZERO);
     }
 
     public void completePayment(LocalDateTime paidAt) {
@@ -204,6 +218,18 @@ public class Order {
         }
 
         return customerId;
+    }
+
+    private static BigDecimal clampOrderCouponDiscount(BigDecimal orderCouponDiscountAmount, BigDecimal maxDiscountAmount) {
+        if (orderCouponDiscountAmount == null || orderCouponDiscountAmount.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("전체 상품 쿠폰 할인 금액은 0 이상이어야 합니다.");
+        }
+
+        if (orderCouponDiscountAmount.compareTo(maxDiscountAmount) > 0) {
+            return maxDiscountAmount;
+        }
+
+        return orderCouponDiscountAmount;
     }
 
     private void requirePaymentPending() {

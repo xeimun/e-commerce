@@ -6,8 +6,14 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.ecommerce.cart.entity.Cart;
 import com.ecommerce.cart.entity.CartItem;
 import com.ecommerce.cart.repository.CartRepository;
+import com.ecommerce.coupon.entity.Coupon;
+import com.ecommerce.coupon.entity.IssuedCoupon;
+import com.ecommerce.coupon.entity.IssuedCouponStatus;
+import com.ecommerce.coupon.repository.CouponRepository;
+import com.ecommerce.coupon.repository.IssuedCouponRepository;
 import com.ecommerce.order.dto.OrderCreateRequest;
 import com.ecommerce.order.dto.OrderCreateResponse;
+import com.ecommerce.order.dto.OrderProductCouponRequest;
 import com.ecommerce.order.dto.OrderPaymentCancelResponse;
 import com.ecommerce.order.dto.OrderPaymentSuccessResponse;
 import com.ecommerce.order.entity.Order;
@@ -46,8 +52,16 @@ class OrderServiceIntegrationTest {
     @Autowired
     private ProductRepository productRepository;
 
+    @Autowired
+    private CouponRepository couponRepository;
+
+    @Autowired
+    private IssuedCouponRepository issuedCouponRepository;
+
     @BeforeEach
     void setUp() {
+        issuedCouponRepository.deleteAll();
+        couponRepository.deleteAll();
         orderRepository.deleteAll();
         cartRepository.deleteAll();
         productRepository.deleteAll();
@@ -75,6 +89,54 @@ class OrderServiceIntegrationTest {
         assertThat(foundOrder.getItems()).hasSize(1);
         assertThat(foundOrder.getItems().get(0).getProductName()).isEqualTo("달빛 상점 한정판 아트북");
         assertThat(foundOrder.getItems().get(0).getSourceCartItemId()).isEqualTo(cartItem.getId());
+    }
+
+    @Test
+    void createOrderPersistsCouponReservationsAndCouponDiscounts() {
+        Product product = productRepository.save(productFixture(ProductStatus.ON_SALE, 5));
+        Coupon orderCoupon = couponRepository.save(Coupon.createOrderCoupon(
+                "전체 상품 할인 쿠폰",
+                new BigDecimal("10000.00"),
+                LocalDateTime.now().plusDays(1)
+        ));
+        Coupon productCoupon = couponRepository.save(Coupon.createProductCoupon(
+                "특정 상품 할인 쿠폰",
+                new BigDecimal("5000.00"),
+                product,
+                LocalDateTime.now().plusDays(1)
+        ));
+        IssuedCoupon issuedOrderCoupon = issuedCouponRepository.save(
+                IssuedCoupon.issue(orderCoupon, 7L, LocalDateTime.now().minusDays(1))
+        );
+        IssuedCoupon issuedProductCoupon = issuedCouponRepository.save(
+                IssuedCoupon.issue(productCoupon, 7L, LocalDateTime.now().minusDays(1))
+        );
+        Cart cart = Cart.create(7L);
+        CartItem cartItem = cart.addItem(product, 2);
+        cartRepository.save(cart);
+
+        OrderCreateResponse response = orderService.createOrder(
+                7L,
+                new OrderCreateRequest(
+                        List.of(cartItem.getId()),
+                        issuedOrderCoupon.getId(),
+                        List.of(new OrderProductCouponRequest(cartItem.getId(), issuedProductCoupon.getId()))
+                )
+        );
+
+        Order foundOrder = orderRepository.findByIdAndCustomerId(response.orderId(), 7L).orElseThrow();
+        IssuedCoupon foundOrderCoupon = issuedCouponRepository.findById(issuedOrderCoupon.getId()).orElseThrow();
+        IssuedCoupon foundProductCoupon = issuedCouponRepository.findById(issuedProductCoupon.getId()).orElseThrow();
+        assertThat(response.totalProductAmount()).isEqualByComparingTo("70000.00");
+        assertThat(response.totalCouponDiscountAmount()).isEqualByComparingTo("15000.00");
+        assertThat(response.finalPaymentAmount()).isEqualByComparingTo("55000.00");
+        assertThat(foundOrder.getTotalCouponDiscountAmount()).isEqualByComparingTo("15000.00");
+        assertThat(foundOrder.getFinalPaymentAmount()).isEqualByComparingTo("55000.00");
+        assertThat(foundOrder.getItems().get(0).getProductCouponDiscountAmount()).isEqualByComparingTo("5000.00");
+        assertThat(foundOrderCoupon.getStatus()).isEqualTo(IssuedCouponStatus.RESERVED);
+        assertThat(foundOrderCoupon.getOrder().getId()).isEqualTo(response.orderId());
+        assertThat(foundProductCoupon.getStatus()).isEqualTo(IssuedCouponStatus.RESERVED);
+        assertThat(foundProductCoupon.getOrder().getId()).isEqualTo(response.orderId());
     }
 
     @Test
@@ -118,6 +180,33 @@ class OrderServiceIntegrationTest {
         assertThat(foundOrder.getPaidAt()).isNotNull();
         assertThat(foundProduct.getStock().getQuantity()).isEqualTo(3);
         assertThat(foundCart.getItems()).isEmpty();
+    }
+
+    @Test
+    void completePaymentPersistsUsedCoupon() {
+        Product product = productRepository.save(productFixture(ProductStatus.ON_SALE, 5));
+        IssuedCoupon issuedCoupon = issuedCouponRepository.save(IssuedCoupon.issue(
+                couponRepository.save(Coupon.createOrderCoupon(
+                        "전체 상품 할인 쿠폰",
+                        new BigDecimal("10000.00"),
+                        LocalDateTime.now().plusDays(1)
+                )),
+                7L,
+                LocalDateTime.now().minusDays(1)
+        ));
+        Cart cart = Cart.create(7L);
+        CartItem cartItem = cart.addItem(product, 2);
+        cartRepository.save(cart);
+        OrderCreateResponse orderResponse = orderService.createOrder(
+                7L,
+                new OrderCreateRequest(List.of(cartItem.getId()), issuedCoupon.getId(), List.of())
+        );
+
+        orderService.completePayment(7L, orderResponse.orderId());
+
+        IssuedCoupon foundIssuedCoupon = issuedCouponRepository.findById(issuedCoupon.getId()).orElseThrow();
+        assertThat(foundIssuedCoupon.getStatus()).isEqualTo(IssuedCouponStatus.USED);
+        assertThat(foundIssuedCoupon.getUsedAt()).isNotNull();
     }
 
     @Test
@@ -199,6 +288,35 @@ class OrderServiceIntegrationTest {
         assertThat(foundOrder.getPaymentCanceledAt()).isNotNull();
         assertThat(foundProduct.getStock().getQuantity()).isEqualTo(5);
         assertThat(foundCart.getItems()).hasSize(1);
+    }
+
+    @Test
+    void cancelPaymentPersistsAvailableCoupon() {
+        Product product = productRepository.save(productFixture(ProductStatus.ON_SALE, 5));
+        IssuedCoupon issuedCoupon = issuedCouponRepository.save(IssuedCoupon.issue(
+                couponRepository.save(Coupon.createOrderCoupon(
+                        "전체 상품 할인 쿠폰",
+                        new BigDecimal("10000.00"),
+                        LocalDateTime.now().plusDays(1)
+                )),
+                7L,
+                LocalDateTime.now().minusDays(1)
+        ));
+        Cart cart = Cart.create(7L);
+        CartItem cartItem = cart.addItem(product, 2);
+        cartRepository.save(cart);
+        OrderCreateResponse orderResponse = orderService.createOrder(
+                7L,
+                new OrderCreateRequest(List.of(cartItem.getId()), issuedCoupon.getId(), List.of())
+        );
+
+        orderService.cancelPayment(7L, orderResponse.orderId());
+
+        IssuedCoupon foundIssuedCoupon = issuedCouponRepository.findById(issuedCoupon.getId()).orElseThrow();
+        assertThat(foundIssuedCoupon.getStatus()).isEqualTo(IssuedCouponStatus.AVAILABLE);
+        assertThat(foundIssuedCoupon.getOrder()).isNull();
+        assertThat(foundIssuedCoupon.getReservedAt()).isNull();
+        assertThat(foundIssuedCoupon.getUsedAt()).isNull();
     }
 
     @Test
