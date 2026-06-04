@@ -366,8 +366,8 @@ X-Customer-Id: 1
 - `cartItemIds`: 주문할 장바구니 상품 ID 목록
 - `orderCouponId`: 주문 전체에 적용할 고객 보유 쿠폰 ID. 선택 값이다.
 - `productCoupons`: 특정 상품에 적용할 고객 보유 쿠폰 목록. 선택 값이다.
-- 고객 보유 쿠폰 기능 구현 전까지 `orderCouponId` 또는 `productCoupons`가 포함되면 `ORDER_VALIDATION_FAILED`로 실패한다.
-- 상품 즉시 할인과 쿠폰 할인 기능 구현 전까지 할인 금액은 0으로 응답한다.
+- 고객 보유 쿠폰이 유효하면 주문 생성 시 `RESERVED` 상태로 예약되고 할인 금액에 반영된다.
+- 상품 즉시 할인 기능 구현 전까지 `totalInstantDiscountAmount`와 `instantDiscountAmount`는 0으로 응답한다.
 
 응답 예시:
 
@@ -482,6 +482,7 @@ X-Customer-Id: 1
 ```
 
 - 결제 성공 시 주문 상태는 `COMPLETED`가 된다.
+- 결제 성공 시 예약된 고객 보유 쿠폰은 `USED` 상태가 된다.
 - 결제 성공 시 주문 생성에 사용된 장바구니 상품은 장바구니에서 제거된다.
 - 주문 생성 후 같은 상품을 다시 담은 새 장바구니 상품은 제거하지 않는다.
 - 주문 생성 후 같은 장바구니 상품의 수량이 증가했다면 주문 수량만큼만 차감하고 남은 수량은 유지한다.
@@ -523,6 +524,7 @@ X-Customer-Id: 1
 
 - 결제 취소 시 주문 상태는 `CANCELED`가 된다.
 - 결제 취소 시 주문 생성으로 예약 차감했던 재고를 복구한다.
+- 결제 취소 시 예약된 고객 보유 쿠폰은 `AVAILABLE` 상태로 되돌린다.
 - 결제 취소 요청은 `PAYMENT_PENDING` 주문에만 허용된다.
 
 ## 7. 쿠폰 API

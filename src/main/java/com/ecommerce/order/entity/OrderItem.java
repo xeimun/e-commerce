@@ -65,7 +65,7 @@ public class OrderItem {
     protected OrderItem() {
     }
 
-    private OrderItem(Product product, long quantity, Long sourceCartItemId) {
+    private OrderItem(Product product, long quantity, Long sourceCartItemId, BigDecimal productCouponDiscountAmount) {
         Product targetProduct = Objects.requireNonNull(product, "주문 상품은 필수입니다.");
         this.product = targetProduct;
         this.productName = targetProduct.getName();
@@ -74,18 +74,28 @@ public class OrderItem {
         this.sourceCartItemId = normalizeSourceCartItemId(sourceCartItemId);
         this.originalAmount = this.productPrice.multiply(BigDecimal.valueOf(this.quantity));
         this.instantDiscountAmount = BigDecimal.ZERO;
-        this.productCouponDiscountAmount = BigDecimal.ZERO;
+        this.productCouponDiscountAmount = requireNonNegativeAmount(productCouponDiscountAmount, "상품 쿠폰 할인 금액");
         this.finalAmount = originalAmount
                 .subtract(this.instantDiscountAmount)
-                .subtract(this.productCouponDiscountAmount);
+                .subtract(this.productCouponDiscountAmount)
+                .max(BigDecimal.ZERO);
     }
 
     public static OrderItem create(Product product, long quantity) {
-        return new OrderItem(product, quantity, null);
+        return new OrderItem(product, quantity, null, BigDecimal.ZERO);
     }
 
     public static OrderItem create(Product product, long quantity, Long sourceCartItemId) {
-        return new OrderItem(product, quantity, sourceCartItemId);
+        return new OrderItem(product, quantity, sourceCartItemId, BigDecimal.ZERO);
+    }
+
+    public static OrderItem create(
+            Product product,
+            long quantity,
+            Long sourceCartItemId,
+            BigDecimal productCouponDiscountAmount
+    ) {
+        return new OrderItem(product, quantity, sourceCartItemId, productCouponDiscountAmount);
     }
 
     void assignOrder(Order order) {
@@ -165,5 +175,13 @@ public class OrderItem {
         }
 
         return sourceCartItemId;
+    }
+
+    private static BigDecimal requireNonNegativeAmount(BigDecimal amount, String fieldName) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException(fieldName + "은(는) 0 이상이어야 합니다.");
+        }
+
+        return amount;
     }
 }

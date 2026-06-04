@@ -4,6 +4,8 @@ import com.ecommerce.cart.entity.Cart;
 import com.ecommerce.cart.entity.CartItem;
 import com.ecommerce.cart.repository.CartRepository;
 import com.ecommerce.common.exception.ErrorDetail;
+import com.ecommerce.coupon.entity.IssuedCoupon;
+import com.ecommerce.coupon.repository.IssuedCouponRepository;
 import com.ecommerce.order.dto.OrderCreateRequest;
 import com.ecommerce.order.dto.OrderCreateResponse;
 import com.ecommerce.order.dto.OrderDetailResponse;
@@ -26,10 +28,12 @@ import com.ecommerce.product.entity.Stock;
 import com.ecommerce.product.repository.StockRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -49,17 +53,20 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final CartRepository cartRepository;
     private final StockRepository stockRepository;
+    private final IssuedCouponRepository issuedCouponRepository;
     private final EntityManager entityManager;
 
     public OrderService(
             OrderRepository orderRepository,
             CartRepository cartRepository,
             StockRepository stockRepository,
+            IssuedCouponRepository issuedCouponRepository,
             EntityManager entityManager
     ) {
         this.orderRepository = orderRepository;
         this.cartRepository = cartRepository;
         this.stockRepository = stockRepository;
+        this.issuedCouponRepository = issuedCouponRepository;
         this.entityManager = entityManager;
     }
 
@@ -68,28 +75,42 @@ public class OrderService {
         Long validCustomerId = requirePositiveCustomerId(customerId);
         OrderCreateRequest validRequest = Objects.requireNonNull(request, "주문 생성 요청은 필수입니다.");
         List<Long> cartItemIds = requireUniqueCartItemIds(validRequest.cartItemIds());
+        LocalDateTime now = LocalDateTime.now();
 
         Cart cart = cartRepository.findForOrderByCustomerId(validCustomerId).orElse(null);
         Map<Long, CartItem> cartItemsById = getCartItemsById(cart);
         List<CartItem> selectedItems = findSelectedItems(cartItemIds, cartItemsById);
         List<ErrorDetail> details = new ArrayList<>(validateSelectedItems(cartItemIds, selectedItems));
-        details.addAll(validateUnsupportedCoupons(validRequest));
 
         if (!details.isEmpty()) {
             throw new OrderValidationException(details);
         }
 
+        CouponApplication couponApplication = validateCouponApplication(validCustomerId, validRequest, selectedItems, now);
         Map<Long, Stock> lockedStocksByProductId = lockStocks(selectedItems);
         List<ErrorDetail> stockDetails = validateOrderableItems(selectedItems, lockedStocksByProductId);
         if (!stockDetails.isEmpty()) {
             throw new OrderValidationException(stockDetails);
         }
 
+        Map<Long, BigDecimal> productCouponDiscountsByCartItemId =
+                calculateProductCouponDiscounts(selectedItems, couponApplication);
         List<OrderItem> orderItems = selectedItems.stream()
-                .map(cartItem -> reserveStockAndCreateOrderItem(cartItem, lockedStocksByProductId))
+                .map(cartItem -> reserveStockAndCreateOrderItem(
+                        cartItem,
+                        lockedStocksByProductId,
+                        productCouponDiscountsByCartItemId.getOrDefault(cartItem.getId(), BigDecimal.ZERO)
+                ))
                 .toList();
-        Order order = Order.create(validCustomerId, LocalDateTime.now().plusMinutes(PAYMENT_PENDING_MINUTES), orderItems);
+        BigDecimal orderCouponDiscountAmount = calculateOrderCouponDiscount(couponApplication.orderCoupon(), orderItems);
+        Order order = Order.create(
+                validCustomerId,
+                now.plusMinutes(PAYMENT_PENDING_MINUTES),
+                orderItems,
+                orderCouponDiscountAmount
+        );
         Order savedOrder = orderRepository.save(order);
+        reserveCoupons(couponApplication, savedOrder, now);
 
         return OrderCreateResponse.from(savedOrder);
     }
@@ -118,6 +139,7 @@ public class OrderService {
         }
 
         order.completePayment(now);
+        useReservedCoupons(order, now);
         removeOrderedCartItems(order);
 
         return OrderPaymentSuccessResponse.from(order);
@@ -155,6 +177,7 @@ public class OrderService {
     private void cancelOrderAndRestoreStock(Order order, OrderCancelReason cancelReason, LocalDateTime canceledAt) {
         order.cancelPayment(cancelReason, canceledAt);
         restoreReservedStocks(List.of(order));
+        releaseReservedCoupons(order);
     }
 
     private void cancelOrdersAndRestoreStock(List<Order> orders, OrderCancelReason cancelReason, LocalDateTime canceledAt) {
@@ -164,6 +187,7 @@ public class OrderService {
 
         orders.forEach(order -> order.cancelPayment(cancelReason, canceledAt));
         restoreReservedStocks(orders);
+        orders.forEach(this::releaseReservedCoupons);
     }
 
     private void restoreReservedStocks(List<Order> orders) {
@@ -238,25 +262,169 @@ public class OrderService {
                 .toList();
     }
 
-    private List<ErrorDetail> validateUnsupportedCoupons(OrderCreateRequest request) {
+    private CouponApplication validateCouponApplication(
+            Long customerId,
+            OrderCreateRequest request,
+            List<CartItem> selectedItems,
+            LocalDateTime now
+    ) {
+        Map<Long, CartItem> selectedItemsById = selectedItems.stream()
+                .collect(Collectors.toMap(CartItem::getId, Function.identity()));
+        CouponRequest couponRequest = normalizeCouponRequest(request, selectedItemsById);
+        if (couponRequest.isEmpty()) {
+            return CouponApplication.empty();
+        }
+
+        Map<Long, IssuedCoupon> issuedCouponsById = issuedCouponRepository.findAllByIdInForUpdate(couponRequest.couponIds())
+                .stream()
+                .collect(Collectors.toMap(IssuedCoupon::getId, Function.identity()));
         List<ErrorDetail> details = new ArrayList<>();
-        if (request.orderCouponId() != null) {
-            details.add(ErrorDetail.coupon(request.orderCouponId(), "COUPON_NOT_AVAILABLE"));
+
+        IssuedCoupon orderCoupon = null;
+        if (couponRequest.orderCouponId() != null) {
+            orderCoupon = issuedCouponsById.get(couponRequest.orderCouponId());
+            details.addAll(validateIssuedCoupon(couponRequest.orderCouponId(), orderCoupon, customerId, now));
+            if (details.isEmpty() && !orderCoupon.getCoupon().isOrderCoupon()) {
+                details.add(ErrorDetail.coupon(couponRequest.orderCouponId(), "COUPON_TARGET_MISMATCH"));
+            }
         }
 
-        List<OrderProductCouponRequest> productCoupons = request.productCoupons();
-        if (productCoupons == null) {
-            return details;
+        Map<Long, IssuedCoupon> productCouponsByCartItemId = new LinkedHashMap<>();
+        for (Map.Entry<Long, Long> entry : couponRequest.productCouponIdsByCartItemId().entrySet()) {
+            Long cartItemId = entry.getKey();
+            Long couponId = entry.getValue();
+            IssuedCoupon issuedCoupon = issuedCouponsById.get(couponId);
+            List<ErrorDetail> couponDetails = validateIssuedCoupon(couponId, issuedCoupon, customerId, now);
+            details.addAll(couponDetails);
+            if (!couponDetails.isEmpty()) {
+                continue;
+            }
+
+            CartItem cartItem = selectedItemsById.get(cartItemId);
+            if (!issuedCoupon.getCoupon().isProductCouponFor(cartItem.getProduct())) {
+                details.add(ErrorDetail.coupon(couponId, "COUPON_TARGET_MISMATCH"));
+                continue;
+            }
+            productCouponsByCartItemId.put(cartItemId, issuedCoupon);
         }
 
-        productCoupons.stream()
+        if (!details.isEmpty()) {
+            throw new OrderValidationException(details);
+        }
+
+        return new CouponApplication(orderCoupon, productCouponsByCartItemId);
+    }
+
+    private CouponRequest normalizeCouponRequest(OrderCreateRequest request, Map<Long, CartItem> selectedItemsById) {
+        Long orderCouponId = normalizeOptionalPositiveId(request.orderCouponId(), "전체 상품 쿠폰 ID");
+        Map<Long, Long> productCouponIdsByCartItemId = new LinkedHashMap<>();
+        List<ErrorDetail> details = new ArrayList<>();
+
+        for (OrderProductCouponRequest productCoupon : normalizeProductCoupons(request.productCoupons())) {
+            Long cartItemId = requirePositiveId(productCoupon.cartItemId(), "쿠폰 적용 장바구니 상품 ID");
+            Long couponId = requirePositiveId(productCoupon.couponId(), "상품 쿠폰 ID");
+            if (!selectedItemsById.containsKey(cartItemId)) {
+                details.add(ErrorDetail.coupon(couponId, "COUPON_TARGET_MISMATCH"));
+                continue;
+            }
+            Long previousCouponId = productCouponIdsByCartItemId.putIfAbsent(cartItemId, couponId);
+            if (previousCouponId != null) {
+                details.add(ErrorDetail.coupon(couponId, "COUPON_NOT_AVAILABLE"));
+            }
+        }
+        details.addAll(validateDuplicateCouponIds(orderCouponId, productCouponIdsByCartItemId.values()));
+
+        if (!details.isEmpty()) {
+            throw new OrderValidationException(details);
+        }
+
+        return new CouponRequest(orderCouponId, productCouponIdsByCartItemId);
+    }
+
+    private List<OrderProductCouponRequest> normalizeProductCoupons(List<OrderProductCouponRequest> productCoupons) {
+        if (productCoupons == null || productCoupons.isEmpty()) {
+            return List.of();
+        }
+
+        return productCoupons.stream()
                 .filter(Objects::nonNull)
-                .map(OrderProductCouponRequest::couponId)
-                .filter(Objects::nonNull)
+                .toList();
+    }
+
+    private List<ErrorDetail> validateDuplicateCouponIds(Long orderCouponId, Collection<Long> productCouponIds) {
+        List<ErrorDetail> details = new ArrayList<>();
+        Set<Long> uniqueCouponIds = new HashSet<>();
+        if (orderCouponId != null) {
+            uniqueCouponIds.add(orderCouponId);
+        }
+        productCouponIds.stream()
+                .filter(couponId -> !uniqueCouponIds.add(couponId))
                 .map(couponId -> ErrorDetail.coupon(couponId, "COUPON_NOT_AVAILABLE"))
                 .forEach(details::add);
 
         return details;
+    }
+
+    private List<ErrorDetail> validateIssuedCoupon(
+            Long requestedCouponId,
+            IssuedCoupon issuedCoupon,
+            Long customerId,
+            LocalDateTime now
+    ) {
+        if (issuedCoupon == null || !issuedCoupon.isOwnedBy(customerId)) {
+            return List.of(ErrorDetail.coupon(requestedCouponId, "COUPON_NOT_OWNED"));
+        }
+        if (!issuedCoupon.isAvailableAt(now)) {
+            return List.of(ErrorDetail.coupon(requestedCouponId, issuedCoupon.unavailableReason(now)));
+        }
+
+        return List.of();
+    }
+
+    private Map<Long, BigDecimal> calculateProductCouponDiscounts(
+            List<CartItem> selectedItems,
+            CouponApplication couponApplication
+    ) {
+        Map<Long, BigDecimal> productCouponDiscountsByCartItemId = new LinkedHashMap<>();
+        Map<Long, CartItem> selectedItemsById = selectedItems.stream()
+                .collect(Collectors.toMap(CartItem::getId, Function.identity()));
+        couponApplication.productCouponsByCartItemId().forEach((cartItemId, issuedCoupon) -> {
+            CartItem cartItem = selectedItemsById.get(cartItemId);
+            BigDecimal discountAmount = min(
+                    issuedCoupon.getCoupon().getDiscountAmount(),
+                    cartItem.getProduct().getPrice()
+            );
+            productCouponDiscountsByCartItemId.put(cartItemId, discountAmount);
+        });
+
+        return productCouponDiscountsByCartItemId;
+    }
+
+    private BigDecimal calculateOrderCouponDiscount(IssuedCoupon orderCoupon, List<OrderItem> orderItems) {
+        if (orderCoupon == null) {
+            return BigDecimal.ZERO;
+        }
+
+        BigDecimal paymentAmountBeforeOrderCoupon = orderItems.stream()
+                .map(OrderItem::getFinalAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        return min(orderCoupon.getCoupon().getDiscountAmount(), paymentAmountBeforeOrderCoupon);
+    }
+
+    private void reserveCoupons(CouponApplication couponApplication, Order order, LocalDateTime reservedAt) {
+        couponApplication.issuedCoupons()
+                .forEach(issuedCoupon -> issuedCoupon.reserve(order, reservedAt));
+    }
+
+    private void useReservedCoupons(Order order, LocalDateTime usedAt) {
+        issuedCouponRepository.findAllByOrderIdForUpdate(order.getId())
+                .forEach(issuedCoupon -> issuedCoupon.use(usedAt));
+    }
+
+    private void releaseReservedCoupons(Order order) {
+        issuedCouponRepository.findAllByOrderIdForUpdate(order.getId())
+                .forEach(IssuedCoupon::releaseReservation);
     }
 
     private Map<Long, Stock> lockStocks(List<CartItem> selectedItems) {
@@ -291,11 +459,15 @@ public class OrderService {
         return details;
     }
 
-    private OrderItem reserveStockAndCreateOrderItem(CartItem cartItem, Map<Long, Stock> lockedStocksByProductId) {
+    private OrderItem reserveStockAndCreateOrderItem(
+            CartItem cartItem,
+            Map<Long, Stock> lockedStocksByProductId,
+            BigDecimal productCouponDiscountAmount
+    ) {
         Product product = cartItem.getProduct();
         lockedStocksByProductId.get(product.getId()).decrease(cartItem.getQuantity());
 
-        return OrderItem.create(product, cartItem.getQuantity(), cartItem.getId());
+        return OrderItem.create(product, cartItem.getQuantity(), cartItem.getId(), productCouponDiscountAmount);
     }
 
     private Map<Long, CartItem> getCartItemsById(Cart cart) {
@@ -347,5 +519,66 @@ public class OrderService {
         }
 
         return normalizedIds;
+    }
+
+    private static Long normalizeOptionalPositiveId(Long id, String fieldName) {
+        if (id == null) {
+            return null;
+        }
+
+        return requirePositiveId(id, fieldName);
+    }
+
+    private static Long requirePositiveId(Long id, String fieldName) {
+        if (id == null || id <= 0) {
+            throw new IllegalArgumentException(fieldName + "는 1 이상이어야 합니다.");
+        }
+
+        return id;
+    }
+
+    private static BigDecimal min(BigDecimal first, BigDecimal second) {
+        if (first.compareTo(second) <= 0) {
+            return first;
+        }
+
+        return second;
+    }
+
+    private record CouponRequest(Long orderCouponId, Map<Long, Long> productCouponIdsByCartItemId) {
+
+        boolean isEmpty() {
+            return orderCouponId == null && productCouponIdsByCartItemId.isEmpty();
+        }
+
+        Set<Long> couponIds() {
+            Set<Long> couponIds = new LinkedHashSet<>();
+            if (orderCouponId != null) {
+                couponIds.add(orderCouponId);
+            }
+            couponIds.addAll(productCouponIdsByCartItemId.values());
+
+            return couponIds;
+        }
+    }
+
+    private record CouponApplication(
+            IssuedCoupon orderCoupon,
+            Map<Long, IssuedCoupon> productCouponsByCartItemId
+    ) {
+
+        static CouponApplication empty() {
+            return new CouponApplication(null, Map.of());
+        }
+
+        List<IssuedCoupon> issuedCoupons() {
+            List<IssuedCoupon> issuedCoupons = new ArrayList<>();
+            if (orderCoupon != null) {
+                issuedCoupons.add(orderCoupon);
+            }
+            issuedCoupons.addAll(productCouponsByCartItemId.values());
+
+            return issuedCoupons;
+        }
     }
 }
