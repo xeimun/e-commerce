@@ -129,5 +129,12 @@ export const api = {
   },
   getMyCoupons(options) {
     return request('/api/v1/customers/me/coupons', options);
+  },
+  createOrder(order, options) {
+    return request('/api/v1/orders', {
+      ...options,
+      method: 'POST',
+      body: order
+    });
   }
 };

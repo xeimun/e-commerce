@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import AppShell from './components/AppShell.jsx';
 import CartPage from './pages/CartPage.jsx';
+import CheckoutPage from './pages/CheckoutPage.jsx';
 import CouponPage from './pages/CouponPage.jsx';
 import PlaceholderPage from './pages/PlaceholderPage.jsx';
 import ProductDetailPage from './pages/ProductDetailPage.jsx';
@@ -58,7 +59,10 @@ export default function App() {
           path="/coupons"
           element={<CouponPage customerId={customerId} onApiEvent={recordApiEvent} />}
         />
-        <Route path="/checkout" element={<PlaceholderPage title="체크아웃" />} />
+        <Route
+          path="/checkout"
+          element={<CheckoutPage customerId={customerId} onApiEvent={recordApiEvent} />}
+        />
         <Route path="/orders" element={<PlaceholderPage title="주문" />} />
         <Route path="/orders/:orderId" element={<PlaceholderPage title="주문 상세" />} />
         <Route path="/report" element={<PlaceholderPage title="성능 리포트" />} />
