@@ -8,10 +8,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ProductRepository extends JpaRepository<Product, Long> {
 
-    @EntityGraph(attributePaths = "stock")
+    @EntityGraph(attributePaths = {"stock", "productDiscount"})
     List<Product> findAllByOrderByIdAsc();
 
     @Override
-    @EntityGraph(attributePaths = "stock")
+    @EntityGraph(attributePaths = {"stock", "productDiscount"})
     Optional<Product> findById(Long id);
 }

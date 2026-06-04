@@ -65,7 +65,13 @@ public class OrderItem {
     protected OrderItem() {
     }
 
-    private OrderItem(Product product, long quantity, Long sourceCartItemId, BigDecimal productCouponDiscountAmount) {
+    private OrderItem(
+            Product product,
+            long quantity,
+            Long sourceCartItemId,
+            BigDecimal instantDiscountAmount,
+            BigDecimal productCouponDiscountAmount
+    ) {
         Product targetProduct = Objects.requireNonNull(product, "주문 상품은 필수입니다.");
         this.product = targetProduct;
         this.productName = targetProduct.getName();
@@ -73,7 +79,7 @@ public class OrderItem {
         this.quantity = requirePositiveQuantity(quantity);
         this.sourceCartItemId = normalizeSourceCartItemId(sourceCartItemId);
         this.originalAmount = this.productPrice.multiply(BigDecimal.valueOf(this.quantity));
-        this.instantDiscountAmount = BigDecimal.ZERO;
+        this.instantDiscountAmount = requireNonNegativeAmount(instantDiscountAmount, "상품 즉시 할인 금액");
         this.productCouponDiscountAmount = requireNonNegativeAmount(productCouponDiscountAmount, "상품 쿠폰 할인 금액");
         this.finalAmount = originalAmount
                 .subtract(this.instantDiscountAmount)
@@ -82,11 +88,11 @@ public class OrderItem {
     }
 
     public static OrderItem create(Product product, long quantity) {
-        return new OrderItem(product, quantity, null, BigDecimal.ZERO);
+        return new OrderItem(product, quantity, null, BigDecimal.ZERO, BigDecimal.ZERO);
     }
 
     public static OrderItem create(Product product, long quantity, Long sourceCartItemId) {
-        return new OrderItem(product, quantity, sourceCartItemId, BigDecimal.ZERO);
+        return new OrderItem(product, quantity, sourceCartItemId, BigDecimal.ZERO, BigDecimal.ZERO);
     }
 
     public static OrderItem create(
@@ -95,7 +101,17 @@ public class OrderItem {
             Long sourceCartItemId,
             BigDecimal productCouponDiscountAmount
     ) {
-        return new OrderItem(product, quantity, sourceCartItemId, productCouponDiscountAmount);
+        return new OrderItem(product, quantity, sourceCartItemId, BigDecimal.ZERO, productCouponDiscountAmount);
+    }
+
+    public static OrderItem create(
+            Product product,
+            long quantity,
+            Long sourceCartItemId,
+            BigDecimal instantDiscountAmount,
+            BigDecimal productCouponDiscountAmount
+    ) {
+        return new OrderItem(product, quantity, sourceCartItemId, instantDiscountAmount, productCouponDiscountAmount);
     }
 
     void assignOrder(Order order) {

@@ -92,6 +92,34 @@ class OrderServiceIntegrationTest {
     }
 
     @Test
+    void createOrderPersistsInstantDiscountSnapshot() {
+        Product product = productFixture(ProductStatus.ON_SALE, 5);
+        product.applyInstantDiscount(
+                "드롭 오픈 할인",
+                new BigDecimal("3000.00"),
+                LocalDateTime.now().minusDays(1),
+                LocalDateTime.now().plusDays(1)
+        );
+        Product savedProduct = productRepository.save(product);
+        Cart cart = Cart.create(7L);
+        CartItem cartItem = cart.addItem(savedProduct, 2);
+        cartRepository.save(cart);
+
+        OrderCreateResponse response = orderService.createOrder(
+                7L,
+                new OrderCreateRequest(List.of(cartItem.getId()), null, List.of())
+        );
+
+        Order foundOrder = orderRepository.findByIdAndCustomerId(response.orderId(), 7L).orElseThrow();
+        assertThat(response.totalProductAmount()).isEqualByComparingTo("70000.00");
+        assertThat(response.totalInstantDiscountAmount()).isEqualByComparingTo("6000.00");
+        assertThat(response.finalPaymentAmount()).isEqualByComparingTo("64000.00");
+        assertThat(foundOrder.getTotalInstantDiscountAmount()).isEqualByComparingTo("6000.00");
+        assertThat(foundOrder.getItems().get(0).getInstantDiscountAmount()).isEqualByComparingTo("6000.00");
+        assertThat(foundOrder.getItems().get(0).getFinalAmount()).isEqualByComparingTo("64000.00");
+    }
+
+    @Test
     void createOrderPersistsCouponReservationsAndCouponDiscounts() {
         Product product = productRepository.save(productFixture(ProductStatus.ON_SALE, 5));
         Coupon orderCoupon = couponRepository.save(Coupon.createOrderCoupon(

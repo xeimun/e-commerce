@@ -1,6 +1,7 @@
 package com.ecommerce.product.service;
 
 import com.ecommerce.product.dto.ProductCreateRequest;
+import com.ecommerce.product.dto.ProductInstantDiscountRequest;
 import com.ecommerce.product.dto.ProductResponse;
 import com.ecommerce.product.dto.ProductStatusUpdateRequest;
 import com.ecommerce.product.dto.ProductStockUpdateRequest;
@@ -9,7 +10,9 @@ import com.ecommerce.product.entity.Product;
 import com.ecommerce.product.entity.Stock;
 import com.ecommerce.product.exception.ProductNotFoundException;
 import com.ecommerce.product.repository.ProductRepository;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,16 +27,18 @@ public class ProductService {
     }
 
     public List<ProductResponse> getProducts() {
+        LocalDateTime now = LocalDateTime.now();
+
         return productRepository.findAllByOrderByIdAsc()
                 .stream()
-                .map(ProductResponse::from)
+                .map(product -> ProductResponse.from(product, now))
                 .toList();
     }
 
     public ProductResponse getProduct(Long productId) {
         Product product = findProduct(productId);
 
-        return ProductResponse.from(product);
+        return ProductResponse.from(product, LocalDateTime.now());
     }
 
     @Transactional
@@ -81,6 +86,28 @@ public class ProductService {
     public ProductResponse updateStock(Long productId, ProductStockUpdateRequest request) {
         Product product = findProduct(productId);
         product.getStock().setQuantity(request.stockQuantity());
+
+        return ProductResponse.from(product);
+    }
+
+    @Transactional
+    public ProductResponse upsertInstantDiscount(Long productId, ProductInstantDiscountRequest request) {
+        ProductInstantDiscountRequest validRequest = Objects.requireNonNull(request, "상품 즉시 할인 요청은 필수입니다.");
+        Product product = findProduct(productId);
+        product.applyInstantDiscount(
+                validRequest.name(),
+                validRequest.discountAmount(),
+                validRequest.startsAt(),
+                validRequest.endsAt()
+        );
+
+        return ProductResponse.from(product);
+    }
+
+    @Transactional
+    public ProductResponse deactivateInstantDiscount(Long productId) {
+        Product product = findProduct(productId);
+        product.deactivateInstantDiscount();
 
         return ProductResponse.from(product);
     }

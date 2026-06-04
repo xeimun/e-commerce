@@ -57,6 +57,8 @@ X-Customer-Id: 1
 | PUT | `/api/v1/products/{productId}` | 상품 기본 정보 수정 |
 | PATCH | `/api/v1/products/{productId}/status` | 상품 판매 상태 변경 |
 | PATCH | `/api/v1/products/{productId}/stock` | 상품 재고 수량 변경 |
+| PUT | `/api/v1/products/{productId}/instant-discount` | 상품 즉시 할인 설정 |
+| DELETE | `/api/v1/products/{productId}/instant-discount` | 상품 즉시 할인 비활성화 |
 
 ### 장바구니
 
@@ -234,6 +236,36 @@ PATCH /api/v1/products/1/stock
 
 응답 형식은 상품 상세 조회와 동일하다.
 
+### 상품 즉시 할인 설정
+
+운영자용 API라는 전제로 상품에 자동 적용되는 즉시 할인 정책을 생성하거나 갱신한다.
+즉시 할인은 활성 상태이고 현재 시간이 적용 기간에 포함될 때 상품 조회 응답과 주문 금액에 반영된다.
+
+```http
+PUT /api/v1/products/1/instant-discount
+```
+
+요청 예시:
+
+```json
+{
+  "name": "드롭 오픈 할인",
+  "discountAmount": 3000,
+  "startsAt": "2026-06-04T10:00:00",
+  "endsAt": "2026-06-30T23:59:59"
+}
+```
+
+응답 형식은 상품 상세 조회와 동일하다.
+
+### 상품 즉시 할인 비활성화
+
+```http
+DELETE /api/v1/products/1/instant-discount
+```
+
+응답 형식은 상품 상세 조회와 동일하다.
+
 ## 4. 장바구니 API
 
 ### 장바구니 조회
@@ -367,7 +399,8 @@ X-Customer-Id: 1
 - `orderCouponId`: 주문 전체에 적용할 고객 보유 쿠폰 ID. 선택 값이다.
 - `productCoupons`: 특정 상품에 적용할 고객 보유 쿠폰 목록. 선택 값이다.
 - 고객 보유 쿠폰이 유효하면 주문 생성 시 `RESERVED` 상태로 예약되고 할인 금액에 반영된다.
-- 상품 즉시 할인 기능 구현 전까지 `totalInstantDiscountAmount`와 `instantDiscountAmount`는 0으로 응답한다.
+- 상품 즉시 할인은 현재 활성 정책이 있으면 상품 1개당 할인 금액을 주문 수량만큼 합산해 반영한다.
+- 특정 상품 쿠폰은 상품 즉시 할인 적용 후 남은 상품 1개 금액까지만 반영한다.
 
 응답 예시:
 

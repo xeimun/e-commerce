@@ -93,12 +93,14 @@ public class OrderService {
             throw new OrderValidationException(stockDetails);
         }
 
+        Map<Long, BigDecimal> instantDiscountsByCartItemId = calculateInstantDiscounts(selectedItems, now);
         Map<Long, BigDecimal> productCouponDiscountsByCartItemId =
-                calculateProductCouponDiscounts(selectedItems, couponApplication);
+                calculateProductCouponDiscounts(selectedItems, couponApplication, now);
         List<OrderItem> orderItems = selectedItems.stream()
                 .map(cartItem -> reserveStockAndCreateOrderItem(
                         cartItem,
                         lockedStocksByProductId,
+                        instantDiscountsByCartItemId.getOrDefault(cartItem.getId(), BigDecimal.ZERO),
                         productCouponDiscountsByCartItemId.getOrDefault(cartItem.getId(), BigDecimal.ZERO)
                 ))
                 .toList();
@@ -383,21 +385,34 @@ public class OrderService {
 
     private Map<Long, BigDecimal> calculateProductCouponDiscounts(
             List<CartItem> selectedItems,
-            CouponApplication couponApplication
+            CouponApplication couponApplication,
+            LocalDateTime now
     ) {
         Map<Long, BigDecimal> productCouponDiscountsByCartItemId = new LinkedHashMap<>();
         Map<Long, CartItem> selectedItemsById = selectedItems.stream()
                 .collect(Collectors.toMap(CartItem::getId, Function.identity()));
         couponApplication.productCouponsByCartItemId().forEach((cartItemId, issuedCoupon) -> {
             CartItem cartItem = selectedItemsById.get(cartItemId);
+            Product product = cartItem.getProduct();
+            BigDecimal productAmountAfterInstantDiscount = product.getPrice()
+                    .subtract(product.getInstantDiscountAmount(now))
+                    .max(BigDecimal.ZERO);
             BigDecimal discountAmount = min(
                     issuedCoupon.getCoupon().getDiscountAmount(),
-                    cartItem.getProduct().getPrice()
+                    productAmountAfterInstantDiscount
             );
             productCouponDiscountsByCartItemId.put(cartItemId, discountAmount);
         });
 
         return productCouponDiscountsByCartItemId;
+    }
+
+    private Map<Long, BigDecimal> calculateInstantDiscounts(List<CartItem> selectedItems, LocalDateTime now) {
+        return selectedItems.stream()
+                .collect(Collectors.toMap(
+                        CartItem::getId,
+                        cartItem -> cartItem.getProduct().calculateInstantDiscountAmount(now, cartItem.getQuantity())
+                ));
     }
 
     private BigDecimal calculateOrderCouponDiscount(IssuedCoupon orderCoupon, List<OrderItem> orderItems) {
@@ -462,12 +477,19 @@ public class OrderService {
     private OrderItem reserveStockAndCreateOrderItem(
             CartItem cartItem,
             Map<Long, Stock> lockedStocksByProductId,
+            BigDecimal instantDiscountAmount,
             BigDecimal productCouponDiscountAmount
     ) {
         Product product = cartItem.getProduct();
         lockedStocksByProductId.get(product.getId()).decrease(cartItem.getQuantity());
 
-        return OrderItem.create(product, cartItem.getQuantity(), cartItem.getId(), productCouponDiscountAmount);
+        return OrderItem.create(
+                product,
+                cartItem.getQuantity(),
+                cartItem.getId(),
+                instantDiscountAmount,
+                productCouponDiscountAmount
+        );
     }
 
     private Map<Long, CartItem> getCartItemsById(Cart cart) {
