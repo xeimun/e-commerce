@@ -117,5 +117,17 @@ export const api = {
       ...options,
       method: 'DELETE'
     });
+  },
+  getIssuableCoupons(options) {
+    return request('/api/v1/coupons/issuable', options);
+  },
+  issueCoupon(couponId, options) {
+    return request(`/api/v1/coupons/${couponId}/issue`, {
+      ...options,
+      method: 'POST'
+    });
+  },
+  getMyCoupons(options) {
+    return request('/api/v1/customers/me/coupons', options);
   }
 };
