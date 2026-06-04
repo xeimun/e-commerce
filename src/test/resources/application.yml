@@ -16,3 +16,8 @@ spring:
 
 server:
   port: 0
+
+app:
+  order:
+    payment-expiration:
+      enabled: false
