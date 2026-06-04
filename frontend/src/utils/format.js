@@ -18,6 +18,14 @@ export function getDiscountedPrice(product) {
   return Math.max(Number(product.price || 0) - Number(product.instantDiscountAmount || 0), 0);
 }
 
+export function getCartItemUnitPrice(item) {
+  if (item.discountedPrice !== undefined && item.discountedPrice !== null) {
+    return Number(item.discountedPrice);
+  }
+
+  return getDiscountedPrice(item);
+}
+
 export function getProductTone(productId) {
   const tones = ['toneInk', 'tonePaper', 'toneBlue', 'toneGreen', 'toneCream'];
   return tones[Number(productId || 0) % tones.length];

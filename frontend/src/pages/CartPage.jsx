@@ -2,7 +2,7 @@ import { Minus, Plus, RefreshCw, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api/client.js';
-import { formatWon } from '../utils/format.js';
+import { formatWon, getCartItemUnitPrice } from '../utils/format.js';
 
 export default function CartPage({ customerId, onApiEvent }) {
   const navigate = useNavigate();
@@ -39,7 +39,7 @@ export default function CartPage({ customerId, onApiEvent }) {
   const allSelected = selectableIds.length > 0 && selectableIds.every((id) => selectedIds.includes(id));
   const selectedItems = cart.items.filter((item) => selectedIds.includes(item.cartItemId));
   const selectedTotal = selectedItems.reduce(
-    (sum, item) => sum + Number(item.price || 0) * Number(item.quantity || 0),
+    (sum, item) => sum + getCartItemUnitPrice(item) * Number(item.quantity || 0),
     0
   );
 
@@ -149,6 +149,9 @@ export default function CartPage({ customerId, onApiEvent }) {
           <div className="cartList">
             {cart.items.map((item) => {
               const disabled = pendingItemId === item.cartItemId;
+              const unitPrice = getCartItemUnitPrice(item);
+              const hasDiscount = Number(item.instantDiscountAmount || 0) > 0;
+
               return (
                 <article className="cartRow" key={item.cartItemId}>
                   <input
@@ -163,9 +166,16 @@ export default function CartPage({ customerId, onApiEvent }) {
                   </div>
                   <div className="cartText">
                     <h2>{item.productName}</h2>
-                    <p>
-                      {formatWon(item.price)} · 재고 {item.stockQuantity}개
-                    </p>
+                    <div className="cartPriceLine">
+                      <strong>{formatWon(unitPrice)}</strong>
+                      {hasDiscount && (
+                        <>
+                          <del>{formatWon(item.price)}</del>
+                          <span>{formatWon(item.instantDiscountAmount)} 즉시 할인</span>
+                        </>
+                      )}
+                    </div>
+                    <p>재고 {item.stockQuantity}개</p>
                     {!item.selectable && (
                       <span className="dangerText">{item.notSelectableReason || '주문할 수 없습니다.'}</span>
                     )}

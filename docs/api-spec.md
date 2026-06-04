@@ -292,6 +292,8 @@ X-Customer-Id: 1
       "productId": 1,
       "productName": "상품 A",
       "price": 10000,
+      "instantDiscountAmount": 1000,
+      "discountedPrice": 9000,
       "quantity": 2,
       "stockQuantity": 10,
       "productStatus": "ON_SALE",
@@ -301,6 +303,11 @@ X-Customer-Id: 1
   ]
 }
 ```
+
+- `price`는 상품 원가격이다.
+- `instantDiscountAmount`는 현재 활성 상품 즉시 할인 단가다.
+- `discountedPrice`는 현재 활성 상품 즉시 할인을 반영한 단가다.
+- 프론트엔드 장바구니 합계는 `discountedPrice * quantity` 기준으로 표시한다.
 
 ### 장바구니 상품 추가
 

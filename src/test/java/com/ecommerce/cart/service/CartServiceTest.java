@@ -21,6 +21,7 @@ import com.ecommerce.product.entity.ProductStatus;
 import com.ecommerce.product.entity.Stock;
 import com.ecommerce.product.repository.ProductRepository;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -146,6 +147,28 @@ class CartServiceTest {
         assertThat(response.items()).hasSize(1);
         assertThat(response.items().get(0).selectable()).isFalse();
         assertThat(response.items().get(0).notSelectableReason()).isEqualTo("PRODUCT_NOT_ON_SALE");
+    }
+
+    @Test
+    void getCartIncludesInstantDiscountAndDiscountedPrice() {
+        Product product = productFixture(1L, ProductStatus.ON_SALE, 10);
+        product.applyInstantDiscount(
+                "드롭 오픈 할인",
+                new BigDecimal("3000.00"),
+                LocalDateTime.now().minusDays(1),
+                LocalDateTime.now().plusDays(1)
+        );
+        Cart cart = cartFixture(7L);
+        CartItem cartItem = cart.addItem(product, 2);
+        ReflectionTestUtils.setField(cartItem, "id", 1L);
+        when(cartRepository.findByCustomerId(7L)).thenReturn(Optional.of(cart));
+
+        CartResponse response = cartService.getCart(7L);
+
+        assertThat(response.items()).hasSize(1);
+        assertThat(response.items().get(0).price()).isEqualByComparingTo("35000.00");
+        assertThat(response.items().get(0).instantDiscountAmount()).isEqualByComparingTo("3000.00");
+        assertThat(response.items().get(0).discountedPrice()).isEqualByComparingTo("32000.00");
     }
 
     private Cart cartFixture(Long customerId) {

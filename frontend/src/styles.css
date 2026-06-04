@@ -75,15 +75,17 @@ a {
 }
 
 .brandMark {
+  position: relative;
   display: grid;
   width: 40px;
   height: 40px;
   place-items: center;
   border-radius: 8px;
   color: #ffffff;
-  background: var(--brand);
+  background: var(--blue);
   font-size: 14px;
   font-weight: 700;
+  box-shadow: 0 4px 16px rgba(31, 140, 230, 0.22);
 }
 
 .brand strong,
@@ -124,8 +126,8 @@ a {
 }
 
 .navTab.active {
-  color: var(--fg-primary);
-  background: var(--bg-subtle);
+  color: var(--blue);
+  background: #edf6ff;
 }
 
 .customerControl {
@@ -148,6 +150,11 @@ a {
   background: transparent;
   font-weight: 700;
   outline: none;
+}
+
+.customerControl:focus-within {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 2px rgba(31, 140, 230, 0.14);
 }
 
 .appFrame {
@@ -187,9 +194,13 @@ a {
   line-height: 22px;
 }
 
+.pageHeader .eyebrow {
+  color: var(--blue);
+}
+
 .eyebrow {
   margin: 0;
-  color: var(--fg-tertiary);
+  color: var(--blue);
   font-size: 12px;
   font-weight: 700;
   line-height: 16px;
@@ -376,6 +387,10 @@ a {
   padding: 32px;
   border-radius: 8px;
   background: var(--bg-subtle);
+}
+
+.noticeBlock .primaryButton {
+  box-shadow: 0 4px 16px rgba(31, 140, 230, 0.12);
 }
 
 .noticeBlock strong {
@@ -664,6 +679,39 @@ a {
   color: var(--fg-secondary);
   font-size: 14px;
   line-height: 20px;
+}
+
+.cartPriceLine {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: baseline;
+  min-width: 0;
+}
+
+.cartPriceLine strong {
+  color: var(--blue);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.cartPriceLine del {
+  color: var(--fg-tertiary);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.cartPriceLine span {
+  display: inline-flex;
+  min-height: 22px;
+  align-items: center;
+  padding: 0 8px;
+  border-radius: 9999px;
+  color: var(--blue);
+  background: #edf6ff;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 16px;
 }
 
 .cartActions {
