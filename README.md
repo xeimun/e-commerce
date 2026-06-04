@@ -22,6 +22,9 @@ CS 지식을 활용해 주문 처리 성능을 개선하는 이커머스 백엔�
 - PostgreSQL
 - Flyway
 - JUnit 5
+- React
+- Vite
+- JavaScript
 
 ## 주요 기능
 
@@ -35,6 +38,7 @@ CS 지식을 활용해 주문 처리 성능을 개선하는 이커머스 백엔�
 - 고객 보유 쿠폰 예약/사용과 결제 취소·만료 시 예약 해제
 - 상품 즉시 할인 설정과 주문 수량별 할인 적용
 - 쿠폰 발급 가능 목록, 고객별 1회 발급, 내 보유 쿠폰 조회
+- 상품 목록/상세와 장바구니를 사용하는 프론트엔드 MVP UI
 
 ## 실행 방법
 
@@ -52,11 +56,24 @@ docker compose up -d
 .\gradlew.bat bootRun
 ```
 
+프론트엔드 개발 서버를 실행합니다.
+
+```powershell
+cd frontend
+npm.cmd install
+npm.cmd run dev
+```
+
+프론트엔드 기본 주소는 `http://localhost:5173`입니다.
+Vite 개발 서버는 `/api` 요청을 `http://localhost:8080` 백엔드로 프록시합니다.
+
 ## 테스트 방법
 
 ```powershell
 .\gradlew.bat test
 .\gradlew.bat build
+cd frontend
+npm.cmd run build
 ```
 
 ## 성능 개선 기록

@@ -1,6 +1,7 @@
 package com.ecommerce.cart.dto;
 
 import com.ecommerce.cart.entity.Cart;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public record CartResponse(
@@ -9,11 +10,13 @@ public record CartResponse(
 ) {
 
     public static CartResponse from(Cart cart) {
+        LocalDateTime now = LocalDateTime.now();
+
         return new CartResponse(
                 cart.getId(),
                 cart.getItems()
                         .stream()
-                        .map(CartItemResponse::from)
+                        .map(cartItem -> CartItemResponse.from(cartItem, now))
                         .toList()
         );
     }

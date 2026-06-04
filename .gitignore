@@ -49,6 +49,11 @@ data/
 coverage/
 htmlcov/
 
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
 # Temporary files
 tmp/
 temp/
