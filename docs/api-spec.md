@@ -585,6 +585,9 @@ X-Customer-Id: 1
 ]
 ```
 
+- 만료된 쿠폰 원본은 발급 가능 쿠폰 조회에서 제외한다.
+- 이미 발급받은 쿠폰은 응답에 포함하되 `issuable`을 `false`로 표시한다.
+
 ### 쿠폰 발급
 
 ```http
@@ -602,6 +605,11 @@ X-Customer-Id: 1
   "issuedAt": "2026-06-02T10:00:00"
 }
 ```
+
+- 고객은 같은 쿠폰 원본을 1번만 발급받을 수 있다.
+- 이미 발급받은 쿠폰을 다시 발급하면 `COUPON_ALREADY_ISSUED`로 실패한다.
+- 만료된 쿠폰을 발급하면 `COUPON_EXPIRED`로 실패한다.
+- 존재하지 않는 쿠폰을 발급하면 `COUPON_NOT_FOUND`로 실패한다.
 
 ### 내 보유 쿠폰 조회
 
@@ -627,6 +635,9 @@ X-Customer-Id: 1
 ]
 ```
 
+- `AVAILABLE` 상태인 보유 쿠폰의 원본 만료 시간이 지났다면 응답 상태를 `EXPIRED`로 표시한다.
+- `RESERVED`, `USED` 상태는 원본 쿠폰 만료 시간이 지나도 해당 상태를 유지해 표시한다.
+
 ## 8. 주요 에러 코드
 
 | Code | Description |
@@ -636,8 +647,10 @@ X-Customer-Id: 1
 | `OUT_OF_STOCK` | 재고 부족 |
 | `CART_ITEM_NOT_FOUND` | 장바구니 상품 없음 |
 | `CART_ITEM_NOT_SELECTABLE` | 주문 선택 불가 장바구니 상품 |
+| `COUPON_NOT_FOUND` | 쿠폰 없음 |
 | `COUPON_NOT_OWNED` | 고객이 보유하지 않은 쿠폰 |
 | `COUPON_NOT_AVAILABLE` | 사용할 수 없는 쿠폰 |
+| `COUPON_ALREADY_ISSUED` | 이미 발급받은 쿠폰 |
 | `COUPON_ALREADY_USED` | 이미 사용된 쿠폰 |
 | `COUPON_RESERVED` | 다른 결제 대기 주문에 예약된 쿠폰 |
 | `COUPON_EXPIRED` | 만료된 쿠폰 |
