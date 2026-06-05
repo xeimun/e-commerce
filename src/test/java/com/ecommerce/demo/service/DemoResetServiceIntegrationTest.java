@@ -3,15 +3,18 @@ package com.ecommerce.demo.service;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ecommerce.cart.entity.Cart;
+import com.ecommerce.cart.entity.CartItem;
 import com.ecommerce.cart.repository.CartRepository;
 import com.ecommerce.coupon.entity.Coupon;
 import com.ecommerce.coupon.entity.IssuedCoupon;
 import com.ecommerce.coupon.entity.IssuedCouponStatus;
 import com.ecommerce.coupon.repository.CouponRepository;
 import com.ecommerce.coupon.repository.IssuedCouponRepository;
+import com.ecommerce.order.dto.OrderCreateRequest;
 import com.ecommerce.order.entity.Order;
 import com.ecommerce.order.entity.OrderItem;
 import com.ecommerce.order.repository.OrderRepository;
+import com.ecommerce.order.service.OrderService;
 import com.ecommerce.product.entity.ContentType;
 import com.ecommerce.product.entity.Product;
 import com.ecommerce.product.entity.ProductStatus;
@@ -30,6 +33,9 @@ class DemoResetServiceIntegrationTest {
 
     @Autowired
     private DemoResetService demoResetService;
+
+    @Autowired
+    private OrderService orderService;
 
     @Autowired
     private CartRepository cartRepository;
@@ -57,7 +63,7 @@ class DemoResetServiceIntegrationTest {
 
     @Test
     void resetRecreatesDemoProductsCouponsCartAndCustomerCouponWithoutDeletingOtherCustomerData() {
-        Product oldProduct = productRepository.save(productFixture());
+        Product oldProduct = productRepository.save(productFixture(1));
         Coupon oldCoupon = couponRepository.save(Coupon.createProductCoupon(
                 "이전 쿠폰",
                 new BigDecimal("1000.00"),
@@ -81,11 +87,13 @@ class DemoResetServiceIntegrationTest {
                 DemoResetService.DEMO_CUSTOMER_ID,
                 LocalDateTime.now().minusDays(1)
         ));
-        orderRepository.save(Order.create(
+        Order completedDemoOrder = Order.create(
                 DemoResetService.DEMO_CUSTOMER_ID,
                 LocalDateTime.now().plusMinutes(10),
                 List.of(OrderItem.create(oldProduct, 1))
-        ));
+        );
+        completedDemoOrder.completePayment(LocalDateTime.now());
+        orderRepository.save(completedDemoOrder);
 
         demoResetService.reset();
 
@@ -137,7 +145,28 @@ class DemoResetServiceIntegrationTest {
                 .hasSize(1);
     }
 
-    private Product productFixture() {
+    @Test
+    void resetRestoresReservedStockBeforeDeletingPaymentPendingDemoOrders() {
+        Product oldProduct = productRepository.save(productFixture(5));
+        Cart demoCustomerCart = Cart.create(DemoResetService.DEMO_CUSTOMER_ID);
+        CartItem cartItem = demoCustomerCart.addItem(oldProduct, 2);
+        cartRepository.save(demoCustomerCart);
+        orderService.createOrder(
+                DemoResetService.DEMO_CUSTOMER_ID,
+                new OrderCreateRequest(List.of(cartItem.getId()), null, List.of())
+        );
+
+        assertThat(productRepository.findById(oldProduct.getId()).orElseThrow().getStock().getQuantity())
+                .isEqualTo(3);
+
+        demoResetService.reset();
+
+        assertThat(productRepository.findById(oldProduct.getId()).orElseThrow().getStock().getQuantity())
+                .isEqualTo(5);
+        assertThat(orderRepository.findAllByCustomerIdOrderByIdDesc(DemoResetService.DEMO_CUSTOMER_ID)).isEmpty();
+    }
+
+    private Product productFixture(long stockQuantity) {
         Product product = Product.create(
                 "기존 상품",
                 new BigDecimal("10000.00"),
@@ -147,7 +176,7 @@ class DemoResetServiceIntegrationTest {
                 "ARTBOOK",
                 "초기화 전 데이터"
         );
-        product.registerStock(Stock.create(product, 1));
+        product.registerStock(Stock.create(product, stockQuantity));
 
         return product;
     }

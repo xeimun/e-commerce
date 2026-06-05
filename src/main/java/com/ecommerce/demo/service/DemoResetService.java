@@ -6,7 +6,9 @@ import com.ecommerce.coupon.entity.Coupon;
 import com.ecommerce.coupon.entity.IssuedCoupon;
 import com.ecommerce.coupon.repository.CouponRepository;
 import com.ecommerce.coupon.repository.IssuedCouponRepository;
+import com.ecommerce.order.entity.Order;
 import com.ecommerce.order.repository.OrderRepository;
+import com.ecommerce.order.service.OrderService;
 import com.ecommerce.product.entity.ContentType;
 import com.ecommerce.product.entity.Product;
 import com.ecommerce.product.entity.ProductStatus;
@@ -27,6 +29,7 @@ public class DemoResetService {
     private final CouponRepository couponRepository;
     private final IssuedCouponRepository issuedCouponRepository;
     private final OrderRepository orderRepository;
+    private final OrderService orderService;
     private final ProductRepository productRepository;
 
     public DemoResetService(
@@ -34,12 +37,14 @@ public class DemoResetService {
             CouponRepository couponRepository,
             IssuedCouponRepository issuedCouponRepository,
             OrderRepository orderRepository,
+            OrderService orderService,
             ProductRepository productRepository
     ) {
         this.cartRepository = cartRepository;
         this.couponRepository = couponRepository;
         this.issuedCouponRepository = issuedCouponRepository;
         this.orderRepository = orderRepository;
+        this.orderService = orderService;
         this.productRepository = productRepository;
     }
 
@@ -56,12 +61,20 @@ public class DemoResetService {
     }
 
     private void resetDemoCustomerData() {
+        cancelPaymentPendingOrders();
         issuedCouponRepository.deleteAllByCustomerId(DEMO_CUSTOMER_ID);
         orderRepository.deleteAllByCustomerId(DEMO_CUSTOMER_ID);
         cartRepository.deleteByCustomerId(DEMO_CUSTOMER_ID);
         issuedCouponRepository.flush();
         orderRepository.flush();
         cartRepository.flush();
+    }
+
+    private void cancelPaymentPendingOrders() {
+        orderRepository.findAllByCustomerIdOrderByIdDesc(DEMO_CUSTOMER_ID)
+                .stream()
+                .filter(Order::isPaymentPending)
+                .forEach(order -> orderService.cancelPayment(DEMO_CUSTOMER_ID, order.getId()));
     }
 
     private List<Product> sampleProducts(LocalDateTime now) {
