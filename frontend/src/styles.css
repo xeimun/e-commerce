@@ -1433,13 +1433,30 @@ a {
   display: grid;
   gap: 16px;
   align-self: start;
+  max-height: calc(100vh - 128px);
+  overflow: auto;
   padding: 16px;
   border-radius: 8px;
   background: #ffffff;
   box-shadow: var(--shadow-soft);
 }
 
+.statusPanel.isCollapsed {
+  gap: 0;
+}
+
 .panelHeader {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.statusPanel .panelHeader {
+  justify-content: space-between;
+}
+
+.panelTitle,
+.panelActions {
   display: flex;
   gap: 8px;
   align-items: center;
@@ -1449,6 +1466,168 @@ a {
   margin: 0;
   font-size: 16px;
   line-height: 22px;
+}
+
+.statusPanelBody {
+  display: grid;
+  gap: 16px;
+}
+
+.statusSummary {
+  grid-template-columns: 1fr;
+}
+
+.statusSyncedAt {
+  margin: -8px 0 0;
+  color: var(--fg-tertiary);
+  font-size: 12px;
+  line-height: 16px;
+  text-align: right;
+}
+
+.pendingExpiry {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: 8px;
+  align-items: start;
+  padding: 12px;
+  border-radius: 8px;
+  background: var(--highlight);
+}
+
+.pendingExpiry > svg {
+  margin-top: 2px;
+  color: var(--brand);
+}
+
+.pendingExpiry span,
+.pendingExpiry strong {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pendingExpiry span {
+  color: var(--fg-secondary);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.pendingExpiry strong {
+  margin-top: 2px;
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.statusSkeleton {
+  display: grid;
+  gap: 12px;
+}
+
+.statusSection {
+  display: grid;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.statusSectionHeader {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.statusSectionHeader span {
+  display: inline-flex;
+  min-width: 0;
+  gap: 6px;
+  align-items: center;
+}
+
+.statusSectionHeader h3 {
+  overflow: hidden;
+  margin: 0;
+  font-size: 14px;
+  line-height: 20px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.statusSectionHeader small {
+  flex: 0 0 auto;
+  color: var(--fg-tertiary);
+  font-size: 12px;
+  line-height: 16px;
+  text-align: right;
+}
+
+.statusMiniList {
+  display: grid;
+}
+
+.statusMiniRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  min-height: 48px;
+  padding: 8px 0;
+}
+
+.statusMiniRow + .statusMiniRow {
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.statusMiniRow strong,
+.statusMiniRow p {
+  overflow: hidden;
+  margin: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.statusMiniRow strong {
+  display: block;
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.statusMiniRow p {
+  color: var(--fg-secondary);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.statusMiniRow .statusBadge {
+  max-width: 96px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stockBadge {
+  display: inline-flex;
+  min-height: 24px;
+  align-items: center;
+  padding: 0 8px;
+  border-radius: 9999px;
+  color: var(--success);
+  background: #eefbf5;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 16px;
+  white-space: nowrap;
+}
+
+.stockBadge.danger {
+  color: var(--danger);
+  background: #fff3f0;
+}
+
+.statusEmpty {
+  margin: 0;
+  padding: 4px 0;
 }
 
 .apiTimeline {
@@ -1500,6 +1679,10 @@ a {
   background: var(--danger);
 }
 
+.spinIcon {
+  animation: spin 700ms linear infinite;
+}
+
 .skeleton {
   position: relative;
   overflow: hidden;
@@ -1543,6 +1726,12 @@ a {
   }
 }
 
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 @media (max-width: 1080px) {
   .topbar {
     grid-template-columns: 1fr auto;
@@ -1564,6 +1753,7 @@ a {
 
   .statusPanel {
     position: static;
+    max-height: none;
   }
 }
 
