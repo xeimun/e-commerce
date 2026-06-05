@@ -190,7 +190,7 @@ export default function CouponPage({ customerId, onApiEvent }) {
             {issuableCoupons.length === 0 ? (
               <div className="noticeBlock">
                 <strong>발급 가능한 쿠폰이 없어요.</strong>
-                <p>데모 데이터 초기화 후 다시 확인할 수 있습니다.</p>
+                <p>잠시 후 새로고침해 다시 확인할 수 있습니다.</p>
               </div>
             ) : (
               <div className="couponGrid">

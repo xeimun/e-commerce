@@ -2,7 +2,6 @@ import {
   BarChart3,
   Package,
   ReceiptText,
-  RotateCcw,
   ShoppingCart,
   Ticket,
   UserRound
@@ -22,13 +21,8 @@ export default function AppShell({
   apiEvents,
   children,
   customerId,
-  demoResetMessage,
-  demoResetStatus,
-  onCustomerIdChange,
-  onDemoReset
+  onCustomerIdChange
 }) {
-  const isResetting = demoResetStatus === 'pending';
-
   return (
     <div className="app">
       <header className="topbar">
@@ -53,17 +47,6 @@ export default function AppShell({
         </nav>
 
         <div className="topActions">
-          <button
-            aria-label={isResetting ? '데모 초기화 진행 중' : '데모 초기화'}
-            className="outlineButton demoResetButton"
-            disabled={isResetting}
-            type="button"
-            onClick={onDemoReset}
-          >
-            <RotateCcw aria-hidden="true" className={isResetting ? 'spinIcon' : ''} size={18} />
-            <span>{isResetting ? '초기화 중' : '데모 초기화'}</span>
-          </button>
-
           <label className="customerControl">
             <UserRound aria-hidden="true" size={18} />
             <span>고객</span>
@@ -76,12 +59,6 @@ export default function AppShell({
           </label>
         </div>
       </header>
-
-      {demoResetMessage && (
-        <div className={demoResetStatus === 'error' ? 'globalNotice error' : 'globalNotice success'}>
-          <span>{demoResetMessage}</span>
-        </div>
-      )}
 
       <div className="appFrame">
         <main className="mainPane">{children}</main>

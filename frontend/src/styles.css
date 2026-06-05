@@ -165,34 +165,6 @@ a {
   justify-content: flex-end;
 }
 
-.demoResetButton {
-  min-height: 36px;
-  padding: 0 12px;
-  font-size: 14px;
-  white-space: nowrap;
-}
-
-.globalNotice {
-  display: flex;
-  width: min(calc(100% - 80px), 1360px);
-  min-height: 44px;
-  align-items: center;
-  margin: 16px auto 0;
-  padding: 10px 12px;
-  border-radius: 8px;
-  font-size: 14px;
-}
-
-.globalNotice.success {
-  color: var(--success);
-  background: #eefbf5;
-}
-
-.globalNotice.error {
-  color: var(--danger);
-  background: #fff3f0;
-}
-
 .appFrame {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 320px;
@@ -1804,19 +1776,8 @@ a {
   }
 
   .brand small,
-  .demoResetButton span,
   .customerControl span {
     display: none;
-  }
-
-  .demoResetButton {
-    width: 36px;
-    padding: 0;
-  }
-
-  .globalNotice {
-    width: calc(100% - 32px);
-    margin-top: 12px;
   }
 
   .appFrame {
