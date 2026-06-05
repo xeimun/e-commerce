@@ -154,5 +154,11 @@ export const api = {
       ...options,
       method: 'POST'
     });
+  },
+  resetDemoData(options) {
+    return request('/api/v1/demo/reset', {
+      ...options,
+      method: 'POST'
+    });
   }
 };

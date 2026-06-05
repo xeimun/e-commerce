@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
+import { api } from './api/client.js';
 import AppShell from './components/AppShell.jsx';
 import CartPage from './pages/CartPage.jsx';
 import CheckoutPage from './pages/CheckoutPage.jsx';
@@ -17,6 +18,9 @@ export default function App() {
     return window.localStorage.getItem(CUSTOMER_ID_STORAGE_KEY) || '1';
   });
   const [apiEvents, setApiEvents] = useState([]);
+  const [demoResetStatus, setDemoResetStatus] = useState('idle');
+  const [demoResetMessage, setDemoResetMessage] = useState('');
+  const [routeRefreshKey, setRouteRefreshKey] = useState(0);
 
   useEffect(() => {
     window.localStorage.setItem(CUSTOMER_ID_STORAGE_KEY, customerId || '1');
@@ -37,13 +41,33 @@ export default function App() {
     ].slice(0, 8));
   }, []);
 
+  const resetDemoData = useCallback(async () => {
+    setDemoResetStatus('pending');
+    setDemoResetMessage('');
+
+    try {
+      await api.resetDemoData({ onApiEvent: recordApiEvent });
+      window.sessionStorage.removeItem('checkout-cart-item-ids');
+      setCustomerId('1');
+      setRouteRefreshKey((current) => current + 1);
+      setDemoResetStatus('success');
+      setDemoResetMessage('데모 상태를 초기화했어요.');
+    } catch (error) {
+      setDemoResetStatus('error');
+      setDemoResetMessage(error.message || '데모 상태를 초기화하지 못했습니다.');
+    }
+  }, [recordApiEvent]);
+
   return (
     <AppShell
       apiEvents={apiEvents}
       customerId={customerId}
+      demoResetMessage={demoResetMessage}
+      demoResetStatus={demoResetStatus}
+      onDemoReset={resetDemoData}
       onCustomerIdChange={setCustomerId}
     >
-      <Routes>
+      <Routes key={routeRefreshKey}>
         <Route path="/" element={<Navigate to="/products" replace />} />
         <Route
           path="/products"
