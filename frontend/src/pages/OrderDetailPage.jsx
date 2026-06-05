@@ -1,4 +1,12 @@
-import { ArrowLeft, Clock3, CreditCard, Package, RefreshCw } from 'lucide-react';
+import {
+  ArrowLeft,
+  CheckCircle2,
+  Clock3,
+  CreditCard,
+  Package,
+  RefreshCw,
+  XCircle
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { api } from '../api/client.js';
@@ -42,9 +50,14 @@ export default function OrderDetailPage({ customerId, onApiEvent }) {
   const [order, setOrder] = useState(null);
   const [status, setStatus] = useState('loading');
   const [message, setMessage] = useState('');
+  const [paymentAction, setPaymentAction] = useState('idle');
+  const [paymentMessage, setPaymentMessage] = useState('');
+  const [paymentMessageType, setPaymentMessageType] = useState('success');
 
-  async function loadOrder() {
-    setStatus('loading');
+  async function loadOrder({ showLoading = true } = {}) {
+    if (showLoading) {
+      setStatus('loading');
+    }
     setMessage('');
 
     try {
@@ -54,6 +67,28 @@ export default function OrderDetailPage({ customerId, onApiEvent }) {
     } catch (error) {
       setStatus('error');
       setMessage(error.message || '주문 상세를 불러오지 못했습니다.');
+    }
+  }
+
+  async function processPayment(action) {
+    setPaymentAction(action);
+    setPaymentMessage('');
+
+    try {
+      if (action === 'success') {
+        await api.completePayment(orderId, { customerId, onApiEvent });
+      } else {
+        await api.cancelPayment(orderId, { customerId, onApiEvent });
+      }
+
+      await loadOrder({ showLoading: false });
+      setPaymentMessageType('success');
+      setPaymentMessage(action === 'success' ? '결제 성공 처리됐어요.' : '결제가 취소됐어요.');
+    } catch (error) {
+      setPaymentMessageType('error');
+      setPaymentMessage(error.message || '결제 상태를 변경하지 못했습니다.');
+    } finally {
+      setPaymentAction('idle');
     }
   }
 
@@ -108,6 +143,9 @@ export default function OrderDetailPage({ customerId, onApiEvent }) {
       </section>
     );
   }
+
+  const isPaymentPending = order.status === 'PAYMENT_PENDING';
+  const isMutatingPayment = paymentAction !== 'idle';
 
   return (
     <section className="pageStack">
@@ -186,6 +224,36 @@ export default function OrderDetailPage({ customerId, onApiEvent }) {
               <dd>{formatWon(order.finalPaymentAmount)}</dd>
             </div>
           </dl>
+
+          {isPaymentPending && (
+            <div className="paymentActionBox" aria-label="결제 처리">
+              <button
+                className="primaryButton"
+                disabled={isMutatingPayment}
+                type="button"
+                onClick={() => processPayment('success')}
+              >
+                <CheckCircle2 aria-hidden="true" size={18} />
+                {paymentAction === 'success' ? '처리 중' : '결제 성공'}
+              </button>
+              <button
+                className="outlineButton"
+                disabled={isMutatingPayment}
+                type="button"
+                onClick={() => processPayment('cancel')}
+              >
+                <XCircle aria-hidden="true" size={18} />
+                {paymentAction === 'cancel' ? '처리 중' : '결제 취소'}
+              </button>
+            </div>
+          )}
+
+          {paymentMessage && (
+            <div className={`inlineNotice ${paymentMessageType}`}>
+              {paymentMessage}
+            </div>
+          )}
+
           <div className="orderSummaryNote">
             <Package aria-hidden="true" size={18} />
             <span>주문 생성 시점의 금액 정보입니다.</span>
