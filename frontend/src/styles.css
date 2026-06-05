@@ -408,6 +408,7 @@ a {
 
 .primaryButton,
 .textButton,
+.outlineButton,
 .iconButton {
   display: inline-flex;
   gap: 8px;
@@ -432,6 +433,22 @@ a {
 }
 
 .primaryButton:disabled {
+  color: #b5b5b5;
+  background: #f0f0f0;
+}
+
+.outlineButton {
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid var(--stroke);
+  color: var(--fg-primary);
+  background: #ffffff;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.outlineButton:disabled {
+  border-color: #f0f0f0;
   color: #b5b5b5;
   background: #f0f0f0;
 }
@@ -604,6 +621,11 @@ a {
 .inlineNotice.error {
   color: var(--danger);
   background: #fff3f0;
+}
+
+.inlineNotice.success {
+  color: var(--success);
+  background: #eefbf5;
 }
 
 .inlineNotice button {
@@ -1387,6 +1409,16 @@ a {
   padding: 0 12px;
   border-radius: 8px;
   background: var(--bg-subtle);
+}
+
+.paymentActionBox {
+  display: grid;
+  gap: 8px;
+}
+
+.paymentActionBox .primaryButton,
+.paymentActionBox .outlineButton {
+  width: 100%;
 }
 
 .skeletonCheckoutLine,

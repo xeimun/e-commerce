@@ -142,5 +142,17 @@ export const api = {
   },
   getOrder(orderId, options) {
     return request(`/api/v1/orders/${orderId}`, options);
+  },
+  completePayment(orderId, options) {
+    return request(`/api/v1/orders/${orderId}/payment/success`, {
+      ...options,
+      method: 'POST'
+    });
+  },
+  cancelPayment(orderId, options) {
+    return request(`/api/v1/orders/${orderId}/payment/cancel`, {
+      ...options,
+      method: 'POST'
+    });
   }
 };
