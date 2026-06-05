@@ -17,12 +17,7 @@ const navigationItems = [
   { to: '/report', label: '리포트', icon: BarChart3 }
 ];
 
-export default function AppShell({
-  apiEvents,
-  children,
-  customerId,
-  onCustomerIdChange
-}) {
+export default function AppShell({ apiEvents, children, customerId, onCustomerIdChange }) {
   return (
     <div className="app">
       <header className="topbar">
@@ -46,18 +41,16 @@ export default function AppShell({
           })}
         </nav>
 
-        <div className="topActions">
-          <label className="customerControl">
-            <UserRound aria-hidden="true" size={18} />
-            <span>고객</span>
-            <input
-              inputMode="numeric"
-              min="1"
-              value={customerId}
-              onChange={(event) => onCustomerIdChange(event.target.value.replace(/\D/g, '') || '1')}
-            />
-          </label>
-        </div>
+        <label className="customerControl">
+          <UserRound aria-hidden="true" size={18} />
+          <span>고객</span>
+          <input
+            inputMode="numeric"
+            min="1"
+            value={customerId}
+            onChange={(event) => onCustomerIdChange(event.target.value.replace(/\D/g, '') || '1')}
+          />
+        </label>
       </header>
 
       <div className="appFrame">

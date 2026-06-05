@@ -158,13 +158,6 @@ a {
   box-shadow: 0 0 0 2px rgba(31, 140, 230, 0.14);
 }
 
-.topActions {
-  display: inline-flex;
-  gap: 8px;
-  align-items: center;
-  justify-content: flex-end;
-}
-
 .appFrame {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 320px;
@@ -1751,10 +1744,6 @@ a {
     order: 3;
     overflow-x: auto;
     padding-bottom: 12px;
-  }
-
-  .topActions {
-    grid-column: 2;
   }
 
   .appFrame {

@@ -29,6 +29,4 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     @EntityGraph(attributePaths = {"items", "items.product"})
     @Query("select o from Order o where o.status = :status and o.expiresAt < :now order by o.id asc")
     List<Order> findExpiredOrdersForUpdate(@Param("status") OrderStatus status, @Param("now") LocalDateTime now);
-
-    void deleteAllByCustomerId(Long customerId);
 }
