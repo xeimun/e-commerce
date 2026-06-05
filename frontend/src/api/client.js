@@ -136,5 +136,11 @@ export const api = {
       method: 'POST',
       body: order
     });
+  },
+  getOrders(options) {
+    return request('/api/v1/orders', options);
+  },
+  getOrder(orderId, options) {
+    return request(`/api/v1/orders/${orderId}`, options);
   }
 };
