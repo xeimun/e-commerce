@@ -32,4 +32,6 @@ public interface IssuedCouponRepository extends JpaRepository<IssuedCoupon, Long
     @EntityGraph(attributePaths = {"coupon", "coupon.targetProduct"})
     @Query("select ic from IssuedCoupon ic where ic.order.id = :orderId")
     List<IssuedCoupon> findAllByOrderIdForUpdate(@Param("orderId") Long orderId);
+
+    void deleteAllByCustomerId(Long customerId);
 }

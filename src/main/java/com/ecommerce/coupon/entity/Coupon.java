@@ -86,6 +86,29 @@ public class Coupon {
         );
     }
 
+    public void updateOrderCoupon(String name, BigDecimal discountAmount, LocalDateTime expiresAt) {
+        this.name = requireText(name, "쿠폰명");
+        this.type = CouponType.ORDER;
+        this.discountAmount = requirePositiveDiscountAmount(discountAmount);
+        this.targetProduct = null;
+        this.expiresAt = Objects.requireNonNull(expiresAt, "쿠폰 만료 시간은 필수입니다.");
+        validateTargetProduct();
+    }
+
+    public void updateProductCoupon(
+            String name,
+            BigDecimal discountAmount,
+            Product targetProduct,
+            LocalDateTime expiresAt
+    ) {
+        this.name = requireText(name, "쿠폰명");
+        this.type = CouponType.PRODUCT;
+        this.discountAmount = requirePositiveDiscountAmount(discountAmount);
+        this.targetProduct = Objects.requireNonNull(targetProduct, "쿠폰 대상 상품은 필수입니다.");
+        this.expiresAt = Objects.requireNonNull(expiresAt, "쿠폰 만료 시간은 필수입니다.");
+        validateTargetProduct();
+    }
+
     public boolean isExpired(LocalDateTime now) {
         return Objects.requireNonNull(now, "현재 시간은 필수입니다.").isAfter(expiresAt);
     }

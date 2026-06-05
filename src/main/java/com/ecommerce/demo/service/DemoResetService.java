@@ -45,7 +45,7 @@ public class DemoResetService {
 
     @Transactional
     public void reset() {
-        deleteExistingDemoData();
+        resetDemoCustomerData();
 
         LocalDateTime now = LocalDateTime.now();
         List<Product> products = productRepository.saveAll(sampleProducts(now));
@@ -55,13 +55,13 @@ public class DemoResetService {
         issuedCouponRepository.save(IssuedCoupon.issue(coupons.get(0), DEMO_CUSTOMER_ID, now));
     }
 
-    private void deleteExistingDemoData() {
-        issuedCouponRepository.deleteAll();
-        orderRepository.deleteAll();
-        cartRepository.deleteAll();
-        couponRepository.deleteAll();
-        productRepository.deleteAll();
-        productRepository.flush();
+    private void resetDemoCustomerData() {
+        issuedCouponRepository.deleteAllByCustomerId(DEMO_CUSTOMER_ID);
+        orderRepository.deleteAllByCustomerId(DEMO_CUSTOMER_ID);
+        cartRepository.deleteByCustomerId(DEMO_CUSTOMER_ID);
+        issuedCouponRepository.flush();
+        orderRepository.flush();
+        cartRepository.flush();
     }
 
     private List<Product> sampleProducts(LocalDateTime now) {
@@ -72,9 +72,11 @@ public class DemoResetService {
                 ContentType.WEBTOON,
                 "ARTBOOK",
                 "웹툰 달빛 상점의 시즌 1 일러스트와 작가 코멘터리를 담은 한정판 아트북",
-                24
+                24,
+                "드롭 오픈 할인",
+                "3000.00",
+                now.plusDays(30)
         );
-        artbook.applyInstantDiscount("드롭 오픈 할인", money("3000.00"), now.minusDays(1), now.plusDays(30));
 
         Product poster = product(
                 "검은별 기록관 포스터 세트",
@@ -83,7 +85,10 @@ public class DemoResetService {
                 ContentType.WEB_NOVEL,
                 "POSTER",
                 "검은별 기록관 주요 장면을 담은 A2 포스터 3종 세트",
-                32
+                32,
+                null,
+                null,
+                null
         );
 
         Product stand = product(
@@ -93,7 +98,10 @@ public class DemoResetService {
                 ContentType.WEBTOON,
                 "ACRYLIC_STAND",
                 "주인공과 서가 배경을 함께 세울 수 있는 데스크용 아크릴 스탠드",
-                18
+                18,
+                null,
+                null,
+                null
         );
 
         Product ost = product(
@@ -103,9 +111,11 @@ public class DemoResetService {
                 ContentType.MUSIC,
                 "OST",
                 "OST 앨범, 북릿, 한정 넘버링 포토카드를 포함한 패키지",
-                12
+                12,
+                "OST 예약 할인",
+                "5000.00",
+                now.plusDays(14)
         );
-        ost.applyInstantDiscount("OST 예약 할인", money("5000.00"), now.minusDays(1), now.plusDays(14));
 
         Product sticker = product(
                 "새벽의 문장 스티커팩",
@@ -114,7 +124,10 @@ public class DemoResetService {
                 ContentType.DRAMA,
                 "STICKER",
                 "주요 대사와 상징 오브젝트를 담은 다이어리 스티커팩",
-                40
+                40,
+                null,
+                null,
+                null
         );
 
         return List.of(artbook, poster, stand, ost, sticker);
@@ -122,9 +135,9 @@ public class DemoResetService {
 
     private List<Coupon> sampleCoupons(List<Product> products, LocalDateTime now) {
         return List.of(
-                Coupon.createOrderCoupon("전체 상품 5000원 할인", money("5000.00"), now.plusDays(30)),
-                Coupon.createProductCoupon("달빛 상점 4000원 할인", money("4000.00"), products.get(0), now.plusDays(21)),
-                Coupon.createProductCoupon("라스트 오케스트라 3000원 할인", money("3000.00"), products.get(3), now.plusDays(21))
+                orderCoupon("전체 상품 5000원 할인", "5000.00", now.plusDays(30)),
+                productCoupon("달빛 상점 4000원 할인", "4000.00", products.get(0), now.plusDays(21)),
+                productCoupon("라스트 오케스트라 3000원 할인", "3000.00", products.get(3), now.plusDays(21))
         );
     }
 
@@ -143,20 +156,57 @@ public class DemoResetService {
             ContentType contentType,
             String category,
             String description,
-            long stockQuantity
+            long stockQuantity,
+            String discountName,
+            String discountAmount,
+            LocalDateTime discountEndsAt
     ) {
-        Product product = Product.create(
-                name,
-                money(price),
-                ProductStatus.ON_SALE,
-                contentTitle,
-                contentType,
-                category,
-                description
-        );
-        product.registerStock(Stock.create(product, stockQuantity));
+        Product product = productRepository.findFirstByNameOrderByIdAsc(name)
+                .orElseGet(() -> Product.create(
+                        name,
+                        money(price),
+                        ProductStatus.ON_SALE,
+                        contentTitle,
+                        contentType,
+                        category,
+                        description
+                ));
+
+        product.update(name, money(price), contentTitle, contentType, category, description);
+        product.changeStatus(ProductStatus.ON_SALE);
+        if (product.getStock() == null) {
+            product.registerStock(Stock.create(product, stockQuantity));
+        } else {
+            product.getStock().setQuantity(stockQuantity);
+        }
+        if (discountName == null) {
+            product.deactivateInstantDiscount();
+        } else {
+            product.applyInstantDiscount(
+                    discountName,
+                    money(discountAmount),
+                    LocalDateTime.now().minusDays(1),
+                    discountEndsAt
+            );
+        }
 
         return product;
+    }
+
+    private Coupon orderCoupon(String name, String discountAmount, LocalDateTime expiresAt) {
+        Coupon coupon = couponRepository.findFirstByNameOrderByIdAsc(name)
+                .orElseGet(() -> Coupon.createOrderCoupon(name, money(discountAmount), expiresAt));
+        coupon.updateOrderCoupon(name, money(discountAmount), expiresAt);
+
+        return coupon;
+    }
+
+    private Coupon productCoupon(String name, String discountAmount, Product targetProduct, LocalDateTime expiresAt) {
+        Coupon coupon = couponRepository.findFirstByNameOrderByIdAsc(name)
+                .orElseGet(() -> Coupon.createProductCoupon(name, money(discountAmount), targetProduct, expiresAt));
+        coupon.updateProductCoupon(name, money(discountAmount), targetProduct, expiresAt);
+
+        return coupon;
     }
 
     private BigDecimal money(String value) {

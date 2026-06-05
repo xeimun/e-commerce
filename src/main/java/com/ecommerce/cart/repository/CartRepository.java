@@ -15,4 +15,6 @@ public interface CartRepository extends JpaRepository<Cart, Long> {
     @EntityGraph(attributePaths = {"items", "items.product", "items.product.productDiscount"})
     @Query("select distinct c from Cart c where c.customerId = :customerId")
     Optional<Cart> findForOrderByCustomerId(@Param("customerId") Long customerId);
+
+    void deleteByCustomerId(Long customerId);
 }

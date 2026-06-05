@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import { api } from './api/client.js';
 import AppShell from './components/AppShell.jsx';
 import CartPage from './pages/CartPage.jsx';
@@ -14,6 +14,7 @@ import ProductListPage from './pages/ProductListPage.jsx';
 const CUSTOMER_ID_STORAGE_KEY = 'ecommerce-demo-customer-id';
 
 export default function App() {
+  const navigate = useNavigate();
   const [customerId, setCustomerId] = useState(() => {
     return window.localStorage.getItem(CUSTOMER_ID_STORAGE_KEY) || '1';
   });
@@ -49,6 +50,7 @@ export default function App() {
       await api.resetDemoData({ onApiEvent: recordApiEvent });
       window.sessionStorage.removeItem('checkout-cart-item-ids');
       setCustomerId('1');
+      navigate('/products', { replace: true });
       setRouteRefreshKey((current) => current + 1);
       setDemoResetStatus('success');
       setDemoResetMessage('데모 상태를 초기화했어요.');
@@ -56,7 +58,7 @@ export default function App() {
       setDemoResetStatus('error');
       setDemoResetMessage(error.message || '데모 상태를 초기화하지 못했습니다.');
     }
-  }, [recordApiEvent]);
+  }, [navigate, recordApiEvent]);
 
   return (
     <AppShell
