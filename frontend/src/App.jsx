@@ -4,6 +4,8 @@ import AppShell from './components/AppShell.jsx';
 import CartPage from './pages/CartPage.jsx';
 import CheckoutPage from './pages/CheckoutPage.jsx';
 import CouponPage from './pages/CouponPage.jsx';
+import OrderDetailPage from './pages/OrderDetailPage.jsx';
+import OrderListPage from './pages/OrderListPage.jsx';
 import PlaceholderPage from './pages/PlaceholderPage.jsx';
 import ProductDetailPage from './pages/ProductDetailPage.jsx';
 import ProductListPage from './pages/ProductListPage.jsx';
@@ -63,8 +65,14 @@ export default function App() {
           path="/checkout"
           element={<CheckoutPage customerId={customerId} onApiEvent={recordApiEvent} />}
         />
-        <Route path="/orders" element={<PlaceholderPage title="주문" />} />
-        <Route path="/orders/:orderId" element={<PlaceholderPage title="주문 상세" />} />
+        <Route
+          path="/orders"
+          element={<OrderListPage customerId={customerId} onApiEvent={recordApiEvent} />}
+        />
+        <Route
+          path="/orders/:orderId"
+          element={<OrderDetailPage customerId={customerId} onApiEvent={recordApiEvent} />}
+        />
         <Route path="/report" element={<PlaceholderPage title="성능 리포트" />} />
         <Route path="*" element={<Navigate to="/products" replace />} />
       </Routes>
