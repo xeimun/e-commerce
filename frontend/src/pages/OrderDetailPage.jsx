@@ -85,6 +85,7 @@ export default function OrderDetailPage({ customerId, onApiEvent }) {
       setPaymentMessageType('success');
       setPaymentMessage(action === 'success' ? '결제 성공 처리됐어요.' : '결제가 취소됐어요.');
     } catch (error) {
+      await loadOrder({ showLoading: false });
       setPaymentMessageType('error');
       setPaymentMessage(error.message || '결제 상태를 변경하지 못했습니다.');
     } finally {
