@@ -109,6 +109,24 @@ class FlywayMigrationTest {
         assertThat(productId).isGreaterThan(20000L);
     }
 
+    @Test
+    void v11RenamesFirstOrderDemoCouponToDropDemoCoupon() {
+        DriverManagerDataSource dataSource = dataSource();
+        migrateToLatest(dataSource);
+        JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+
+        Integer oldNameCount = jdbcTemplate.queryForObject(
+                "select count(*) from coupons where name = '첫 주문 전체 상품 3000원 할인'",
+                Integer.class
+        );
+        Integer newNameCount = jdbcTemplate.queryForObject(
+                "select count(*) from coupons where name = '드롭 기념 전체 상품 3000원 할인'",
+                Integer.class
+        );
+        assertThat(oldNameCount).isZero();
+        assertThat(newNameCount).isEqualTo(1);
+    }
+
     private DriverManagerDataSource dataSource() {
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
         dataSource.setDriverClassName("org.h2.Driver");
