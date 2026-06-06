@@ -136,8 +136,11 @@ export default function ProductDetailPage({ customerId, onApiEvent }) {
 
           <div className="purchaseBar detailPurchaseBar">
             <div className="quantityControl">
-              <span>수량</span>
-              <div className="stepper" aria-label="수량">
+              <div className="quantityMeta">
+                <span>수량</span>
+                <small>최대 {maxQuantity}개</small>
+              </div>
+              <div className="stepper detailStepper" aria-label="수량">
                 <button
                   aria-label="수량 줄이기"
                   disabled={quantity <= 1}

@@ -587,17 +587,18 @@ X-Customer-Id: 1
 [
   {
     "couponId": 1,
-    "name": "전체 상품 3000원 할인",
+    "name": "드롭 기념 전체 상품 5000원 할인",
     "type": "ORDER",
-    "discountAmount": 3000,
+    "discountAmount": 5000,
     "targetProductId": null,
-    "expiresAt": "2026-06-30T23:59:59",
+    "expiresAt": "2027-12-31T23:59:59",
     "issuable": true
   }
 ]
 ```
 
-- 만료된 쿠폰 원본은 발급 가능 쿠폰 조회에서 제외한다.
+- `ACTIVE` 상태이고 만료 시간이 지나지 않은 쿠폰 원본만 발급 가능 쿠폰 조회에 포함한다.
+- `STOPPED` 상태인 쿠폰 원본은 이력 보존을 위해 남아 있어도 발급 가능 쿠폰 조회에서 제외한다.
 - 이미 발급받은 쿠폰은 응답에 포함하되 `issuable`을 `false`로 표시한다.
 
 ### 쿠폰 발급
@@ -620,8 +621,25 @@ X-Customer-Id: 1
 
 - 고객은 같은 쿠폰 원본을 1번만 발급받을 수 있다.
 - 이미 발급받은 쿠폰을 다시 발급하면 `COUPON_ALREADY_ISSUED`로 실패한다.
+- 발급이 중단된 쿠폰을 발급하면 `COUPON_NOT_ISSUABLE`로 실패한다.
 - 만료된 쿠폰을 발급하면 `COUPON_EXPIRED`로 실패한다.
 - 존재하지 않는 쿠폰을 발급하면 `COUPON_NOT_FOUND`로 실패한다.
+
+발급이 중단된 쿠폰을 요청한 경우:
+
+```json
+{
+  "code": "COUPON_NOT_ISSUABLE",
+  "message": "발급이 중단된 쿠폰입니다.",
+  "details": [
+    {
+      "targetType": "COUPON",
+      "targetId": 2,
+      "reason": "COUPON_NOT_ISSUABLE"
+    }
+  ]
+}
+```
 
 ### 내 보유 쿠폰 조회
 
@@ -637,12 +655,12 @@ X-Customer-Id: 1
   {
     "issuedCouponId": 1,
     "couponId": 1,
-    "name": "전체 상품 3000원 할인",
+    "name": "드롭 기념 전체 상품 5000원 할인",
     "type": "ORDER",
-    "discountAmount": 3000,
+    "discountAmount": 5000,
     "targetProductId": null,
     "status": "AVAILABLE",
-    "expiresAt": "2026-06-30T23:59:59"
+    "expiresAt": "2027-12-31T23:59:59"
   }
 ]
 ```

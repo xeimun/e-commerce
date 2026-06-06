@@ -12,11 +12,13 @@ import com.ecommerce.coupon.dto.IssuableCouponResponse;
 import com.ecommerce.coupon.dto.IssuedCouponIssueResponse;
 import com.ecommerce.coupon.dto.MyCouponResponse;
 import com.ecommerce.coupon.entity.Coupon;
+import com.ecommerce.coupon.entity.CouponStatus;
 import com.ecommerce.coupon.entity.IssuedCoupon;
 import com.ecommerce.coupon.entity.IssuedCouponStatus;
 import com.ecommerce.coupon.exception.CouponAlreadyIssuedException;
 import com.ecommerce.coupon.exception.CouponExpiredException;
 import com.ecommerce.coupon.exception.CouponNotFoundException;
+import com.ecommerce.coupon.exception.CouponNotIssuableException;
 import com.ecommerce.coupon.repository.CouponRepository;
 import com.ecommerce.coupon.repository.IssuedCouponRepository;
 import java.math.BigDecimal;
@@ -50,7 +52,10 @@ class CouponServiceTest {
     void getIssuableCouponsMarksAlreadyIssuedCouponAsNotIssuable() {
         Coupon firstCoupon = orderCouponFixture(1L, "전체 상품 3000원 할인", LocalDateTime.now().plusDays(1));
         Coupon secondCoupon = orderCouponFixture(2L, "전체 상품 5000원 할인", LocalDateTime.now().plusDays(1));
-        when(couponRepository.findAllByExpiresAtGreaterThanEqualOrderByIdAsc(any(LocalDateTime.class)))
+        when(couponRepository.findAllByStatusAndExpiresAtGreaterThanEqualOrderByIdAsc(
+                eq(CouponStatus.ACTIVE),
+                any(LocalDateTime.class)
+        ))
                 .thenReturn(List.of(firstCoupon, secondCoupon));
         when(issuedCouponRepository.findIssuedCouponIdsByCustomerIdAndCouponIdIn(eq(7L), any()))
                 .thenReturn(List.of(2L));
@@ -100,6 +105,18 @@ class CouponServiceTest {
 
         assertThatThrownBy(() -> couponService.issueCoupon(7L, 1L))
                 .isInstanceOf(CouponExpiredException.class);
+        verify(issuedCouponRepository, never()).saveAndFlush(any());
+    }
+
+    @Test
+    void issueCouponThrowsExceptionWhenCouponIsStopped() {
+        Coupon coupon = orderCouponFixture(1L, "전체 상품 3000원 할인", LocalDateTime.now().plusDays(1));
+        ReflectionTestUtils.setField(coupon, "status", CouponStatus.STOPPED);
+        when(couponRepository.findById(1L)).thenReturn(Optional.of(coupon));
+
+        assertThatThrownBy(() -> couponService.issueCoupon(7L, 1L))
+                .isInstanceOf(CouponNotIssuableException.class);
+        verify(issuedCouponRepository, never()).existsByCouponIdAndCustomerId(any(), any());
         verify(issuedCouponRepository, never()).saveAndFlush(any());
     }
 
