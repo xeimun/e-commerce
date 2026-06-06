@@ -52,11 +52,13 @@ class FlywayMigrationTest {
     }
 
     @Test
-    void v9DoesNotAttachDemoChildRowsToCollidingProductId() {
+    void v11RemovesUnreferencedDemoChildRowsAttachedToCollidingProductId() {
         DriverManagerDataSource dataSource = dataSource();
         migrateToV8(dataSource);
         JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
         insertCollidingProduct(jdbcTemplate);
+        migrateToV10(dataSource);
+        insertInvalidDemoProductCoupon(jdbcTemplate, 800L);
 
         migrateToLatest(dataSource);
 
@@ -80,6 +82,32 @@ class FlywayMigrationTest {
         assertThat(stockCount).isZero();
         assertThat(discountCount).isZero();
         assertThat(productCouponCount).isZero();
+    }
+
+    @Test
+    void v11ExpiresReferencedInvalidDemoProductCouponInsteadOfDeletingIt() {
+        DriverManagerDataSource dataSource = dataSource();
+        migrateToV8(dataSource);
+        JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        insertCollidingProduct(jdbcTemplate);
+        migrateToV10(dataSource);
+        Long couponId = 801L;
+        insertInvalidDemoProductCoupon(jdbcTemplate, couponId);
+        insertIssuedCoupon(jdbcTemplate, 700L, couponId, 11L);
+
+        migrateToLatest(dataSource);
+
+        Integer couponCount = jdbcTemplate.queryForObject(
+                "select count(*) from coupons where id = ? and expires_at = timestamp '2026-06-06 00:00:00'",
+                Integer.class,
+                couponId
+        );
+        String issuedCouponStatus = jdbcTemplate.queryForObject(
+                "select status from issued_coupons where id = 700",
+                String.class
+        );
+        assertThat(couponCount).isEqualTo(1);
+        assertThat(issuedCouponStatus).isEqualTo("EXPIRED");
     }
 
     @Test
@@ -109,6 +137,45 @@ class FlywayMigrationTest {
         assertThat(productId).isGreaterThan(20000L);
     }
 
+    @Test
+    void v11RenamesFirstOrderDemoCouponToDropDemoCoupon() {
+        DriverManagerDataSource dataSource = dataSource();
+        migrateToLatest(dataSource);
+        JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+
+        Integer oldNameCount = jdbcTemplate.queryForObject(
+                "select count(*) from coupons where name = '첫 주문 전체 상품 3000원 할인'",
+                Integer.class
+        );
+        Integer newNameCount = jdbcTemplate.queryForObject(
+                "select count(*) from coupons where name = '드롭 기념 전체 상품 3000원 할인'",
+                Integer.class
+        );
+        assertThat(oldNameCount).isZero();
+        assertThat(newNameCount).isEqualTo(1);
+    }
+
+    @Test
+    void v11DoesNotRenameNonSeedOrderCouponWithSameNameAndAmount() {
+        DriverManagerDataSource dataSource = dataSource();
+        migrateToV10(dataSource);
+        JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        insertNonSeedOrderCouponWithOldDemoName(jdbcTemplate, 900L);
+
+        migrateToLatest(dataSource);
+
+        String couponName = jdbcTemplate.queryForObject(
+                "select name from coupons where id = 900",
+                String.class
+        );
+        Integer renamedDemoCouponCount = jdbcTemplate.queryForObject(
+                "select count(*) from coupons where name = '드롭 기념 전체 상품 3000원 할인'",
+                Integer.class
+        );
+        assertThat(couponName).isEqualTo("첫 주문 전체 상품 3000원 할인");
+        assertThat(renamedDemoCouponCount).isEqualTo(1);
+    }
+
     private DriverManagerDataSource dataSource() {
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
         dataSource.setDriverClassName("org.h2.Driver");
@@ -133,6 +200,15 @@ class FlywayMigrationTest {
                 .dataSource(dataSource)
                 .locations("classpath:db/migration")
                 .target(MigrationVersion.fromVersion("8"))
+                .load()
+                .migrate();
+    }
+
+    private void migrateToV10(DriverManagerDataSource dataSource) {
+        Flyway.configure()
+                .dataSource(dataSource)
+                .locations("classpath:db/migration")
+                .target(MigrationVersion.fromVersion("10"))
                 .load()
                 .migrate();
     }
@@ -200,6 +276,55 @@ class FlywayMigrationTest {
 
     private void insertCollidingProduct(JdbcTemplate jdbcTemplate) {
         insertExistingProduct(jdbcTemplate, 10001L, "기존 상품");
+    }
+
+    private void insertIssuedCoupon(
+            JdbcTemplate jdbcTemplate,
+            Long issuedCouponId,
+            Long couponId,
+            Long customerId
+    ) {
+        jdbcTemplate.update("""
+                insert into issued_coupons (
+                    id, coupon_id, customer_id, status, issued_at, created_at, updated_at
+                )
+                values (
+                    ?, ?, ?, 'AVAILABLE',
+                    timestamp '2026-06-06 12:00:00',
+                    timestamp '2026-06-06 12:00:00',
+                    timestamp '2026-06-06 12:00:00'
+                )
+                """, issuedCouponId, couponId, customerId);
+    }
+
+    private void insertInvalidDemoProductCoupon(JdbcTemplate jdbcTemplate, Long couponId) {
+        jdbcTemplate.update("""
+                insert into coupons (
+                    id, name, type, discount_amount, target_product_id,
+                    expires_at, created_at, updated_at
+                )
+                values (
+                    ?, '달빛 상점 아트북 4000원 할인', 'PRODUCT', 4000.00, 10001,
+                    timestamp '2027-12-31 23:59:59',
+                    timestamp '2026-06-06 00:00:00',
+                    timestamp '2026-06-06 00:00:00'
+                )
+                """, couponId);
+    }
+
+    private void insertNonSeedOrderCouponWithOldDemoName(JdbcTemplate jdbcTemplate, Long couponId) {
+        jdbcTemplate.update("""
+                insert into coupons (
+                    id, name, type, discount_amount, target_product_id,
+                    expires_at, created_at, updated_at
+                )
+                values (
+                    ?, '첫 주문 전체 상품 3000원 할인', 'ORDER', 3000.00, null,
+                    timestamp '2028-12-31 23:59:59',
+                    timestamp '2026-06-07 00:00:00',
+                    timestamp '2026-06-07 00:00:00'
+                )
+                """, couponId);
     }
 
     private void insertExistingProduct(JdbcTemplate jdbcTemplate, Long productId, String name) {
