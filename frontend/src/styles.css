@@ -869,8 +869,8 @@
   }
 
   .statusPanel {
-    @apply sticky top-24 grid self-start gap-4 overflow-auto rounded-lg bg-surface-card p-4 shadow-panel;
-    max-height: calc(100vh - 128px);
+    @apply sticky top-24 grid self-start gap-3 rounded-lg bg-surface-card p-3 shadow-panel;
+    max-height: calc(100vh - 112px);
   }
 
   .statusPanel.isCollapsed {
@@ -891,46 +891,46 @@
   }
 
   .panelHeader h2 {
-    @apply m-0 text-base leading-[22px];
+    @apply m-0 text-[15px] font-bold leading-5;
   }
 
   .statusPanelBody {
-    @apply grid gap-3;
+    @apply grid gap-2.5;
   }
 
   .statusSyncedAt {
-    @apply -mt-1 mb-0 text-right text-xs leading-4 text-fg-tertiary;
+    @apply -mt-1 mb-0 text-right text-[11px] leading-4 text-fg-tertiary;
   }
 
-  .statusOverview {
+  .statusSummary {
     @apply grid gap-2;
   }
 
-  .statusSignal {
-    @apply grid min-h-14 items-center gap-2 rounded-lg bg-surface-subtle px-3 py-2.5;
+  .statusSummaryCard {
+    @apply grid min-h-[44px] items-center gap-2 rounded-lg bg-surface-subtle px-3 py-2;
     grid-template-columns: 20px minmax(0, 1fr);
   }
 
-  .statusSignal > svg {
+  .statusSummaryCard > svg {
     @apply text-fg-secondary;
   }
 
-  .statusSignal span,
-  .statusSignal strong,
-  .statusSignal small {
+  .statusSummaryCard span,
+  .statusSummaryCard strong,
+  .statusSummaryCard small {
     @apply block overflow-hidden text-ellipsis whitespace-nowrap;
   }
 
-  .statusSignal span {
+  .statusSummaryCard span {
     @apply text-xs leading-4 text-fg-secondary;
   }
 
-  .statusSignal strong {
-    @apply text-sm leading-5;
+  .statusSummaryCard strong {
+    @apply text-[15px] font-bold leading-5;
   }
 
-  .statusSignal small {
-    @apply text-xs leading-4 text-fg-tertiary;
+  .statusSummaryCard small {
+    @apply text-[11px] leading-4 text-fg-tertiary;
   }
 
   .statusSkeleton {
@@ -938,11 +938,7 @@
   }
 
   .statusSection {
-    @apply grid gap-2 border-t border-black/5 pt-3;
-  }
-
-  .apiStatusSection {
-    @apply mt-1;
+    @apply grid gap-2 border-t border-black/5 pt-2.5;
   }
 
   .statusSectionHeader {
@@ -954,7 +950,7 @@
   }
 
   .statusSectionHeader h3 {
-    @apply m-0 overflow-hidden text-ellipsis whitespace-nowrap text-sm leading-5;
+    @apply m-0 overflow-hidden text-ellipsis whitespace-nowrap text-[15px] font-bold leading-5;
   }
 
   .statusSectionHeader small {
@@ -983,8 +979,7 @@
     @apply block text-[13px] leading-[18px];
   }
 
-  .statusMiniRow p,
-  .apiEvent p {
+  .statusMiniRow p {
     @apply text-xs leading-4 text-fg-secondary;
   }
 
@@ -1005,11 +1000,11 @@
   }
 
   .apiTimeline {
-    @apply grid gap-2.5;
+    @apply grid gap-1.5;
   }
 
   .apiEvent {
-    @apply grid items-start gap-2;
+    @apply grid min-h-[29px] items-start gap-2;
     grid-template-columns: 8px minmax(0, 1fr);
   }
 
@@ -1019,7 +1014,11 @@
   }
 
   .apiEvent strong {
-    @apply block text-[13px] leading-[18px];
+    @apply block text-xs font-bold leading-4;
+  }
+
+  .apiEvent p {
+    @apply text-[11px] leading-[14px] text-fg-secondary;
   }
 
   .okDot,
