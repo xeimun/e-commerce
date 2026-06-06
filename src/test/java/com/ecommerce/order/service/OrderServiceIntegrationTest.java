@@ -168,34 +168,6 @@ class OrderServiceIntegrationTest {
     }
 
     @Test
-    void createOrderRejectsSecondPaymentPendingOrderWithFirstOrderCoupon() {
-        Product product = productRepository.save(productFixture(ProductStatus.ON_SALE, 5));
-        Coupon firstCoupon = couponRepository.save(firstOrderCouponFixture("첫 주문 전체 상품 3000원 할인"));
-        Coupon secondCoupon = couponRepository.save(firstOrderCouponFixture("첫 주문 전체 상품 5000원 할인"));
-        IssuedCoupon firstIssuedCoupon = issuedCouponRepository.save(
-                IssuedCoupon.issue(firstCoupon, 7L, LocalDateTime.now().minusDays(1))
-        );
-        IssuedCoupon secondIssuedCoupon = issuedCouponRepository.save(
-                IssuedCoupon.issue(secondCoupon, 7L, LocalDateTime.now().minusDays(1))
-        );
-        Cart cart = Cart.create(7L);
-        CartItem cartItem = cart.addItem(product, 1);
-        cartRepository.save(cart);
-        orderService.createOrder(
-                7L,
-                new OrderCreateRequest(List.of(cartItem.getId()), firstIssuedCoupon.getId(), List.of())
-        );
-
-        assertThatThrownBy(() -> orderService.createOrder(
-                7L,
-                new OrderCreateRequest(List.of(cartItem.getId()), secondIssuedCoupon.getId(), List.of())
-        ))
-                .isInstanceOfSatisfying(OrderValidationException.class, exception -> assertThat(exception.getDetails())
-                        .extracting("reason")
-                        .containsOnly("FIRST_ORDER_COUPON_NOT_AVAILABLE"));
-    }
-
-    @Test
     void createOrderFailureDoesNotPersistOrderOrDecreaseStock() {
         Product product = productRepository.save(productFixture(ProductStatus.ON_SALE, 1));
         Cart cart = Cart.create(7L);
@@ -263,40 +235,6 @@ class OrderServiceIntegrationTest {
         IssuedCoupon foundIssuedCoupon = issuedCouponRepository.findById(issuedCoupon.getId()).orElseThrow();
         assertThat(foundIssuedCoupon.getStatus()).isEqualTo(IssuedCouponStatus.USED);
         assertThat(foundIssuedCoupon.getUsedAt()).isNotNull();
-    }
-
-    @Test
-    void completePaymentRejectsReservedFirstOrderCouponWhenCustomerAlreadyHasCompletedOrder() {
-        Product product = productRepository.save(productFixture(ProductStatus.ON_SALE, 5));
-        Order completedOrder = Order.create(
-                7L,
-                LocalDateTime.now().plusMinutes(5),
-                List.of(OrderItem.create(product, 1))
-        );
-        completedOrder.completePayment(LocalDateTime.now().minusMinutes(1));
-        orderRepository.save(completedOrder);
-        Order pendingOrder = orderRepository.save(Order.create(
-                7L,
-                LocalDateTime.now().plusMinutes(5),
-                List.of(OrderItem.create(product, 1))
-        ));
-        IssuedCoupon issuedCoupon = issuedCouponRepository.save(IssuedCoupon.issue(
-                couponRepository.save(firstOrderCouponFixture("첫 주문 전체 상품 3000원 할인")),
-                7L,
-                LocalDateTime.now().minusDays(1)
-        ));
-        issuedCoupon.reserve(pendingOrder, LocalDateTime.now().minusMinutes(1));
-        issuedCouponRepository.saveAndFlush(issuedCoupon);
-
-        assertThatThrownBy(() -> orderService.completePayment(7L, pendingOrder.getId()))
-                .isInstanceOfSatisfying(OrderValidationException.class, exception -> assertThat(exception.getDetails())
-                        .extracting("reason")
-                        .containsOnly("FIRST_ORDER_COUPON_NOT_AVAILABLE"));
-
-        Order foundPendingOrder = orderRepository.findByIdAndCustomerId(pendingOrder.getId(), 7L).orElseThrow();
-        IssuedCoupon foundIssuedCoupon = issuedCouponRepository.findById(issuedCoupon.getId()).orElseThrow();
-        assertThat(foundPendingOrder.getStatus()).isEqualTo(OrderStatus.PAYMENT_PENDING);
-        assertThat(foundIssuedCoupon.getStatus()).isEqualTo(IssuedCouponStatus.RESERVED);
     }
 
     @Test
@@ -472,11 +410,4 @@ class OrderServiceIntegrationTest {
         return product;
     }
 
-    private Coupon firstOrderCouponFixture(String name) {
-        return Coupon.createFirstOrderCoupon(
-                name,
-                new BigDecimal("3000.00"),
-                LocalDateTime.now().plusDays(1)
-        );
-    }
 }

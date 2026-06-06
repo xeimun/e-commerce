@@ -5,7 +5,7 @@ import java.sql.Statement;
 import org.flywaydb.core.api.migration.BaseJavaMigration;
 import org.flywaydb.core.api.migration.Context;
 
-public class V11__reset_product_identity_after_demo_products extends BaseJavaMigration {
+public class V10__reset_product_identity_after_demo_products extends BaseJavaMigration {
 
     @Override
     public void migrate(Context context) throws Exception {

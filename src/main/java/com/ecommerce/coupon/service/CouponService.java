@@ -8,11 +8,8 @@ import com.ecommerce.coupon.entity.IssuedCoupon;
 import com.ecommerce.coupon.exception.CouponAlreadyIssuedException;
 import com.ecommerce.coupon.exception.CouponExpiredException;
 import com.ecommerce.coupon.exception.CouponNotFoundException;
-import com.ecommerce.coupon.exception.FirstOrderCouponNotAvailableException;
 import com.ecommerce.coupon.repository.CouponRepository;
 import com.ecommerce.coupon.repository.IssuedCouponRepository;
-import com.ecommerce.order.entity.OrderStatus;
-import com.ecommerce.order.repository.OrderRepository;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
@@ -27,16 +24,10 @@ public class CouponService {
 
     private final CouponRepository couponRepository;
     private final IssuedCouponRepository issuedCouponRepository;
-    private final OrderRepository orderRepository;
 
-    public CouponService(
-            CouponRepository couponRepository,
-            IssuedCouponRepository issuedCouponRepository,
-            OrderRepository orderRepository
-    ) {
+    public CouponService(CouponRepository couponRepository, IssuedCouponRepository issuedCouponRepository) {
         this.couponRepository = couponRepository;
         this.issuedCouponRepository = issuedCouponRepository;
-        this.orderRepository = orderRepository;
     }
 
     public List<IssuableCouponResponse> getIssuableCoupons(Long customerId) {
@@ -44,14 +35,9 @@ public class CouponService {
         LocalDateTime now = LocalDateTime.now();
         List<Coupon> coupons = couponRepository.findAllByExpiresAtGreaterThanEqualOrderByIdAsc(now);
         Set<Long> issuedCouponIds = findIssuedCouponIds(validCustomerId, coupons);
-        boolean hasCompletedOrder = hasFirstOrderOnlyCoupon(coupons)
-                && orderRepository.existsByCustomerIdAndStatus(validCustomerId, OrderStatus.COMPLETED);
 
         return coupons.stream()
-                .map(coupon -> IssuableCouponResponse.from(
-                        coupon,
-                        !issuedCouponIds.contains(coupon.getId()) && coupon.isEligibleForCustomer(hasCompletedOrder)
-                ))
+                .map(coupon -> IssuableCouponResponse.from(coupon, !issuedCouponIds.contains(coupon.getId())))
                 .toList();
     }
 
@@ -67,13 +53,6 @@ public class CouponService {
         }
         if (issuedCouponRepository.existsByCouponIdAndCustomerId(validCouponId, validCustomerId)) {
             throw new CouponAlreadyIssuedException(validCouponId);
-        }
-        if (coupon.isFirstOrderOnly()
-                && !coupon.isEligibleForCustomer(orderRepository.existsByCustomerIdAndStatus(
-                        validCustomerId,
-                        OrderStatus.COMPLETED
-                ))) {
-            throw new FirstOrderCouponNotAvailableException(validCouponId);
         }
 
         try {
@@ -106,10 +85,6 @@ public class CouponService {
         }
 
         return new HashSet<>(issuedCouponRepository.findIssuedCouponIdsByCustomerIdAndCouponIdIn(customerId, couponIds));
-    }
-
-    private static boolean hasFirstOrderOnlyCoupon(List<Coupon> coupons) {
-        return coupons.stream().anyMatch(Coupon::isFirstOrderOnly);
     }
 
     private static Long requirePositiveCustomerId(Long customerId) {

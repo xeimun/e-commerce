@@ -407,7 +407,6 @@ X-Customer-Id: 1
 - `orderCouponId`: 주문 전체에 적용할 고객 보유 쿠폰 ID. 선택 값이다.
 - `productCoupons`: 특정 상품에 적용할 고객 보유 쿠폰 목록. 선택 값이다.
 - 고객 보유 쿠폰이 유효하면 주문 생성 시 `RESERVED` 상태로 예약되고 할인 금액에 반영된다.
-- 첫 주문 전용 쿠폰은 고객의 `COMPLETED` 주문이 0건이고, 다른 `PAYMENT_PENDING` 주문에 첫 주문 전용 쿠폰 예약이 없을 때만 주문 생성에 사용할 수 있다.
 - 상품 즉시 할인은 현재 활성 정책이 있으면 상품 1개당 할인 금액을 주문 수량만큼 합산해 반영한다.
 - 특정 상품 쿠폰은 상품 즉시 할인 적용 후 남은 상품 1개 금액까지만 반영한다.
 
@@ -525,7 +524,6 @@ X-Customer-Id: 1
 
 - 결제 성공 시 주문 상태는 `COMPLETED`가 된다.
 - 결제 성공 시 예약된 고객 보유 쿠폰은 `USED` 상태가 된다.
-- 첫 주문 전용 쿠폰이 예약된 주문은 결제 성공 처리 시점에도 고객의 `COMPLETED` 주문이 0건인지 다시 검증한다.
 - 결제 성공 시 주문 생성에 사용된 장바구니 상품은 장바구니에서 제거된다.
 - 주문 생성 후 같은 상품을 다시 담은 새 장바구니 상품은 제거하지 않는다.
 - 주문 생성 후 같은 장바구니 상품의 수량이 증가했다면 주문 수량만큼만 차감하고 남은 수량은 유지한다.
@@ -574,6 +572,7 @@ X-Customer-Id: 1
 
 초기 버전의 쿠폰 API는 고객이 발급 가능한 쿠폰을 조회하고, 쿠폰을 발급받고, 보유 쿠폰을 조회하는 기능만 포함한다.
 쿠폰 원본을 생성하거나 수정하는 관리자 API와 관리자 화면은 이후 구현 예정이다.
+첫 주문 쿠폰은 현재 API 범위에서 제외하며, 이후 인증/인가와 회원가입 기능 구현 후 회원가입 시 고객당 1개 자동 발급되는 정책으로 별도 구현한다.
 
 ### 발급 가능 쿠폰 조회
 
@@ -592,7 +591,6 @@ X-Customer-Id: 1
     "type": "ORDER",
     "discountAmount": 3000,
     "targetProductId": null,
-    "firstOrderOnly": false,
     "expiresAt": "2026-06-30T23:59:59",
     "issuable": true
   }
@@ -601,7 +599,6 @@ X-Customer-Id: 1
 
 - 만료된 쿠폰 원본은 발급 가능 쿠폰 조회에서 제외한다.
 - 이미 발급받은 쿠폰은 응답에 포함하되 `issuable`을 `false`로 표시한다.
-- 첫 주문 전용 쿠폰은 고객의 `COMPLETED` 주문이 있으면 응답에 포함하되 `issuable`을 `false`로 표시한다.
 
 ### 쿠폰 발급
 
@@ -624,7 +621,6 @@ X-Customer-Id: 1
 - 고객은 같은 쿠폰 원본을 1번만 발급받을 수 있다.
 - 이미 발급받은 쿠폰을 다시 발급하면 `COUPON_ALREADY_ISSUED`로 실패한다.
 - 만료된 쿠폰을 발급하면 `COUPON_EXPIRED`로 실패한다.
-- 첫 주문 전용 쿠폰은 고객의 `COMPLETED` 주문이 있으면 `FIRST_ORDER_COUPON_NOT_AVAILABLE`로 실패한다.
 - 존재하지 않는 쿠폰을 발급하면 `COUPON_NOT_FOUND`로 실패한다.
 
 ### 내 보유 쿠폰 조회
@@ -645,7 +641,6 @@ X-Customer-Id: 1
     "type": "ORDER",
     "discountAmount": 3000,
     "targetProductId": null,
-    "firstOrderOnly": false,
     "status": "AVAILABLE",
     "expiresAt": "2026-06-30T23:59:59"
   }
@@ -672,7 +667,6 @@ X-Customer-Id: 1
 | `COUPON_RESERVED` | 다른 결제 대기 주문에 예약된 쿠폰 |
 | `COUPON_EXPIRED` | 만료된 쿠폰 |
 | `COUPON_TARGET_MISMATCH` | 쿠폰 적용 대상 불일치 |
-| `FIRST_ORDER_COUPON_NOT_AVAILABLE` | 첫 주문 전용 쿠폰 사용 조건 불일치 |
 | `ORDER_NOT_FOUND` | 주문 없음 |
 | `ORDER_NOT_PAYMENT_PENDING` | 결제 대기 상태가 아닌 주문 |
 | `ORDER_PAYMENT_EXPIRED` | 결제 대기 시간 만료 |

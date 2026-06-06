@@ -193,14 +193,14 @@ insert into coupons (
     name, type, discount_amount, target_product_id, expires_at, created_at, updated_at
 )
 select
-    '첫 주문 전체 상품 3000원 할인',
+    '드롭 기념 전체 상품 3000원 할인',
     'ORDER',
     3000.00,
     null,
     timestamp '2027-12-31 23:59:59',
     timestamp '2026-06-06 00:00:00',
     timestamp '2026-06-06 00:00:00'
-where not exists (select 1 from coupons where name = '첫 주문 전체 상품 3000원 할인');
+where not exists (select 1 from coupons where name = '드롭 기념 전체 상품 3000원 할인');
 
 insert into coupons (
     name, type, discount_amount, target_product_id, expires_at, created_at, updated_at

@@ -43,9 +43,6 @@ public class Coupon {
     @Column(name = "expires_at", nullable = false)
     private LocalDateTime expiresAt;
 
-    @Column(name = "first_order_only", nullable = false)
-    private boolean firstOrderOnly;
-
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -60,24 +57,18 @@ public class Coupon {
             CouponType type,
             BigDecimal discountAmount,
             Product targetProduct,
-            LocalDateTime expiresAt,
-            boolean firstOrderOnly
+            LocalDateTime expiresAt
     ) {
         this.name = requireText(name, "쿠폰명");
         this.type = Objects.requireNonNull(type, "쿠폰 타입은 필수입니다.");
         this.discountAmount = requirePositiveDiscountAmount(discountAmount);
         this.targetProduct = targetProduct;
         this.expiresAt = Objects.requireNonNull(expiresAt, "쿠폰 만료 시간은 필수입니다.");
-        this.firstOrderOnly = firstOrderOnly;
         validateTargetProduct();
     }
 
     public static Coupon createOrderCoupon(String name, BigDecimal discountAmount, LocalDateTime expiresAt) {
-        return new Coupon(name, CouponType.ORDER, discountAmount, null, expiresAt, false);
-    }
-
-    public static Coupon createFirstOrderCoupon(String name, BigDecimal discountAmount, LocalDateTime expiresAt) {
-        return new Coupon(name, CouponType.ORDER, discountAmount, null, expiresAt, true);
+        return new Coupon(name, CouponType.ORDER, discountAmount, null, expiresAt);
     }
 
     public static Coupon createProductCoupon(
@@ -91,8 +82,7 @@ public class Coupon {
                 CouponType.PRODUCT,
                 discountAmount,
                 Objects.requireNonNull(targetProduct, "쿠폰 대상 상품은 필수입니다."),
-                expiresAt,
-                false
+                expiresAt
         );
     }
 
@@ -102,14 +92,6 @@ public class Coupon {
 
     public boolean isOrderCoupon() {
         return type == CouponType.ORDER;
-    }
-
-    public boolean isFirstOrderOnly() {
-        return firstOrderOnly;
-    }
-
-    public boolean isEligibleForCustomer(boolean hasCompletedOrder) {
-        return !firstOrderOnly || !hasCompletedOrder;
     }
 
     public boolean isProductCouponFor(Product product) {
@@ -176,9 +158,6 @@ public class Coupon {
         }
         if (type == CouponType.PRODUCT && targetProduct == null) {
             throw new IllegalArgumentException("특정 상품 쿠폰은 대상 상품이 필요합니다.");
-        }
-        if (firstOrderOnly && type != CouponType.ORDER) {
-            throw new IllegalArgumentException("첫 주문 전용 쿠폰은 전체 상품 쿠폰이어야 합니다.");
         }
     }
 }

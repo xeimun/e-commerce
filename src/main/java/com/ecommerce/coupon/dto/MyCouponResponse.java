@@ -14,7 +14,6 @@ public record MyCouponResponse(
         CouponType type,
         BigDecimal discountAmount,
         Long targetProductId,
-        boolean firstOrderOnly,
         IssuedCouponStatus status,
         LocalDateTime expiresAt
 ) {
@@ -30,7 +29,6 @@ public record MyCouponResponse(
                 coupon.getType(),
                 coupon.getDiscountAmount(),
                 targetProductId,
-                coupon.isFirstOrderOnly(),
                 effectiveStatus(issuedCoupon, now),
                 coupon.getExpiresAt()
         );

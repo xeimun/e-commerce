@@ -83,7 +83,7 @@ class FlywayMigrationTest {
     }
 
     @Test
-    void v11ResetsProductIdentityToCurrentMaxIdAfterExplicitDemoProductIds() {
+    void v10ResetsProductIdentityToCurrentMaxIdAfterExplicitDemoProductIds() {
         DriverManagerDataSource dataSource = dataSource();
         migrateToV8(dataSource);
         JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
