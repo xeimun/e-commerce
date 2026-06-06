@@ -1,1723 +1,1033 @@
-:root {
-  color: #222222;
-  background: #ffffff;
-  font-family: "Pretendard Std", "Pretendard JP", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", system-ui, sans-serif;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  --fg-primary: #222222;
-  --fg-secondary: #5d5d5d;
-  --fg-tertiary: #9d9d9d;
-  --bg-card: #ffffff;
-  --bg-subtle: #f9f9f9;
-  --stroke: #d0d0d0;
-  --brand: #3d3d3d;
-  --brand-pressed: #222222;
-  --blue: #1f8ce6;
-  --danger: #f4361e;
-  --success: #03aa5a;
-  --highlight: #fff9ea;
-  --shadow-soft: 0 2px 16px rgba(0, 0, 0, 0.03);
-  --shadow-lift: 0 4px 16px rgba(0, 0, 0, 0.12), 0 0 1px rgba(0, 0, 0, 0.08);
-}
-
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  min-width: 320px;
-  min-height: 100vh;
-}
-
-button,
-input,
-select {
-  font: inherit;
-}
-
-button {
-  cursor: pointer;
-}
-
-button:disabled {
-  cursor: not-allowed;
-}
-
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-.app {
-  min-height: 100vh;
-  background: #ffffff;
-}
-
-.topbar {
-  position: sticky;
-  z-index: 10;
-  top: 0;
-  display: grid;
-  grid-template-columns: minmax(180px, 240px) 1fr auto;
-  gap: 24px;
-  align-items: center;
-  min-height: 64px;
-  padding: 0 40px;
-  background: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
-  backdrop-filter: blur(16px);
-}
-
-.brand {
-  display: inline-flex;
-  gap: 12px;
-  align-items: center;
-}
-
-.brandMark {
-  position: relative;
-  display: grid;
-  width: 40px;
-  height: 40px;
-  place-items: center;
-  border-radius: 8px;
-  color: #ffffff;
-  background: var(--blue);
-  font-size: 14px;
-  font-weight: 700;
-  box-shadow: 0 4px 16px rgba(31, 140, 230, 0.22);
-}
-
-.brand strong,
-.brand small {
-  display: block;
-  letter-spacing: 0;
-}
-
-.brand strong {
-  font-size: 16px;
-  line-height: 22px;
-}
-
-.brand small {
-  color: var(--fg-secondary);
-  font-size: 12px;
-  line-height: 16px;
-}
-
-.navTabs {
-  display: flex;
-  gap: 4px;
-  justify-content: center;
-  min-width: 0;
-}
-
-.navTab {
-  display: inline-flex;
-  gap: 6px;
-  align-items: center;
-  min-height: 36px;
-  padding: 0 12px;
-  border-radius: 8px;
-  color: var(--fg-secondary);
-  font-size: 14px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.navTab.active {
-  color: var(--blue);
-  background: #edf6ff;
-}
-
-.customerControl {
-  display: inline-flex;
-  gap: 8px;
-  align-items: center;
-  min-height: 36px;
-  padding: 0 8px 0 12px;
-  border: 1px solid var(--stroke);
-  border-radius: 8px;
-  color: var(--fg-secondary);
-  font-size: 14px;
-}
-
-.customerControl input {
-  width: 48px;
-  height: 28px;
-  border: 0;
-  color: var(--fg-primary);
-  background: transparent;
-  font-weight: 700;
-  outline: none;
-}
-
-.customerControl:focus-within {
-  border-color: var(--blue);
-  box-shadow: 0 0 0 2px rgba(31, 140, 230, 0.14);
-}
-
-.appFrame {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
-  gap: 32px;
-  width: min(100%, 1440px);
-  margin: 0 auto;
-  padding: 32px 40px 64px;
-}
-
-.mainPane {
-  min-width: 0;
-}
-
-.pageStack {
-  display: grid;
-  gap: 24px;
-}
-
-.pageHeader {
-  display: grid;
-  gap: 8px;
-}
-
-.pageHeader h1 {
-  margin: 0;
-  font-size: 28px;
-  line-height: 36px;
-}
-
-.pageHeader p {
-  max-width: 720px;
-  margin: 4px 0 0;
-  color: var(--fg-secondary);
-  font-size: 15px;
-  line-height: 22px;
-}
-
-.pageHeader .eyebrow {
-  color: var(--blue);
-}
-
-.eyebrow {
-  margin: 0;
-  color: var(--blue);
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 16px;
-  text-transform: uppercase;
-}
-
-.productGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(144px, 1fr));
-  gap: 24px;
-}
-
-.bookCard {
-  display: grid;
-  gap: 10px;
-  color: var(--fg-primary);
-}
-
-.bookCard:hover .cover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lift);
-}
-
-.cover,
-.detailCover {
-  position: relative;
-  display: flex;
-  overflow: hidden;
-  flex-direction: column;
-  justify-content: space-between;
-  aspect-ratio: 2 / 3;
-  padding: 14px;
-  border-radius: 4px;
-  box-shadow: var(--shadow-soft);
-  transition: box-shadow 150ms cubic-bezier(0.4, 0, 0.2, 1), transform 150ms cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.cover::after,
-.detailCover::after {
-  position: absolute;
-  inset: auto -20% -16% -20%;
-  height: 44%;
-  background: rgba(255, 255, 255, 0.18);
-  content: "";
-  transform: rotate(-8deg);
-}
-
-.cover strong,
-.detailCover strong,
-.coverType,
-.saleFlag {
-  position: relative;
-  z-index: 1;
-}
-
-.cover strong,
-.detailCover strong {
-  font-size: 17px;
-  font-weight: 700;
-  line-height: 24px;
-  word-break: keep-all;
-}
-
-.coverType {
-  align-self: flex-start;
-  color: rgba(255, 255, 255, 0.82);
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 16px;
-}
-
-.saleFlag {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  display: inline-flex;
-  min-height: 24px;
-  align-items: center;
-  padding: 0 8px;
-  border-radius: 4px;
-  color: #ffffff;
-  background: var(--danger);
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.toneInk {
-  color: #ffffff;
-  background: linear-gradient(160deg, #222222 0%, #5d5d5d 100%);
-}
-
-.tonePaper {
-  color: #222222;
-  background: linear-gradient(160deg, #f9f9f9 0%, #d0d0d0 100%);
-}
-
-.tonePaper .coverType {
-  color: #5d5d5d;
-}
-
-.toneBlue {
-  color: #ffffff;
-  background: linear-gradient(160deg, #1f8ce6 0%, #27496d 100%);
-}
-
-.toneGreen {
-  color: #ffffff;
-  background: linear-gradient(160deg, #03aa5a 0%, #185d42 100%);
-}
-
-.toneCream {
-  color: #222222;
-  background: linear-gradient(160deg, #fff9ea 0%, #f0d59a 100%);
-}
-
-.toneCream .coverType {
-  color: #5d5d5d;
-}
-
-.bookMeta {
-  display: grid;
-  gap: 4px;
-}
-
-.bookMeta h2 {
-  display: -webkit-box;
-  overflow: hidden;
-  min-height: 44px;
-  margin: 0;
-  font-size: 16px;
-  font-weight: 600;
-  line-height: 22px;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-}
-
-.bookMeta p {
-  overflow: hidden;
-  margin: 0;
-  color: var(--fg-secondary);
-  font-size: 14px;
-  line-height: 20px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.priceLine {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  align-items: baseline;
-  font-size: 15px;
-  font-weight: 700;
-  line-height: 22px;
-}
-
-.priceLine del {
-  color: var(--fg-tertiary);
-  font-size: 13px;
-  font-weight: 400;
-}
-
-.discountPrice {
-  color: var(--danger);
-}
-
-.stockLine {
-  display: inline-flex;
-  gap: 4px;
-  align-items: center;
-  color: var(--fg-secondary);
-  font-size: 13px;
-  line-height: 18px;
-}
-
-.dangerText {
-  color: var(--danger);
-}
-
-.noticeBlock {
-  display: grid;
-  justify-items: start;
-  gap: 12px;
-  padding: 32px;
-  border-radius: 8px;
-  background: var(--bg-subtle);
-}
-
-.noticeBlock .primaryButton {
-  box-shadow: 0 4px 16px rgba(31, 140, 230, 0.12);
-}
-
-.noticeBlock strong {
-  font-size: 16px;
-  line-height: 22px;
-}
-
-.noticeBlock p {
-  margin: 0;
-  color: var(--fg-secondary);
-  font-size: 14px;
-  line-height: 20px;
-}
-
-.primaryButton,
-.textButton,
-.outlineButton,
-.iconButton {
-  display: inline-flex;
-  gap: 8px;
-  align-items: center;
-  justify-content: center;
-  border: 0;
-  border-radius: 8px;
-  text-decoration: none;
-}
-
-.primaryButton {
-  min-height: 44px;
-  padding: 10px 16px;
-  color: #f9f9f9;
-  background: var(--brand);
-  font-size: 15px;
-  font-weight: 600;
-}
-
-.primaryButton:active {
-  background: var(--brand-pressed);
-}
-
-.primaryButton:disabled {
-  color: #b5b5b5;
-  background: #f0f0f0;
-}
-
-.outlineButton {
-  min-height: 44px;
-  padding: 10px 16px;
-  border: 1px solid var(--stroke);
-  color: var(--fg-primary);
-  background: #ffffff;
-  font-size: 15px;
-  font-weight: 600;
-}
-
-.outlineButton:disabled {
-  border-color: #f0f0f0;
-  color: #b5b5b5;
-  background: #f0f0f0;
-}
-
-.textButton {
-  justify-self: start;
-  min-height: 36px;
-  padding: 0 4px;
-  color: var(--fg-secondary);
-  background: transparent;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.iconButton {
-  width: 36px;
-  height: 36px;
-  color: var(--fg-secondary);
-  background: var(--bg-subtle);
-}
-
-.productDetail,
-.detailSkeleton {
-  display: grid;
-  grid-template-columns: minmax(220px, 320px) minmax(0, 1fr);
-  gap: 40px;
-  align-items: start;
-}
-
-.detailCover {
-  min-height: 480px;
-}
-
-.detailInfo {
-  display: grid;
-  gap: 20px;
-  align-content: start;
-}
-
-.detailInfo h1 {
-  margin: 0;
-  font-size: 28px;
-  line-height: 36px;
-}
-
-.detailDescription {
-  margin: 0;
-  color: var(--fg-secondary);
-  font-size: 15px;
-  line-height: 24px;
-  word-break: keep-all;
-}
-
-.detailPrice {
-  display: grid;
-  gap: 4px;
-}
-
-.detailPrice strong {
-  font-size: 28px;
-  line-height: 36px;
-}
-
-.detailPrice span {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: baseline;
-  color: var(--fg-secondary);
-  font-size: 14px;
-}
-
-.detailPrice em {
-  color: var(--danger);
-  font-style: normal;
-  font-weight: 700;
-}
-
-.detailFacts,
-.stateList {
-  display: grid;
-  gap: 8px;
-  margin: 0;
-}
-
-.detailFacts div,
-.stateList div {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  min-height: 40px;
-  padding: 0 12px;
-  border-radius: 8px;
-  background: var(--bg-subtle);
-}
-
-.detailFacts dt,
-.stateList dt {
-  display: inline-flex;
-  gap: 6px;
-  align-items: center;
-  color: var(--fg-secondary);
-  font-size: 13px;
-}
-
-.detailFacts dd,
-.stateList dd {
-  margin: 0;
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.purchaseBar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  align-items: center;
-}
-
-.stepper {
-  display: inline-grid;
-  overflow: hidden;
-  grid-template-columns: 44px 52px 44px;
-  min-height: 44px;
-  border: 1px solid var(--stroke);
-  border-radius: 8px;
-}
-
-.stepper.compact {
-  grid-template-columns: 36px 44px 36px;
-  min-height: 36px;
-}
-
-.stepper button {
-  display: grid;
-  border: 0;
-  place-items: center;
-  color: var(--fg-primary);
-  background: #ffffff;
-}
-
-.stepper button:disabled {
-  color: #b5b5b5;
-  background: #f0f0f0;
-}
-
-.stepper span {
-  display: grid;
-  min-width: 0;
-  place-items: center;
-  border-right: 1px solid var(--stroke);
-  border-left: 1px solid var(--stroke);
-  font-weight: 700;
-}
-
-.inlineNotice {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  align-items: center;
-  justify-content: space-between;
-  min-height: 44px;
-  padding: 10px 12px;
-  border-radius: 8px;
-  color: #222222;
-  background: var(--highlight);
-  font-size: 14px;
-}
-
-.inlineNotice.error {
-  color: var(--danger);
-  background: #fff3f0;
-}
-
-.inlineNotice.success {
-  color: var(--success);
-  background: #eefbf5;
-}
-
-.inlineNotice button {
-  border: 0;
-  color: var(--fg-primary);
-  background: transparent;
-  font-weight: 700;
-}
-
-.cartToolbar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.checkboxLine {
-  display: inline-flex;
-  gap: 8px;
-  align-items: center;
-  color: var(--fg-secondary);
-  font-size: 14px;
-}
-
-.cartList {
-  display: grid;
-  gap: 12px;
-}
-
-.cartRow {
-  display: grid;
-  grid-template-columns: auto 64px minmax(0, 1fr) auto;
-  gap: 16px;
-  align-items: center;
-  padding: 16px;
-  border-radius: 8px;
-  background: #ffffff;
-  box-shadow: var(--shadow-soft);
-}
-
-.thumb {
-  display: grid;
-  width: 64px;
-  height: 96px;
-  place-items: center;
-  border-radius: 4px;
-  color: #ffffff;
-  background: var(--brand);
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.cartText {
-  display: grid;
-  gap: 4px;
-  min-width: 0;
-}
-
-.cartText h2,
-.cartText p {
-  overflow: hidden;
-  margin: 0;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.cartText h2 {
-  font-size: 16px;
-  line-height: 22px;
-}
-
-.cartText p {
-  color: var(--fg-secondary);
-  font-size: 14px;
-  line-height: 20px;
-}
-
-.cartPriceLine {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  align-items: baseline;
-  min-width: 0;
-}
-
-.cartPriceLine strong {
-  color: var(--blue);
-  font-size: 14px;
-  line-height: 20px;
-}
-
-.cartPriceLine del {
-  color: var(--fg-tertiary);
-  font-size: 12px;
-  line-height: 16px;
-}
-
-.cartPriceLine span {
-  display: inline-flex;
-  min-height: 22px;
-  align-items: center;
-  padding: 0 8px;
-  border-radius: 9999px;
-  color: var(--blue);
-  background: #edf6ff;
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 16px;
-}
-
-.cartActions {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.summaryBand {
-  position: sticky;
-  bottom: 16px;
-  display: flex;
-  gap: 16px;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.96);
-  box-shadow: var(--shadow-lift);
-  backdrop-filter: blur(16px);
-}
-
-.summaryBand div {
-  display: grid;
-  gap: 4px;
-}
-
-.summaryBand span {
-  color: var(--fg-secondary);
-  font-size: 13px;
-}
-
-.summaryBand strong {
-  font-size: 22px;
-  line-height: 30px;
-}
-
-.couponSummary {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 160px)) auto;
-  gap: 12px;
-  align-items: center;
-  padding: 16px;
-  border-radius: 8px;
-  background: var(--bg-subtle);
-}
-
-.couponSummary div {
-  display: grid;
-  gap: 4px;
-}
-
-.couponSummary span,
-.sectionTitle span,
-.couponHint {
-  color: var(--fg-secondary);
-  font-size: 13px;
-  line-height: 18px;
-}
-
-.couponSummary strong {
-  font-size: 22px;
-  line-height: 30px;
-}
-
-.couponSummary .textButton {
-  justify-self: end;
-}
-
-.couponSection {
-  display: grid;
-  gap: 12px;
-}
-
-.sectionTitle {
-  display: flex;
-  gap: 12px;
-  align-items: baseline;
-  justify-content: space-between;
-}
-
-.sectionTitle h2 {
-  margin: 0;
-  font-size: 18px;
-  line-height: 26px;
-}
-
-.couponGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 12px;
-}
-
-.couponCard {
-  display: grid;
-  grid-template-columns: 72px minmax(0, 1fr);
-  gap: 16px;
-  min-height: 196px;
-  padding: 16px;
-  border-radius: 8px;
-  background: #ffffff;
-  box-shadow: var(--shadow-soft);
-}
-
-.couponStub {
-  display: grid;
-  min-height: 164px;
-  place-items: center;
-  border-radius: 4px;
-  color: var(--brand);
-  background: var(--highlight);
-}
-
-.couponBody {
-  display: grid;
-  gap: 8px;
-  min-width: 0;
-}
-
-.couponTitleLine,
-.couponMeta div {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.couponType,
-.statusBadge {
-  display: inline-flex;
-  min-height: 24px;
-  align-items: center;
-  padding: 0 8px;
-  border-radius: 9999px;
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 16px;
-  white-space: nowrap;
-}
-
-.couponType {
-  color: var(--blue);
-  background: #edf6ff;
-}
-
-.statusBadge {
-  color: var(--fg-secondary);
-  background: var(--bg-subtle);
-}
-
-.statusAVAILABLE {
-  color: var(--success);
-  background: #eefbf5;
-}
-
-.statusRESERVED {
-  color: var(--blue);
-  background: #edf6ff;
-}
-
-.statusUSED,
-.statusEXPIRED {
-  color: var(--fg-tertiary);
-  background: #f0f0f0;
-}
-
-.couponBody h2,
-.couponBody p {
-  margin: 0;
-}
-
-.couponBody h2 {
-  display: -webkit-box;
-  overflow: hidden;
-  min-height: 44px;
-  font-size: 16px;
-  line-height: 22px;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-}
-
-.couponBody strong {
-  color: var(--danger);
-  font-size: 22px;
-  line-height: 30px;
-}
-
-.couponMeta {
-  display: grid;
-  gap: 6px;
-  margin: 0;
-}
-
-.couponMeta dt,
-.couponMeta dd {
-  font-size: 13px;
-  line-height: 18px;
-}
-
-.couponMeta dt {
-  color: var(--fg-secondary);
-}
-
-.couponMeta dd {
-  margin: 0;
-  font-weight: 700;
-  text-align: right;
-}
-
-.couponAction {
-  grid-column: 2;
-  align-self: end;
-}
-
-.couponAction .primaryButton {
-  width: 100%;
-}
-
-.skeletonCouponCard {
-  pointer-events: none;
-}
-
-.checkoutLayout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
-  gap: 24px;
-  align-items: start;
-}
-
-.checkoutMain,
-.checkoutSection,
-.checkoutList {
-  display: grid;
-  gap: 12px;
-}
-
-.checkoutSection {
-  gap: 16px;
-}
-
-.checkoutLineItem {
-  display: grid;
-  grid-template-columns: 64px minmax(0, 1fr) minmax(180px, 220px) auto;
-  gap: 16px;
-  align-items: center;
-  padding: 16px;
-  border-radius: 8px;
-  background: #ffffff;
-  box-shadow: var(--shadow-soft);
-}
-
-.checkoutLineItem > .iconButton {
-  justify-self: end;
-}
-
-.checkoutThumb {
-  width: 64px;
-  height: 96px;
-}
-
-.checkoutItemBody {
-  display: grid;
-  gap: 10px;
-  min-width: 0;
-}
-
-.checkoutItemBody h2,
-.checkoutItemBody p {
-  overflow: hidden;
-  margin: 0;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.checkoutItemBody h2 {
-  font-size: 16px;
-  line-height: 22px;
-}
-
-.checkoutItemBody p,
-.checkoutPriceMeta span,
-.fieldLabel {
-  color: var(--fg-secondary);
-  font-size: 13px;
-  line-height: 18px;
-}
-
-.checkoutPriceMeta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.checkoutPriceMeta span {
-  display: inline-flex;
-  min-height: 24px;
-  align-items: center;
-  padding: 0 8px;
-  border-radius: 9999px;
-  background: var(--bg-subtle);
-}
-
-.checkoutItemAction {
-  display: grid;
-  gap: 8px;
-}
-
-.checkoutItemAction strong {
-  justify-self: end;
-  font-size: 16px;
-  line-height: 22px;
-}
-
-.fieldLabel {
-  font-weight: 700;
-}
-
-.selectControl {
-  width: 100%;
-  min-height: 44px;
-  padding: 0 12px;
-  border: 1px solid var(--stroke);
-  border-radius: 8px;
-  color: var(--fg-primary);
-  background: #ffffff;
-  outline: none;
-}
-
-.selectControl:focus {
-  border-color: var(--blue);
-  box-shadow: 0 0 0 2px rgba(31, 140, 230, 0.14);
-}
-
-.orderCouponBox {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 12px;
-  align-items: start;
-  padding: 16px;
-  border-radius: 8px;
-  background: var(--bg-subtle);
-}
-
-.orderCouponBox > svg {
-  margin-top: 26px;
-  color: var(--brand);
-}
-
-.orderCouponBox > div {
-  display: grid;
-  gap: 8px;
-}
-
-.checkoutSummary {
-  position: sticky;
-  top: 96px;
-  display: grid;
-  gap: 16px;
-  padding: 16px;
-  border-radius: 8px;
-  background: #ffffff;
-  box-shadow: var(--shadow-soft);
-}
-
-.summaryRows {
-  display: grid;
-  gap: 8px;
-  margin: 0;
-}
-
-.summaryRows div {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  justify-content: space-between;
-  min-height: 36px;
-}
-
-.summaryRows dt {
-  color: var(--fg-secondary);
-  font-size: 13px;
-  line-height: 18px;
-}
-
-.summaryRows dd {
-  margin: 0;
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 20px;
-}
-
-.summaryRows .summaryTotal {
-  margin-top: 4px;
-  padding-top: 12px;
-  border-top: 1px solid var(--stroke);
-}
-
-.summaryTotal dd {
-  color: var(--danger);
-  font-size: 22px;
-  line-height: 30px;
-}
-
-.checkoutSubmit {
-  width: 100%;
-}
-
-.checkoutComplete {
-  display: grid;
-  justify-items: start;
-  gap: 16px;
-  max-width: 520px;
-  padding: 32px;
-  border-radius: 8px;
-  background: #ffffff;
-  box-shadow: var(--shadow-soft);
-}
-
-.checkoutComplete > svg {
-  color: var(--success);
-}
-
-.checkoutComplete h1 {
-  margin: 0;
-  font-size: 28px;
-  line-height: 36px;
-}
-
-.checkoutCompleteFacts {
-  display: grid;
-  gap: 8px;
-  width: 100%;
-  margin: 0;
-}
-
-.checkoutCompleteFacts div {
-  display: flex;
-  gap: 12px;
-  justify-content: space-between;
-  min-height: 40px;
-  padding: 0 12px;
-  align-items: center;
-  border-radius: 8px;
-  background: var(--bg-subtle);
-}
-
-.checkoutCompleteFacts dt {
-  color: var(--fg-secondary);
-  font-size: 13px;
-}
-
-.checkoutCompleteFacts dd {
-  margin: 0;
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.checkoutCompleteActions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.orderSummaryGrid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 160px)) auto;
-  gap: 12px;
-  align-items: center;
-  padding: 16px;
-  border-radius: 8px;
-  background: var(--bg-subtle);
-}
-
-.orderSummaryGrid div {
-  display: grid;
-  gap: 4px;
-}
-
-.orderSummaryGrid span,
-.orderCardMeta,
-.orderItemBody p,
-.orderItemPrice span,
-.orderSummaryNote {
-  color: var(--fg-secondary);
-  font-size: 13px;
-  line-height: 18px;
-}
-
-.orderSummaryGrid strong {
-  font-size: 22px;
-  line-height: 30px;
-}
-
-.orderSummaryGrid .textButton {
-  justify-self: end;
-}
-
-.orderList {
-  display: grid;
-  gap: 12px;
-}
-
-.orderCard {
-  display: grid;
-  grid-template-columns: 48px minmax(0, 1fr);
-  gap: 16px;
-  align-items: center;
-  padding: 16px;
-  border-radius: 8px;
-  background: #ffffff;
-  box-shadow: var(--shadow-soft);
-  transition: box-shadow 150ms cubic-bezier(0.4, 0, 0.2, 1), transform 150ms cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.orderCard:hover {
-  box-shadow: var(--shadow-lift);
-  transform: translateY(-1px);
-}
-
-.orderCardIcon {
-  display: grid;
-  width: 48px;
-  height: 48px;
-  place-items: center;
-  border-radius: 8px;
-  color: var(--brand);
-  background: var(--bg-subtle);
-}
-
-.orderCardBody,
-.orderCardTitle > div,
-.orderItemBody {
-  display: grid;
-  gap: 6px;
-  min-width: 0;
-}
-
-.orderCardTitle {
-  display: flex;
-  gap: 12px;
-  align-items: start;
-  justify-content: space-between;
-  min-width: 0;
-}
-
-.orderCardTitle span,
-.orderCardTitle strong,
-.orderItemBody h2,
-.orderItemBody p {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.orderCardTitle span {
-  color: var(--fg-secondary);
-  font-size: 13px;
-  line-height: 18px;
-}
-
-.orderCardTitle strong {
-  font-size: 20px;
-  line-height: 28px;
-}
-
-.orderCardMeta {
-  display: inline-flex;
-  gap: 6px;
-  align-items: center;
-}
-
-.orderStatus {
-  flex: 0 0 auto;
-}
-
-.statusPAYMENT_PENDING {
-  color: var(--blue);
-  background: #edf6ff;
-}
-
-.statusCOMPLETED {
-  color: var(--success);
-  background: #eefbf5;
-}
-
-.statusCANCELED {
-  color: var(--danger);
-  background: #fff3f0;
-}
-
-.orderDetailLayout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
-  gap: 24px;
-  align-items: start;
-}
-
-.orderFacts {
-  display: grid;
-  gap: 8px;
-  margin: 0;
-}
-
-.orderFacts div {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  justify-content: space-between;
-  min-height: 40px;
-  padding: 0 12px;
-  border-radius: 8px;
-  background: var(--bg-subtle);
-}
-
-.orderFacts dt {
-  display: inline-flex;
-  gap: 6px;
-  align-items: center;
-  color: var(--fg-secondary);
-  font-size: 13px;
-  line-height: 18px;
-}
-
-.orderFacts dd {
-  margin: 0;
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.orderItemRow {
-  display: grid;
-  grid-template-columns: 64px minmax(0, 1fr) minmax(140px, auto);
-  gap: 16px;
-  align-items: center;
-  padding: 16px;
-  border-radius: 8px;
-  background: #ffffff;
-  box-shadow: var(--shadow-soft);
-}
-
-.orderItemThumb {
-  width: 64px;
-  height: 96px;
-}
-
-.orderItemBody h2,
-.orderItemBody p {
-  margin: 0;
-}
-
-.orderItemBody h2 {
-  font-size: 16px;
-  line-height: 22px;
-}
-
-.orderItemPrice {
-  display: grid;
-  gap: 4px;
-  justify-items: end;
-}
-
-.orderItemPrice strong {
-  font-size: 16px;
-  line-height: 22px;
-}
-
-.orderSummaryNote {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  min-height: 40px;
-  padding: 0 12px;
-  border-radius: 8px;
-  background: var(--bg-subtle);
-}
-
-.paymentActionBox {
-  display: grid;
-  gap: 8px;
-}
-
-.paymentActionBox .primaryButton,
-.paymentActionBox .outlineButton {
-  width: 100%;
-}
-
-.skeletonCheckoutLine,
-.skeletonCheckoutSummary,
-.skeletonOrderCard {
-  pointer-events: none;
-}
-
-.statusPanel {
-  position: sticky;
-  top: 96px;
-  display: grid;
-  gap: 16px;
-  align-self: start;
-  max-height: calc(100vh - 128px);
-  overflow: auto;
-  padding: 16px;
-  border-radius: 8px;
-  background: #ffffff;
-  box-shadow: var(--shadow-soft);
-}
-
-.statusPanel.isCollapsed {
-  gap: 0;
-}
-
-.panelHeader {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.statusPanel .panelHeader {
-  justify-content: space-between;
-}
-
-.panelTitle,
-.panelActions {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.panelHeader h2 {
-  margin: 0;
-  font-size: 16px;
-  line-height: 22px;
-}
-
-.statusPanelBody {
-  display: grid;
-  gap: 16px;
-}
-
-.statusSummary {
-  grid-template-columns: 1fr;
-}
-
-.statusSyncedAt {
-  margin: -8px 0 0;
-  color: var(--fg-tertiary);
-  font-size: 12px;
-  line-height: 16px;
-  text-align: right;
-}
-
-.pendingExpiry {
-  display: grid;
-  grid-template-columns: 20px minmax(0, 1fr);
-  gap: 8px;
-  align-items: start;
-  padding: 12px;
-  border-radius: 8px;
-  background: var(--highlight);
-}
-
-.pendingExpiry > svg {
-  margin-top: 2px;
-  color: var(--brand);
-}
-
-.pendingExpiry span,
-.pendingExpiry strong {
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.pendingExpiry span {
-  color: var(--fg-secondary);
-  font-size: 12px;
-  line-height: 16px;
-}
-
-.pendingExpiry strong {
-  margin-top: 2px;
-  font-size: 13px;
-  line-height: 18px;
-}
-
-.statusSkeleton {
-  display: grid;
-  gap: 12px;
-}
-
-.statusSection {
-  display: grid;
-  gap: 8px;
-  padding-top: 12px;
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
-}
-
-.statusSectionHeader {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.statusSectionHeader span {
-  display: inline-flex;
-  min-width: 0;
-  gap: 6px;
-  align-items: center;
-}
-
-.statusSectionHeader h3 {
-  overflow: hidden;
-  margin: 0;
-  font-size: 14px;
-  line-height: 20px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.statusSectionHeader small {
-  flex: 0 0 auto;
-  color: var(--fg-tertiary);
-  font-size: 12px;
-  line-height: 16px;
-  text-align: right;
-}
-
-.statusMiniList {
-  display: grid;
-}
-
-.statusMiniRow {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 8px;
-  align-items: center;
-  min-height: 48px;
-  padding: 8px 0;
-}
-
-.statusMiniRow + .statusMiniRow {
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
-}
-
-.statusMiniRow strong,
-.statusMiniRow p {
-  overflow: hidden;
-  margin: 0;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.statusMiniRow strong {
-  display: block;
-  font-size: 13px;
-  line-height: 18px;
-}
-
-.statusMiniRow p {
-  color: var(--fg-secondary);
-  font-size: 12px;
-  line-height: 16px;
-}
-
-.statusMiniRow .statusBadge {
-  max-width: 96px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.stockBadge {
-  display: inline-flex;
-  min-height: 24px;
-  align-items: center;
-  padding: 0 8px;
-  border-radius: 9999px;
-  color: var(--success);
-  background: #eefbf5;
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 16px;
-  white-space: nowrap;
-}
-
-.stockBadge.danger {
-  color: var(--danger);
-  background: #fff3f0;
-}
-
-.statusEmpty {
-  margin: 0;
-  padding: 4px 0;
-}
-
-.apiTimeline {
-  display: grid;
-  gap: 10px;
-}
-
-.apiEvent {
-  display: grid;
-  grid-template-columns: 8px minmax(0, 1fr);
-  gap: 8px;
-  align-items: start;
-}
-
-.apiEvent strong,
-.apiEvent p {
-  overflow: hidden;
-  margin: 0;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.apiEvent strong {
-  display: block;
-  font-size: 13px;
-  line-height: 18px;
-}
-
-.apiEvent p,
-.mutedText {
-  color: var(--fg-secondary);
-  font-size: 12px;
-  line-height: 16px;
-}
-
-.okDot,
-.failDot {
-  width: 8px;
-  height: 8px;
-  margin-top: 5px;
-  border-radius: 9999px;
-}
-
-.okDot {
-  background: var(--success);
-}
-
-.failDot {
-  background: var(--danger);
-}
-
-.spinIcon {
-  animation: spin 700ms linear infinite;
-}
-
-.skeleton {
-  position: relative;
-  overflow: hidden;
-  background: var(--bg-subtle);
-}
-
-.skeleton::after,
-.skeletonLine::after {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
-  content: "";
-  transform: translateX(-100%);
-  animation: shimmer 1.4s infinite;
-}
-
-.skeletonCard {
-  pointer-events: none;
-}
-
-.skeletonLine {
-  position: relative;
-  overflow: hidden;
-  width: 72%;
-  height: 12px;
-  border-radius: 4px;
-  background: var(--bg-subtle);
-}
-
-.skeletonLine.wide {
-  width: 100%;
-}
-
-.skeletonCartRow {
-  pointer-events: none;
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css");
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Pretendard Std", "Pretendard JP", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", system-ui, sans-serif;
+
+  --color-fg-primary: #222222;
+  --color-fg-secondary: #5d5d5d;
+  --color-fg-tertiary: #9d9d9d;
+  --color-fg-disabled: #b5b5b5;
+  --color-surface-card: #ffffff;
+  --color-surface-subtle: #f9f9f9;
+  --color-surface-muted: #f0f0f0;
+  --color-stroke-inactive: #d0d0d0;
+  --color-brand: #3d3d3d;
+  --color-brand-pressed: #222222;
+  --color-ridi-blue: #1f8ce6;
+  --color-danger: #f4361e;
+  --color-success: #03aa5a;
+  --color-highlight: #fff9ea;
+
+  --shadow-soft: 0 2px 16px rgb(0 0 0 / 0.03);
+  --shadow-lift: 0 4px 16px rgb(0 0 0 / 0.12), 0 0 1px rgb(0 0 0 / 0.08);
+  --shadow-panel: 0 6px 24px rgb(0 0 0 / 0.08), 0 0 1px rgb(0 0 0 / 0.08);
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    @apply bg-surface-subtle text-fg-primary font-sans;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply m-0 min-h-screen min-w-80 bg-surface-subtle;
+  }
+
+  button,
+  input,
+  select {
+    font: inherit;
+  }
+
+  button {
+    @apply cursor-pointer;
+  }
+
+  button:disabled {
+    @apply cursor-not-allowed;
+  }
+
+  a {
+    @apply text-inherit no-underline;
+  }
+}
+
+@layer components {
+  .app {
+    @apply min-h-screen bg-surface-subtle;
+  }
+
+  .topbar {
+    @apply sticky top-0 z-10 grid min-h-16 items-center gap-6 px-10;
+    grid-template-columns: minmax(180px, 240px) minmax(0, 1fr) auto;
+    background: rgb(255 255 255 / 0.96);
+    box-shadow: 0 1px 0 rgb(0 0 0 / 0.04);
+    backdrop-filter: blur(16px);
+  }
+
+  .brand {
+    @apply inline-flex items-center gap-3;
+  }
+
+  .brandMark {
+    @apply relative grid h-10 w-10 place-items-center rounded-lg bg-ridi-blue text-sm font-bold text-white;
+    box-shadow: 0 4px 16px rgb(31 140 230 / 0.22);
+  }
+
+  .brand strong,
+  .brand small {
+    @apply block tracking-normal;
+  }
+
+  .brand strong {
+    @apply text-base font-bold leading-6;
+  }
+
+  .brand small {
+    @apply text-xs leading-4 text-fg-secondary;
+  }
+
+  .navTabs {
+    @apply flex min-w-0 justify-center gap-1;
+  }
+
+  .navTab {
+    @apply inline-flex min-h-9 items-center gap-1.5 whitespace-nowrap rounded-lg px-3 text-sm font-semibold text-fg-secondary;
+  }
+
+  .navTab.active {
+    @apply bg-blue-50 text-ridi-blue;
+  }
+
+  .customerControl {
+    @apply inline-flex min-h-9 items-center gap-2 rounded-lg border border-stroke-inactive py-0 pl-3 pr-2 text-sm text-fg-secondary;
+  }
+
+  .customerControl input {
+    @apply h-7 w-12 border-0 bg-transparent font-bold text-fg-primary outline-none;
+  }
+
+  .customerControl:focus-within {
+    @apply border-ridi-blue;
+    box-shadow: 0 0 0 2px rgb(31 140 230 / 0.14);
+  }
+
+  .appFrame {
+    @apply mx-auto grid gap-8 px-10 pb-16 pt-8;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    width: min(100%, 1440px);
+  }
+
+  .mainPane {
+    @apply min-w-0;
+  }
+
+  .pageStack {
+    @apply grid gap-6;
+  }
+
+  .pageHeader {
+    @apply grid gap-2;
+  }
+
+  .pageHeader h1 {
+    @apply m-0 text-[28px] font-bold leading-9;
+  }
+
+  .pageHeader p {
+    @apply mt-1 mb-0 max-w-[720px] text-[15px] leading-[22px] text-fg-secondary;
+  }
+
+  .pageHeader .eyebrow,
+  .eyebrow {
+    @apply m-0 text-xs font-bold uppercase leading-4 text-ridi-blue;
+  }
+
+  .productGrid {
+    @apply grid gap-6;
+    grid-template-columns: repeat(auto-fill, minmax(144px, 1fr));
+  }
+
+  .bookCard {
+    @apply grid gap-2.5 text-fg-primary;
+  }
+
+  .bookCard:hover .cover {
+    @apply -translate-y-0.5 shadow-lift;
+  }
+
+  .cover,
+  .detailCover {
+    @apply relative flex aspect-[2/3] flex-col justify-between overflow-hidden rounded bg-surface-subtle p-3.5 shadow-soft transition-transform duration-150 ease-out;
+    transition-property: box-shadow, transform;
+  }
+
+  .cover::after,
+  .detailCover::after {
+    @apply absolute content-[""];
+    inset: auto -20% -16%;
+    height: 44%;
+    background: rgb(255 255 255 / 0.18);
+    transform: rotate(-8deg);
+  }
+
+  .cover strong,
+  .detailCover strong,
+  .coverType,
+  .saleFlag {
+    @apply relative z-[1];
+  }
+
+  .cover strong,
+  .detailCover strong {
+    @apply text-[17px] font-bold leading-6;
+    word-break: keep-all;
+  }
+
+  .coverType {
+    @apply self-start text-xs font-bold leading-4 text-white/80;
+  }
+
+  .saleFlag {
+    @apply absolute right-2.5 top-2.5 inline-flex min-h-6 items-center rounded bg-danger px-2 text-xs font-bold leading-4 text-white;
+  }
+
+  .toneInk {
+    @apply text-white;
+    background: linear-gradient(160deg, #222222 0%, #5d5d5d 100%);
+  }
+
+  .tonePaper {
+    @apply text-fg-primary;
+    background: linear-gradient(160deg, #f9f9f9 0%, #d0d0d0 100%);
+  }
+
+  .tonePaper .coverType,
+  .toneCream .coverType {
+    @apply text-fg-secondary;
+  }
+
+  .toneBlue {
+    @apply text-white;
+    background: linear-gradient(160deg, #1f8ce6 0%, #27496d 100%);
+  }
+
+  .toneGreen {
+    @apply text-white;
+    background: linear-gradient(160deg, #03aa5a 0%, #185d42 100%);
+  }
+
+  .toneCream {
+    @apply text-fg-primary;
+    background: linear-gradient(160deg, #fff9ea 0%, #f0d59a 100%);
+  }
+
+  .bookMeta {
+    @apply grid gap-1;
+  }
+
+  .bookMeta h2 {
+    @apply m-0 overflow-hidden text-base font-semibold leading-[22px];
+    display: -webkit-box;
+    min-height: 44px;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .bookMeta p {
+    @apply m-0 overflow-hidden text-ellipsis whitespace-nowrap text-sm leading-5 text-fg-secondary;
+  }
+
+  .priceLine {
+    @apply flex flex-wrap items-baseline gap-1.5 text-[15px] font-bold leading-[22px];
+  }
+
+  .priceLine del {
+    @apply text-[13px] font-normal leading-[18px] text-fg-tertiary;
+  }
+
+  .discountPrice,
+  .dangerText {
+    @apply text-danger;
+  }
+
+  .stockLine {
+    @apply inline-flex items-center gap-1 text-[13px] leading-[18px] text-fg-secondary;
+  }
+
+  .noticeBlock {
+    @apply grid justify-items-start gap-3 rounded-lg bg-surface-card p-8 shadow-soft;
+  }
+
+  .noticeBlock strong {
+    @apply text-base leading-[22px];
+  }
+
+  .noticeBlock p {
+    @apply m-0 text-sm leading-5 text-fg-secondary;
+  }
+
+  .primaryButton,
+  .textButton,
+  .outlineButton,
+  .iconButton {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border-0 no-underline;
+  }
+
+  .primaryButton {
+    @apply min-h-11 bg-brand px-4 py-2.5 text-[15px] font-semibold text-surface-subtle;
+  }
+
+  .primaryButton:active {
+    @apply bg-brand-pressed;
+  }
+
+  .primaryButton:disabled {
+    @apply bg-surface-muted text-fg-disabled;
+  }
+
+  .outlineButton {
+    @apply min-h-11 border border-stroke-inactive bg-surface-card px-4 py-2.5 text-[15px] font-semibold text-fg-primary;
+  }
+
+  .outlineButton:disabled {
+    @apply border-surface-muted bg-surface-muted text-fg-disabled;
+  }
+
+  .textButton {
+    @apply min-h-9 justify-self-start bg-transparent px-1 text-sm font-semibold text-fg-secondary;
+  }
+
+  .iconButton {
+    @apply h-9 w-9 bg-surface-subtle text-fg-secondary;
+  }
+
+  .productDetail,
+  .detailSkeleton {
+    @apply grid items-start gap-10;
+    grid-template-columns: minmax(220px, 320px) minmax(0, 1fr);
+  }
+
+  .detailCover {
+    @apply min-h-[480px];
+  }
+
+  .detailInfo {
+    @apply grid content-start gap-5;
+  }
+
+  .detailInfo h1 {
+    @apply m-0 text-[28px] font-bold leading-9;
+  }
+
+  .detailDescription {
+    @apply m-0 text-[15px] leading-6 text-fg-secondary;
+    word-break: keep-all;
+  }
+
+  .detailPrice {
+    @apply grid gap-1;
+  }
+
+  .detailPrice strong {
+    @apply text-[28px] leading-9;
+  }
+
+  .detailPrice span {
+    @apply flex flex-wrap items-baseline gap-2 text-sm text-fg-secondary;
+  }
+
+  .detailPrice em {
+    @apply font-bold not-italic text-danger;
+  }
+
+  .detailFacts,
+  .stateList {
+    @apply m-0 grid gap-2;
+  }
+
+  .detailFacts div,
+  .stateList div {
+    @apply flex min-h-10 items-center justify-between rounded-lg bg-surface-subtle px-3;
+  }
+
+  .detailFacts dt,
+  .stateList dt {
+    @apply inline-flex items-center gap-1.5 text-[13px] text-fg-secondary;
+  }
+
+  .detailFacts dd,
+  .stateList dd {
+    @apply m-0 text-sm font-bold;
+  }
+
+  .purchaseBar,
+  .cartToolbar,
+  .checkoutCompleteActions {
+    @apply flex flex-wrap items-center gap-3;
+  }
+
+  .stepper {
+    @apply inline-grid min-h-11 overflow-hidden rounded-lg border border-stroke-inactive;
+    grid-template-columns: 44px 52px 44px;
+  }
+
+  .stepper.compact {
+    @apply min-h-9;
+    grid-template-columns: 36px 44px 36px;
+  }
+
+  .stepper button {
+    @apply grid place-items-center border-0 bg-surface-card text-fg-primary;
+  }
+
+  .stepper button:disabled {
+    @apply bg-surface-muted text-fg-disabled;
+  }
+
+  .stepper span {
+    @apply grid min-w-0 place-items-center border-x border-stroke-inactive font-bold;
+  }
+
+  .inlineNotice {
+    @apply flex min-h-11 flex-wrap items-center justify-between gap-3 rounded-lg bg-highlight px-3 py-2.5 text-sm text-fg-primary;
+  }
+
+  .inlineNotice.error {
+    @apply bg-red-50 text-danger;
+  }
+
+  .inlineNotice.success {
+    @apply bg-green-50 text-success;
+  }
+
+  .inlineNotice button {
+    @apply border-0 bg-transparent font-bold text-fg-primary;
+  }
+
+  .cartToolbar {
+    @apply justify-between;
+  }
+
+  .checkboxLine {
+    @apply inline-flex items-center gap-2 text-sm text-fg-secondary;
+  }
+
+  .cartList,
+  .checkoutMain,
+  .checkoutSection,
+  .checkoutList,
+  .orderList {
+    @apply grid gap-3;
+  }
+
+  .checkoutSection {
+    @apply gap-4;
+  }
+
+  .cartRow {
+    @apply grid items-center gap-4 rounded-lg bg-surface-card p-4 shadow-soft;
+    grid-template-columns: auto 64px minmax(0, 1fr) auto;
+  }
+
+  .thumb {
+    @apply grid h-24 w-16 place-items-center rounded bg-brand text-sm font-bold text-white;
+  }
+
+  .cartText,
+  .orderCardBody,
+  .orderCardTitle > div,
+  .orderItemBody {
+    @apply grid min-w-0 gap-1.5;
+  }
+
+  .cartText h2,
+  .cartText p,
+  .orderCardTitle span,
+  .orderCardTitle strong,
+  .orderItemBody h2,
+  .orderItemBody p,
+  .checkoutItemBody h2,
+  .checkoutItemBody p {
+    @apply m-0 overflow-hidden text-ellipsis whitespace-nowrap;
+  }
+
+  .cartText h2,
+  .checkoutItemBody h2,
+  .orderItemBody h2 {
+    @apply text-base font-bold leading-[22px];
+  }
+
+  .cartText p,
+  .checkoutItemBody p,
+  .checkoutPriceMeta span,
+  .fieldLabel,
+  .orderCardMeta,
+  .orderItemBody p,
+  .orderItemPrice span,
+  .orderSummaryNote {
+    @apply text-[13px] leading-[18px] text-fg-secondary;
+  }
+
+  .cartPriceLine,
+  .checkoutPriceMeta {
+    @apply flex min-w-0 flex-wrap items-baseline gap-1.5;
+  }
+
+  .cartPriceLine strong {
+    @apply text-sm leading-5 text-ridi-blue;
+  }
+
+  .cartPriceLine del {
+    @apply text-xs leading-4 text-fg-tertiary;
+  }
+
+  .cartPriceLine span,
+  .checkoutPriceMeta span {
+    @apply inline-flex min-h-6 items-center rounded-full bg-surface-subtle px-2 text-xs font-bold leading-4 text-ridi-blue;
+  }
+
+  .cartActions {
+    @apply flex items-center gap-2;
+  }
+
+  .summaryBand {
+    @apply sticky bottom-4 flex items-center justify-between gap-4 rounded-lg p-4 shadow-lift;
+    background: rgb(255 255 255 / 0.96);
+    backdrop-filter: blur(16px);
+  }
+
+  .summaryBand div,
+  .couponSummary div,
+  .orderSummaryGrid div {
+    @apply grid gap-1;
+  }
+
+  .summaryBand span,
+  .couponSummary span,
+  .sectionTitle span,
+  .couponHint,
+  .orderSummaryGrid span,
+  .mutedText {
+    @apply text-[13px] leading-[18px] text-fg-secondary;
+  }
+
+  .summaryBand strong,
+  .couponSummary strong,
+  .orderSummaryGrid strong {
+    @apply text-[22px] leading-[30px];
+  }
+
+  .couponSummary,
+  .orderSummaryGrid {
+    @apply grid items-center gap-3 rounded-lg bg-surface-card p-4 shadow-soft;
+  }
+
+  .couponSummary {
+    grid-template-columns: repeat(2, minmax(0, 160px)) auto;
+  }
+
+  .orderSummaryGrid {
+    grid-template-columns: repeat(3, minmax(0, 160px)) auto;
+  }
+
+  .couponSummary .textButton,
+  .orderSummaryGrid .textButton {
+    @apply justify-self-end;
+  }
+
+  .couponSection {
+    @apply grid gap-3;
+  }
+
+  .sectionTitle {
+    @apply flex items-baseline justify-between gap-3;
+  }
+
+  .sectionTitle h2 {
+    @apply m-0 text-lg leading-[26px];
+  }
+
+  .couponGrid {
+    @apply grid gap-3;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+
+  .couponCard {
+    @apply grid min-h-[196px] gap-4 rounded-lg bg-surface-card p-4 shadow-soft;
+    grid-template-columns: 72px minmax(0, 1fr);
+  }
+
+  .couponStub {
+    @apply grid min-h-[164px] place-items-center rounded bg-surface-subtle text-ridi-blue;
+  }
+
+  .couponBody {
+    @apply grid min-w-0 gap-2;
+  }
+
+  .couponTitleLine,
+  .couponMeta div {
+    @apply flex items-center justify-between gap-2;
+  }
+
+  .couponType,
+  .statusBadge {
+    @apply inline-flex min-h-6 items-center whitespace-nowrap rounded-full px-2 text-xs font-bold leading-4;
+  }
+
+  .couponType {
+    @apply bg-blue-50 text-ridi-blue;
+  }
+
+  .statusBadge {
+    @apply bg-surface-subtle text-fg-secondary;
+  }
+
+  .statusAVAILABLE {
+    @apply bg-green-50 text-success;
+  }
+
+  .statusRESERVED,
+  .statusPAYMENT_PENDING {
+    @apply bg-blue-50 text-ridi-blue;
+  }
+
+  .statusUSED,
+  .statusEXPIRED {
+    @apply bg-surface-muted text-fg-tertiary;
+  }
+
+  .statusCOMPLETED {
+    @apply bg-green-50 text-success;
+  }
+
+  .statusCANCELED {
+    @apply bg-red-50 text-danger;
+  }
+
+  .couponBody h2,
+  .couponBody p {
+    @apply m-0;
+  }
+
+  .couponBody h2 {
+    @apply overflow-hidden text-base leading-[22px];
+    display: -webkit-box;
+    min-height: 44px;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .couponBody strong {
+    @apply text-[22px] leading-[30px] text-danger;
+  }
+
+  .couponMeta {
+    @apply m-0 grid gap-1.5;
+  }
+
+  .couponMeta dt,
+  .couponMeta dd {
+    @apply text-[13px] leading-[18px];
+  }
+
+  .couponMeta dt {
+    @apply text-fg-secondary;
+  }
+
+  .couponMeta dd {
+    @apply m-0 text-right font-bold;
+  }
+
+  .couponAction {
+    @apply col-start-2 self-end;
+  }
+
+  .couponAction .primaryButton {
+    @apply w-full;
+  }
+
+  .checkoutLayout,
+  .orderDetailLayout {
+    @apply grid items-start gap-6;
+    grid-template-columns: minmax(0, 1fr) 320px;
+  }
+
+  .checkoutLineItem {
+    @apply grid items-center gap-4 rounded-lg bg-surface-card p-4 shadow-soft;
+    grid-template-columns: 64px minmax(0, 1fr) minmax(180px, 220px) auto;
+  }
+
+  .checkoutLineItem > .iconButton {
+    @apply justify-self-end;
+  }
+
+  .checkoutThumb,
+  .orderItemThumb {
+    @apply h-24 w-16;
+  }
+
+  .checkoutItemBody {
+    @apply grid min-w-0 gap-2.5;
+  }
+
+  .checkoutItemAction {
+    @apply grid gap-2;
+  }
+
+  .checkoutItemAction strong {
+    @apply justify-self-end text-base leading-[22px];
+  }
+
+  .fieldLabel {
+    @apply font-bold;
+  }
+
+  .selectControl {
+    @apply min-h-11 w-full rounded-lg border border-stroke-inactive bg-surface-card px-3 text-fg-primary outline-none;
+  }
+
+  .selectControl:focus {
+    @apply border-ridi-blue;
+    box-shadow: 0 0 0 2px rgb(31 140 230 / 0.14);
+  }
+
+  .orderCouponBox {
+    @apply grid items-start gap-3 rounded-lg bg-surface-card p-4 shadow-soft;
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .orderCouponBox > svg {
+    @apply mt-[26px] text-brand;
+  }
+
+  .orderCouponBox > div {
+    @apply grid gap-2;
+  }
+
+  .checkoutSummary {
+    @apply sticky top-24 grid gap-4 rounded-lg bg-surface-card p-4 shadow-panel;
+  }
+
+  .summaryRows,
+  .checkoutCompleteFacts,
+  .orderFacts {
+    @apply m-0 grid gap-2;
+  }
+
+  .summaryRows div,
+  .checkoutCompleteFacts div,
+  .orderFacts div {
+    @apply flex min-h-9 items-center justify-between gap-3;
+  }
+
+  .summaryRows div {
+    @apply min-h-9;
+  }
+
+  .checkoutCompleteFacts div,
+  .orderFacts div {
+    @apply min-h-10 rounded-lg bg-surface-subtle px-3;
+  }
+
+  .summaryRows dt,
+  .checkoutCompleteFacts dt,
+  .orderFacts dt {
+    @apply text-[13px] leading-[18px] text-fg-secondary;
+  }
+
+  .summaryRows dd,
+  .checkoutCompleteFacts dd,
+  .orderFacts dd {
+    @apply m-0 text-sm font-bold leading-5;
+  }
+
+  .summaryRows .summaryTotal {
+    @apply mt-1 border-t border-stroke-inactive pt-3;
+  }
+
+  .summaryTotal dd {
+    @apply text-[22px] leading-[30px] text-danger;
+  }
+
+  .checkoutSubmit {
+    @apply w-full;
+  }
+
+  .checkoutComplete {
+    @apply grid max-w-[520px] justify-items-start gap-4 rounded-lg bg-surface-card p-8 shadow-soft;
+  }
+
+  .checkoutComplete > svg {
+    @apply text-success;
+  }
+
+  .checkoutComplete h1 {
+    @apply m-0 text-[28px] leading-9;
+  }
+
+  .orderCard {
+    @apply grid items-center gap-4 rounded-lg bg-surface-card p-4 shadow-soft transition-transform duration-150 ease-out;
+    grid-template-columns: 48px minmax(0, 1fr);
+    transition-property: box-shadow, transform;
+  }
+
+  .orderCard:hover {
+    @apply -translate-y-px shadow-lift;
+  }
+
+  .orderCardIcon {
+    @apply grid h-12 w-12 place-items-center rounded-lg bg-surface-subtle text-brand;
+  }
+
+  .orderCardTitle {
+    @apply flex min-w-0 items-start justify-between gap-3;
+  }
+
+  .orderCardTitle span {
+    @apply text-[13px] leading-[18px] text-fg-secondary;
+  }
+
+  .orderCardTitle strong {
+    @apply text-xl leading-7;
+  }
+
+  .orderCardMeta {
+    @apply inline-flex items-center gap-1.5;
+  }
+
+  .orderStatus {
+    @apply shrink-0;
+  }
+
+  .orderFacts dt {
+    @apply inline-flex items-center gap-1.5;
+  }
+
+  .orderItemRow {
+    @apply grid items-center gap-4 rounded-lg bg-surface-card p-4 shadow-soft;
+    grid-template-columns: 64px minmax(0, 1fr) minmax(140px, auto);
+  }
+
+  .orderItemPrice {
+    @apply grid justify-items-end gap-1;
+  }
+
+  .orderItemPrice strong {
+    @apply text-base leading-[22px];
+  }
+
+  .orderSummaryNote {
+    @apply flex min-h-10 items-center gap-2 rounded-lg bg-surface-subtle px-3;
+  }
+
+  .paymentActionBox {
+    @apply grid gap-2;
+  }
+
+  .paymentActionBox .primaryButton,
+  .paymentActionBox .outlineButton {
+    @apply w-full;
+  }
+
+  .statusPanel {
+    @apply sticky top-24 grid self-start gap-4 overflow-auto rounded-lg bg-surface-card p-4 shadow-panel;
+    max-height: calc(100vh - 128px);
+  }
+
+  .statusPanel.isCollapsed {
+    @apply gap-0;
+  }
+
+  .panelHeader {
+    @apply flex items-center gap-2;
+  }
+
+  .statusPanel .panelHeader {
+    @apply justify-between;
+  }
+
+  .panelTitle,
+  .panelActions {
+    @apply flex items-center gap-2;
+  }
+
+  .panelHeader h2 {
+    @apply m-0 text-base leading-[22px];
+  }
+
+  .statusPanelBody {
+    @apply grid gap-4;
+  }
+
+  .statusSummary {
+    grid-template-columns: 1fr;
+  }
+
+  .statusSyncedAt {
+    @apply -mt-2 mb-0 text-right text-xs leading-4 text-fg-tertiary;
+  }
+
+  .pendingExpiry {
+    @apply grid items-start gap-2 rounded-lg bg-highlight p-3;
+    grid-template-columns: 20px minmax(0, 1fr);
+  }
+
+  .pendingExpiry > svg {
+    @apply mt-0.5 text-brand;
+  }
+
+  .pendingExpiry span,
+  .pendingExpiry strong {
+    @apply block overflow-hidden text-ellipsis whitespace-nowrap;
+  }
+
+  .pendingExpiry span {
+    @apply text-xs leading-4 text-fg-secondary;
+  }
+
+  .pendingExpiry strong {
+    @apply mt-0.5 text-[13px] leading-[18px];
+  }
+
+  .statusSkeleton {
+    @apply grid gap-3;
+  }
+
+  .statusSection {
+    @apply grid gap-2 border-t border-black/5 pt-3;
+  }
+
+  .statusSectionHeader {
+    @apply flex items-center justify-between gap-2;
+  }
+
+  .statusSectionHeader span {
+    @apply inline-flex min-w-0 items-center gap-1.5;
+  }
+
+  .statusSectionHeader h3 {
+    @apply m-0 overflow-hidden text-ellipsis whitespace-nowrap text-sm leading-5;
+  }
+
+  .statusSectionHeader small {
+    @apply shrink-0 text-right text-xs leading-4 text-fg-tertiary;
+  }
+
+  .statusMiniList {
+    @apply grid;
+  }
+
+  .statusMiniRow {
+    @apply grid min-h-12 items-center gap-2 py-2;
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .statusMiniRow + .statusMiniRow {
+    @apply border-t border-black/5;
+  }
+
+  .statusMiniRow strong,
+  .statusMiniRow p {
+    @apply m-0 overflow-hidden text-ellipsis whitespace-nowrap;
+  }
+
+  .statusMiniRow strong {
+    @apply block text-[13px] leading-[18px];
+  }
+
+  .statusMiniRow p,
+  .apiEvent p {
+    @apply text-xs leading-4 text-fg-secondary;
+  }
+
+  .statusMiniRow .statusBadge {
+    @apply max-w-24 overflow-hidden text-ellipsis;
+  }
+
+  .stockBadge {
+    @apply inline-flex min-h-6 items-center whitespace-nowrap rounded-full bg-green-50 px-2 text-xs font-bold leading-4 text-success;
+  }
+
+  .stockBadge.danger {
+    @apply bg-red-50 text-danger;
+  }
+
+  .statusEmpty {
+    @apply m-0 py-1;
+  }
+
+  .apiTimeline {
+    @apply grid gap-2.5;
+  }
+
+  .apiEvent {
+    @apply grid items-start gap-2;
+    grid-template-columns: 8px minmax(0, 1fr);
+  }
+
+  .apiEvent strong,
+  .apiEvent p {
+    @apply m-0 overflow-hidden text-ellipsis whitespace-nowrap;
+  }
+
+  .apiEvent strong {
+    @apply block text-[13px] leading-[18px];
+  }
+
+  .okDot,
+  .failDot {
+    @apply mt-[5px] h-2 w-2 rounded-full;
+  }
+
+  .okDot {
+    @apply bg-success;
+  }
+
+  .failDot {
+    @apply bg-danger;
+  }
+
+  .spinIcon {
+    animation: spin 700ms linear infinite;
+  }
+
+  .skeletonCouponCard,
+  .skeletonCheckoutLine,
+  .skeletonCheckoutSummary,
+  .skeletonOrderCard,
+  .skeletonCartRow,
+  .skeletonCard {
+    @apply pointer-events-none;
+  }
+
+  .skeleton,
+  .skeletonLine {
+    @apply relative overflow-hidden bg-surface-subtle;
+  }
+
+  .skeleton::after,
+  .skeletonLine::after {
+    @apply absolute inset-0 content-[""];
+    background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.8), transparent);
+    transform: translateX(-100%);
+    animation: shimmer 1.4s infinite;
+  }
+
+  .skeletonLine {
+    @apply h-3 w-[72%] rounded;
+  }
+
+  .skeletonLine.wide {
+    @apply w-full;
+  }
 }
 
 @keyframes shimmer {
@@ -1734,122 +1044,120 @@ a {
 
 @media (max-width: 1080px) {
   .topbar {
-    grid-template-columns: 1fr auto;
-    padding: 0 24px;
+    @apply gap-4 px-6;
+    grid-template-columns: minmax(0, 1fr) auto;
   }
 
   .navTabs {
-    grid-column: 1 / -1;
-    justify-content: flex-start;
-    order: 3;
-    overflow-x: auto;
-    padding-bottom: 12px;
+    @apply order-3 col-span-full justify-start overflow-x-auto pb-3;
   }
 
   .appFrame {
-    grid-template-columns: 1fr;
-    padding: 24px;
+    @apply grid-cols-1 p-6;
   }
 
   .statusPanel {
-    position: static;
-    max-height: none;
+    @apply static max-h-none;
+  }
+}
+
+@media (max-width: 900px) {
+  .checkoutLayout,
+  .orderDetailLayout {
+    @apply grid-cols-1;
+  }
+
+  .checkoutSummary {
+    @apply static;
+  }
+
+  .checkoutLineItem {
+    grid-template-columns: 64px minmax(0, 1fr) auto;
+  }
+
+  .checkoutItemAction {
+    grid-column: 2 / -1;
   }
 }
 
 @media (max-width: 720px) {
   .topbar {
-    gap: 12px;
-    min-height: 56px;
-    padding: 8px 16px 0;
+    @apply min-h-14 gap-3 px-4 pt-2;
   }
 
   .brand small,
   .customerControl span {
-    display: none;
+    @apply hidden;
   }
 
   .appFrame {
-    padding: 20px 16px 48px;
+    @apply px-4 pb-12 pt-5;
   }
 
   .pageHeader h1,
   .detailInfo h1 {
-    font-size: 22px;
-    line-height: 30px;
+    @apply text-[22px] leading-[30px];
   }
 
   .productGrid {
+    @apply gap-4;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 16px;
   }
 
   .productDetail,
   .detailSkeleton {
-    grid-template-columns: 1fr;
-    gap: 24px;
+    @apply grid-cols-1 gap-6;
   }
 
   .detailCover {
-    width: min(100%, 260px);
-    min-height: auto;
+    @apply min-h-0 w-full max-w-[260px];
   }
 
   .cartRow {
+    @apply gap-3;
     grid-template-columns: auto 56px minmax(0, 1fr);
-    gap: 12px;
   }
 
   .cartActions {
     grid-column: 2 / -1;
-    justify-content: space-between;
+    @apply justify-between;
   }
 
   .summaryBand {
-    right: 16px;
-    left: 16px;
+    @apply left-4 right-4;
   }
 
   .couponSummary {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .couponSummary .textButton {
+  .couponSummary .textButton,
+  .orderSummaryGrid .textButton {
     grid-column: 1 / -1;
-    justify-self: start;
+    @apply justify-self-start;
   }
 
   .couponGrid,
   .couponCard {
-    grid-template-columns: 1fr;
+    @apply grid-cols-1;
   }
 
   .couponStub {
-    min-height: 96px;
+    @apply min-h-24;
   }
 
   .couponAction {
     grid-column: auto;
   }
 
-  .checkoutLayout {
-    grid-template-columns: 1fr;
-  }
-
-  .checkoutSummary,
-  .orderDetailLayout {
-    position: static;
-    grid-template-columns: 1fr;
-  }
-
   .checkoutLineItem {
+    @apply gap-3;
     grid-template-columns: 56px minmax(0, 1fr) auto;
-    gap: 12px;
   }
 
-  .checkoutThumb {
-    width: 56px;
-    height: 84px;
+  .checkoutThumb,
+  .orderItemThumb {
+    @apply h-[84px] w-14;
   }
 
   .checkoutItemAction {
@@ -1866,40 +1174,27 @@ a {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .orderSummaryGrid .textButton {
-    grid-column: 1 / -1;
-    justify-self: start;
-  }
-
   .orderCard {
+    @apply gap-3;
     grid-template-columns: 44px minmax(0, 1fr);
-    gap: 12px;
   }
 
   .orderCardIcon {
-    width: 44px;
-    height: 44px;
+    @apply h-11 w-11;
   }
 
   .orderCardTitle {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 8px;
+    @apply flex-col gap-2;
   }
 
   .orderItemRow {
+    @apply gap-3;
     grid-template-columns: 56px minmax(0, 1fr);
-    gap: 12px;
-  }
-
-  .orderItemThumb {
-    width: 56px;
-    height: 84px;
   }
 
   .orderItemPrice {
     grid-column: 2;
-    justify-items: start;
+    @apply justify-items-start;
   }
 }
 
@@ -1911,7 +1206,8 @@ a {
     transition-duration: 0ms !important;
   }
 
-  .bookCard:hover .cover {
+  .bookCard:hover .cover,
+  .orderCard:hover {
     transform: none;
   }
 }
