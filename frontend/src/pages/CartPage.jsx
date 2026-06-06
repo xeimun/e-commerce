@@ -2,6 +2,7 @@ import { Minus, Plus, RefreshCw, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api/client.js';
+import ProductArtwork from '../components/ProductArtwork.jsx';
 import { formatWon, getCartItemUnitPrice } from '../utils/format.js';
 
 export default function CartPage({ customerId, onApiEvent }) {
@@ -161,9 +162,7 @@ export default function CartPage({ customerId, onApiEvent }) {
                     type="checkbox"
                     onChange={() => toggleItem(item.cartItemId)}
                   />
-                  <div className="thumb">
-                    <span>{item.productName.slice(0, 2)}</span>
-                  </div>
+                  <ProductArtwork product={item} className="thumb" compact />
                   <div className="cartText">
                     <h2>{item.productName}</h2>
                     <div className="cartPriceLine">

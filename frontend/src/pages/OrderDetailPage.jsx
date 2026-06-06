@@ -10,6 +10,7 @@ import {
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { api } from '../api/client.js';
+import ProductArtwork from '../components/ProductArtwork.jsx';
 import { formatDateTime, formatWon } from '../utils/format.js';
 import { OrderStatusBadge } from './OrderListPage.jsx';
 
@@ -21,9 +22,7 @@ const cancelReasonLabels = {
 function OrderItemRow({ item }) {
   return (
     <article className="orderItemRow">
-      <div className="thumb orderItemThumb">
-        <span>{(item.productName || '상품').slice(0, 2)}</span>
-      </div>
+      <ProductArtwork product={item} className="thumb orderItemThumb" compact />
       <div className="orderItemBody">
         <h2>{item.productName}</h2>
         <p>상품 #{item.productId} · 수량 {item.quantity}개</p>

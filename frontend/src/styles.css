@@ -76,8 +76,25 @@
   }
 
   .brandMark {
-    @apply relative grid h-10 w-10 place-items-center rounded-lg bg-ridi-blue text-sm font-bold text-white;
-    box-shadow: 0 4px 16px rgb(31 140 230 / 0.22);
+    @apply relative grid h-10 w-10 place-items-center overflow-hidden rounded-lg bg-brand text-white;
+    box-shadow: 0 4px 16px rgb(61 61 61 / 0.2);
+  }
+
+  .brandMark::before {
+    @apply absolute content-[""];
+    inset: 0 18px;
+    background: rgb(255 255 255 / 0.22);
+  }
+
+  .brandMark::after {
+    @apply absolute content-[""];
+    inset: 18px 0 auto;
+    height: 3px;
+    background: rgb(255 255 255 / 0.22);
+  }
+
+  .brandMark svg {
+    @apply relative z-[1];
   }
 
   .brand strong,
@@ -168,6 +185,52 @@
     transition-property: box-shadow, transform;
   }
 
+  .productArtwork {
+    @apply relative isolate overflow-hidden;
+  }
+
+  .artworkImage {
+    @apply absolute inset-0 z-0 h-full w-full;
+  }
+
+  .artworkTitle {
+    @apply max-w-full;
+    text-shadow: 0 1px 10px rgb(0 0 0 / 0.16);
+  }
+
+  .compactArtwork {
+    @apply block p-0;
+  }
+
+  .compactArtwork .artworkImage {
+    @apply block;
+  }
+
+  .artMoon {
+    @apply text-white;
+    background: #182232;
+  }
+
+  .artStar {
+    @apply text-white;
+    background: #202020;
+  }
+
+  .artLibrary {
+    @apply text-fg-primary;
+    background: #eaf5ff;
+  }
+
+  .artOrchestra {
+    @apply text-white;
+    background: #3d3d3d;
+  }
+
+  .artDawn {
+    @apply text-fg-primary;
+    background: #fff9ea;
+  }
+
   .cover::after,
   .detailCover::after {
     @apply absolute content-[""];
@@ -198,34 +261,19 @@
     @apply absolute right-2.5 top-2.5 inline-flex min-h-6 items-center rounded bg-danger px-2 text-xs font-bold leading-4 text-white;
   }
 
-  .toneInk {
-    @apply text-white;
-    background: linear-gradient(160deg, #222222 0%, #5d5d5d 100%);
-  }
-
-  .tonePaper {
-    @apply text-fg-primary;
-    background: linear-gradient(160deg, #f9f9f9 0%, #d0d0d0 100%);
-  }
-
-  .tonePaper .coverType,
-  .toneCream .coverType {
+  .artLibrary .coverType,
+  .artDawn .coverType {
     @apply text-fg-secondary;
   }
 
-  .toneBlue {
-    @apply text-white;
-    background: linear-gradient(160deg, #1f8ce6 0%, #27496d 100%);
+  .artLibrary .artworkTitle,
+  .artDawn .artworkTitle {
+    text-shadow: none;
   }
 
-  .toneGreen {
-    @apply text-white;
-    background: linear-gradient(160deg, #03aa5a 0%, #185d42 100%);
-  }
-
-  .toneCream {
-    @apply text-fg-primary;
-    background: linear-gradient(160deg, #fff9ea 0%, #f0d59a 100%);
+  .artLibrary .saleFlag,
+  .artDawn .saleFlag {
+    box-shadow: 0 2px 8px rgb(0 0 0 / 0.12);
   }
 
   .bookMeta {
@@ -440,6 +488,30 @@
     @apply grid h-24 w-16 place-items-center rounded bg-brand text-sm font-bold text-white;
   }
 
+  .thumb.productArtwork {
+    @apply block p-0 text-fg-primary;
+  }
+
+  .thumb.productArtwork.artMoon {
+    background: #182232;
+  }
+
+  .thumb.productArtwork.artStar {
+    background: #202020;
+  }
+
+  .thumb.productArtwork.artLibrary {
+    background: #eaf5ff;
+  }
+
+  .thumb.productArtwork.artOrchestra {
+    background: #3d3d3d;
+  }
+
+  .thumb.productArtwork.artDawn {
+    background: #fff9ea;
+  }
+
   .cartText,
   .orderCardBody,
   .orderCardTitle > div,
@@ -540,6 +612,26 @@
   .couponSummary .textButton,
   .orderSummaryGrid .textButton {
     @apply justify-self-end;
+  }
+
+  .segmentedTabs {
+    @apply inline-grid w-full max-w-[440px] grid-cols-2 gap-1 rounded-lg bg-surface-muted p-1;
+  }
+
+  .segmentedTab {
+    @apply inline-flex min-h-10 items-center justify-center gap-2 rounded border-0 bg-transparent px-3 text-sm font-bold text-fg-secondary;
+  }
+
+  .segmentedTab.active {
+    @apply bg-surface-card text-ridi-blue shadow-soft;
+  }
+
+  .segmentedTab span {
+    @apply inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-surface-subtle px-1.5 text-xs leading-4 text-fg-secondary;
+  }
+
+  .segmentedTab.active span {
+    @apply bg-blue-50 text-ridi-blue;
   }
 
   .couponSection {
@@ -679,7 +771,7 @@
   }
 
   .checkoutItemAction {
-    @apply grid gap-2;
+    @apply grid min-w-0 gap-2;
   }
 
   .checkoutItemAction strong {
@@ -691,7 +783,7 @@
   }
 
   .selectControl {
-    @apply min-h-11 w-full rounded-lg border border-stroke-inactive bg-surface-card px-3 text-fg-primary outline-none;
+    @apply min-h-11 w-full min-w-0 rounded-lg border border-stroke-inactive bg-surface-card px-3 text-fg-primary outline-none;
   }
 
   .selectControl:focus {
@@ -1072,11 +1164,18 @@
   }
 
   .checkoutLineItem {
-    grid-template-columns: 64px minmax(0, 1fr) auto;
+    @apply items-start;
+    grid-template-columns: 64px minmax(0, 1fr) 36px;
   }
 
   .checkoutItemAction {
     grid-column: 2 / -1;
+    @apply items-end gap-2;
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .checkoutItemAction .fieldLabel {
+    grid-column: 1 / -1;
   }
 }
 
@@ -1152,7 +1251,7 @@
 
   .checkoutLineItem {
     @apply gap-3;
-    grid-template-columns: 56px minmax(0, 1fr) auto;
+    grid-template-columns: 56px minmax(0, 1fr) 36px;
   }
 
   .checkoutThumb,
@@ -1163,6 +1262,11 @@
   .checkoutItemAction {
     grid-column: 2 / -1;
     grid-row: 2;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .checkoutItemAction strong {
+    @apply justify-self-start;
   }
 
   .checkoutLineItem > .iconButton {

@@ -1,5 +1,6 @@
 import {
   BarChart3,
+  Gift,
   Package,
   ReceiptText,
   ShoppingCart,
@@ -22,7 +23,9 @@ export default function AppShell({ apiEvents, children, customerId, onCustomerId
     <div className="app">
       <header className="topbar">
         <NavLink className="brand" to="/products" aria-label="Drop Goods 상품">
-          <span className="brandMark">DG</span>
+          <span className="brandMark">
+            <Gift aria-hidden="true" size={22} />
+          </span>
           <span>
             <strong>Drop Goods</strong>
             <small>Limited IP Merch</small>
