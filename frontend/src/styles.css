@@ -137,7 +137,7 @@
 
   .productGrid {
     @apply grid gap-6;
-    grid-template-columns: repeat(auto-fill, minmax(144px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   }
 
   .bookCard {
@@ -307,17 +307,26 @@
     @apply m-0 grid gap-2;
   }
 
-  .detailFacts div,
+  .detailFacts div {
+    @apply flex min-h-12 items-center justify-between rounded-lg bg-surface-subtle px-4;
+  }
+
   .stateList div {
     @apply flex min-h-10 items-center justify-between rounded-lg bg-surface-subtle px-3;
   }
 
-  .detailFacts dt,
+  .detailFacts dt {
+    @apply inline-flex items-center gap-1.5 text-[15px] font-semibold leading-[22px] text-fg-secondary;
+  }
+
   .stateList dt {
     @apply inline-flex items-center gap-1.5 text-[13px] text-fg-secondary;
   }
 
-  .detailFacts dd,
+  .detailFacts dd {
+    @apply m-0 text-base font-bold leading-[22px];
+  }
+
   .stateList dd {
     @apply m-0 text-sm font-bold;
   }
@@ -326,6 +335,23 @@
   .cartToolbar,
   .checkoutCompleteActions {
     @apply flex flex-wrap items-center gap-3;
+  }
+
+  .detailPurchaseBar {
+    @apply grid rounded-lg bg-surface-subtle p-3;
+    grid-template-columns: auto minmax(180px, 1fr);
+  }
+
+  .quantityControl {
+    @apply inline-flex min-w-0 items-center justify-between gap-3 rounded-lg bg-surface-card px-3 py-2 shadow-soft;
+  }
+
+  .quantityControl > span {
+    @apply text-[15px] font-semibold leading-[22px] text-fg-secondary;
+  }
+
+  .detailCartButton {
+    @apply min-h-12 px-5;
   }
 
   .stepper {
@@ -1048,6 +1074,14 @@
 
   .checkoutSummary {
     @apply static;
+  }
+
+  .detailPurchaseBar {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .quantityControl {
+    @apply w-full;
   }
 
   .checkoutLineItem {

@@ -134,29 +134,32 @@ export default function ProductDetailPage({ customerId, onApiEvent }) {
             </div>
           </dl>
 
-          <div className="purchaseBar">
-            <div className="stepper" aria-label="수량">
-              <button
-                aria-label="수량 줄이기"
-                disabled={quantity <= 1}
-                type="button"
-                onClick={() => setQuantity((current) => Math.max(current - 1, 1))}
-              >
-                <Minus aria-hidden="true" size={18} />
-              </button>
-              <span>{quantity}</span>
-              <button
-                aria-label="수량 늘리기"
-                disabled={quantity >= maxQuantity}
-                type="button"
-                onClick={() => setQuantity((current) => Math.min(current + 1, maxQuantity))}
-              >
-                <Plus aria-hidden="true" size={18} />
-              </button>
+          <div className="purchaseBar detailPurchaseBar">
+            <div className="quantityControl">
+              <span>수량</span>
+              <div className="stepper" aria-label="수량">
+                <button
+                  aria-label="수량 줄이기"
+                  disabled={quantity <= 1}
+                  type="button"
+                  onClick={() => setQuantity((current) => Math.max(current - 1, 1))}
+                >
+                  <Minus aria-hidden="true" size={18} />
+                </button>
+                <span>{quantity}</span>
+                <button
+                  aria-label="수량 늘리기"
+                  disabled={quantity >= maxQuantity}
+                  type="button"
+                  onClick={() => setQuantity((current) => Math.min(current + 1, maxQuantity))}
+                >
+                  <Plus aria-hidden="true" size={18} />
+                </button>
+              </div>
             </div>
 
             <button
-              className="primaryButton"
+              className="primaryButton detailCartButton"
               disabled={!canBuy || mutationStatus === 'pending'}
               type="button"
               onClick={addToCart}
