@@ -1,18 +1,3 @@
-update product_discounts
-set name = 'Savoia S-21 드롭 할인',
-    discount_amount = 5000.00,
-    starts_at = timestamp '2026-06-07 00:00:00',
-    ends_at = timestamp '2027-12-31 23:59:59',
-    active = true,
-    updated_at = timestamp '2026-06-07 12:00:00'
-where product_id = 10002
-  and exists (
-      select 1
-      from products
-      where id = 10002
-        and name = '[Savoia] S-21 수상비행기 피규어'
-  );
-
 insert into product_discounts (
     product_id, name, discount_amount, starts_at, ends_at, active, created_at, updated_at
 )
@@ -38,6 +23,13 @@ set name = '묘코 봉제 인형 드롭 할인',
     active = true,
     updated_at = timestamp '2026-06-07 12:00:00'
 where product_id = 10004
+  and name = '묘코 마스코트 출시 할인'
+  and discount_amount = 5000.00
+  and starts_at = timestamp '2026-06-01 00:00:00'
+  and ends_at = timestamp '2027-12-31 23:59:59'
+  and active = false
+  and created_at = timestamp '2026-06-06 00:00:00'
+  and updated_at = timestamp '2026-06-07 00:00:00'
   and exists (
       select 1
       from products

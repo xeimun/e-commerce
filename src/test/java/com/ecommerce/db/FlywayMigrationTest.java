@@ -275,6 +275,47 @@ class FlywayMigrationTest {
     }
 
     @Test
+    void v14DoesNotOverwriteNonSeedProductDiscountsForFinalDemoProducts() {
+        DriverManagerDataSource dataSource = dataSource();
+        migrateToV13(dataSource);
+        JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        insertNonSeedProductDiscount(
+                jdbcTemplate,
+                10002L,
+                "Savoia 기존 운영 할인",
+                new BigDecimal("1234.00"),
+                true
+        );
+        jdbcTemplate.update("delete from product_discounts where product_id = 10004");
+        insertNonSeedProductDiscount(
+                jdbcTemplate,
+                10004L,
+                "묘코 기존 운영 할인",
+                new BigDecimal("2222.00"),
+                false
+        );
+
+        migrateToLatest(dataSource);
+
+        var discountNames = jdbcTemplate.queryForList(
+                "select name from product_discounts where product_id in (10002, 10004) order by product_id",
+                String.class
+        );
+        var discountAmounts = jdbcTemplate.queryForList(
+                "select discount_amount from product_discounts where product_id in (10002, 10004) order by product_id",
+                BigDecimal.class
+        );
+        var activeFlags = jdbcTemplate.queryForList(
+                "select active from product_discounts where product_id in (10002, 10004) order by product_id",
+                Boolean.class
+        );
+
+        assertThat(discountNames).containsExactly("Savoia 기존 운영 할인", "묘코 기존 운영 할인");
+        assertThat(discountAmounts).containsExactly(new BigDecimal("1234.00"), new BigDecimal("2222.00"));
+        assertThat(activeFlags).containsExactly(true, false);
+    }
+
+    @Test
     void v14KeepsReserved3000OrderCouponReservedForPendingOrderLifecycle() {
         DriverManagerDataSource dataSource = dataSource();
         migrateToV13(dataSource);
@@ -564,6 +605,28 @@ class FlywayMigrationTest {
                     timestamp '2026-06-07 12:00:00'
                 )
                 """, couponId);
+    }
+
+    private void insertNonSeedProductDiscount(
+            JdbcTemplate jdbcTemplate,
+            Long productId,
+            String name,
+            BigDecimal discountAmount,
+            boolean active
+    ) {
+        jdbcTemplate.update("""
+                insert into product_discounts (
+                    product_id, name, discount_amount, starts_at, ends_at, active, created_at, updated_at
+                )
+                values (
+                    ?, ?, ?,
+                    timestamp '2026-06-02 00:00:00',
+                    timestamp '2028-12-31 23:59:59',
+                    ?,
+                    timestamp '2026-06-07 13:00:00',
+                    timestamp '2026-06-07 13:00:00'
+                )
+                """, productId, name, discountAmount, active);
     }
 
     private void insertExistingProduct(JdbcTemplate jdbcTemplate, Long productId, String name) {
