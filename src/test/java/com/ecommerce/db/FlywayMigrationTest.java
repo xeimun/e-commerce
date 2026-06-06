@@ -52,7 +52,7 @@ class FlywayMigrationTest {
     }
 
     @Test
-    void v9DoesNotAttachDemoChildRowsToCollidingProductId() {
+    void v11RemovesUnreferencedDemoChildRowsAttachedToCollidingProductId() {
         DriverManagerDataSource dataSource = dataSource();
         migrateToV8(dataSource);
         JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
@@ -80,6 +80,34 @@ class FlywayMigrationTest {
         assertThat(stockCount).isZero();
         assertThat(discountCount).isZero();
         assertThat(productCouponCount).isZero();
+    }
+
+    @Test
+    void v11ExpiresReferencedInvalidDemoProductCouponInsteadOfDeletingIt() {
+        DriverManagerDataSource dataSource = dataSource();
+        migrateToV8(dataSource);
+        JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        insertCollidingProduct(jdbcTemplate);
+        migrateToV10(dataSource);
+        Long couponId = jdbcTemplate.queryForObject(
+                "select id from coupons where name = '달빛 상점 아트북 4000원 할인' and target_product_id = 10001",
+                Long.class
+        );
+        insertIssuedCoupon(jdbcTemplate, 700L, couponId, 11L);
+
+        migrateToLatest(dataSource);
+
+        Integer couponCount = jdbcTemplate.queryForObject(
+                "select count(*) from coupons where id = ? and expires_at = timestamp '2026-06-06 00:00:00'",
+                Integer.class,
+                couponId
+        );
+        String issuedCouponStatus = jdbcTemplate.queryForObject(
+                "select status from issued_coupons where id = 700",
+                String.class
+        );
+        assertThat(couponCount).isEqualTo(1);
+        assertThat(issuedCouponStatus).isEqualTo("EXPIRED");
     }
 
     @Test
@@ -155,6 +183,15 @@ class FlywayMigrationTest {
                 .migrate();
     }
 
+    private void migrateToV10(DriverManagerDataSource dataSource) {
+        Flyway.configure()
+                .dataSource(dataSource)
+                .locations("classpath:db/migration")
+                .target(MigrationVersion.fromVersion("10"))
+                .load()
+                .migrate();
+    }
+
     private void migrateToLatest(DriverManagerDataSource dataSource) {
         Flyway.configure()
                 .dataSource(dataSource)
@@ -218,6 +255,25 @@ class FlywayMigrationTest {
 
     private void insertCollidingProduct(JdbcTemplate jdbcTemplate) {
         insertExistingProduct(jdbcTemplate, 10001L, "기존 상품");
+    }
+
+    private void insertIssuedCoupon(
+            JdbcTemplate jdbcTemplate,
+            Long issuedCouponId,
+            Long couponId,
+            Long customerId
+    ) {
+        jdbcTemplate.update("""
+                insert into issued_coupons (
+                    id, coupon_id, customer_id, status, issued_at, created_at, updated_at
+                )
+                values (
+                    ?, ?, ?, 'AVAILABLE',
+                    timestamp '2026-06-06 12:00:00',
+                    timestamp '2026-06-06 12:00:00',
+                    timestamp '2026-06-06 12:00:00'
+                )
+                """, issuedCouponId, couponId, customerId);
     }
 
     private void insertExistingProduct(JdbcTemplate jdbcTemplate, Long productId, String name) {

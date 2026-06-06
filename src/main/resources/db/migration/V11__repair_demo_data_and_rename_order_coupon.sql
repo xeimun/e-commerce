@@ -1,10 +1,41 @@
-delete from coupons
+update issued_coupons
+set status = 'EXPIRED',
+    updated_at = timestamp '2026-06-06 00:00:00'
+where status = 'AVAILABLE'
+  and exists (
+      select 1
+      from coupons
+      where coupons.id = issued_coupons.coupon_id
+        and name = '달빛 상점 아트북 4000원 할인'
+        and type = 'PRODUCT'
+        and discount_amount = 4000.00
+        and target_product_id = 10001
+        and created_at = timestamp '2026-06-06 00:00:00'
+        and updated_at = timestamp '2026-06-06 00:00:00'
+        and not exists (
+            select 1
+            from products
+            where id = 10001
+              and name = '달빛 상점 한정판 아트북'
+              and price = 35000.00
+              and status = 'ON_SALE'
+              and content_title = '달빛 상점'
+              and content_type = 'WEBTOON'
+              and category = 'ARTBOOK'
+              and description = '웹툰 달빛 상점 시즌 1의 콘셉트 아트와 작가 코멘터리를 담은 한정판 아트북'
+        )
+  );
+
+update coupons
+set expires_at = timestamp '2026-06-06 00:00:00',
+    updated_at = timestamp '2026-06-06 00:00:00'
 where name = '달빛 상점 아트북 4000원 할인'
   and type = 'PRODUCT'
   and discount_amount = 4000.00
   and target_product_id = 10001
   and created_at = timestamp '2026-06-06 00:00:00'
   and updated_at = timestamp '2026-06-06 00:00:00'
+  and exists (select 1 from issued_coupons where coupon_id = coupons.id)
   and not exists (
       select 1
       from products
@@ -19,12 +50,85 @@ where name = '달빛 상점 아트북 4000원 할인'
   );
 
 delete from coupons
+where name = '달빛 상점 아트북 4000원 할인'
+  and type = 'PRODUCT'
+  and discount_amount = 4000.00
+  and target_product_id = 10001
+  and created_at = timestamp '2026-06-06 00:00:00'
+  and updated_at = timestamp '2026-06-06 00:00:00'
+  and not exists (select 1 from issued_coupons where coupon_id = coupons.id)
+  and not exists (
+      select 1
+      from products
+      where id = 10001
+        and name = '달빛 상점 한정판 아트북'
+        and price = 35000.00
+        and status = 'ON_SALE'
+        and content_title = '달빛 상점'
+        and content_type = 'WEBTOON'
+        and category = 'ARTBOOK'
+        and description = '웹툰 달빛 상점 시즌 1의 콘셉트 아트와 작가 코멘터리를 담은 한정판 아트북'
+  );
+
+update issued_coupons
+set status = 'EXPIRED',
+    updated_at = timestamp '2026-06-06 00:00:00'
+where status = 'AVAILABLE'
+  and exists (
+      select 1
+      from coupons
+      where coupons.id = issued_coupons.coupon_id
+        and name = '라스트 오케스트라 OST 7000원 할인'
+        and type = 'PRODUCT'
+        and discount_amount = 7000.00
+        and target_product_id = 10004
+        and created_at = timestamp '2026-06-06 00:00:00'
+        and updated_at = timestamp '2026-06-06 00:00:00'
+        and not exists (
+            select 1
+            from products
+            where id = 10004
+              and name = '라스트 오케스트라 OST 패키지'
+              and price = 42000.00
+              and status = 'ON_SALE'
+              and content_title = '라스트 오케스트라'
+              and content_type = 'MUSIC'
+              and category = 'OST'
+              and description = 'OST 앨범, 미니 포토북, 넘버링 카드로 구성된 한정판 음악 패키지'
+        )
+  );
+
+update coupons
+set expires_at = timestamp '2026-06-06 00:00:00',
+    updated_at = timestamp '2026-06-06 00:00:00'
 where name = '라스트 오케스트라 OST 7000원 할인'
   and type = 'PRODUCT'
   and discount_amount = 7000.00
   and target_product_id = 10004
   and created_at = timestamp '2026-06-06 00:00:00'
   and updated_at = timestamp '2026-06-06 00:00:00'
+  and exists (select 1 from issued_coupons where coupon_id = coupons.id)
+  and not exists (
+      select 1
+      from products
+      where id = 10004
+        and name = '라스트 오케스트라 OST 패키지'
+        and price = 42000.00
+        and status = 'ON_SALE'
+        and content_title = '라스트 오케스트라'
+        and content_type = 'MUSIC'
+        and category = 'OST'
+        and description = 'OST 앨범, 미니 포토북, 넘버링 카드로 구성된 한정판 음악 패키지'
+  );
+
+delete from coupons
+where name = '라스트 오케스트라 OST 7000원 할인'
+  and type = 'PRODUCT'
+  and discount_amount = 7000.00
+  and target_product_id = 10004
+  and created_at = timestamp '2026-06-06 00:00:00'
+  and updated_at = timestamp '2026-06-06 00:00:00'
+  and not exists (select 1 from issued_coupons where coupon_id = coupons.id)
   and not exists (
       select 1
       from products
