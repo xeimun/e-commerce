@@ -150,21 +150,16 @@
 
   .cover,
   .detailCover {
-    @apply relative flex aspect-[2/3] flex-col justify-between overflow-hidden rounded bg-surface-subtle p-3.5 shadow-soft transition-transform duration-150 ease-out;
+    @apply relative flex aspect-square overflow-hidden rounded bg-surface-card p-0 shadow-soft transition-transform duration-150 ease-out;
     transition-property: box-shadow, transform;
   }
 
   .productArtwork {
-    @apply relative isolate overflow-hidden;
+    @apply relative isolate overflow-hidden bg-surface-card;
   }
 
   .artworkImage {
-    @apply absolute inset-0 z-0 h-full w-full;
-  }
-
-  .artworkTitle {
-    @apply max-w-full;
-    text-shadow: 0 1px 10px rgb(0 0 0 / 0.16);
+    @apply absolute inset-0 z-0 h-full w-full object-cover;
   }
 
   .compactArtwork {
@@ -175,73 +170,16 @@
     @apply block;
   }
 
-  .artMoon {
-    @apply text-white;
-    background: #182232;
+  .artworkFallback {
+    @apply grid h-full w-full place-items-center bg-surface-muted text-brand;
   }
 
-  .artStar {
-    @apply text-white;
-    background: #202020;
-  }
-
-  .artLibrary {
-    @apply text-fg-primary;
-    background: #eaf5ff;
-  }
-
-  .artOrchestra {
-    @apply text-white;
-    background: #3d3d3d;
-  }
-
-  .artDawn {
-    @apply text-fg-primary;
-    background: #fff9ea;
-  }
-
-  .cover::after,
-  .detailCover::after {
-    @apply absolute content-[""];
-    inset: auto -20% -16%;
-    height: 44%;
-    background: rgb(255 255 255 / 0.18);
-    transform: rotate(-8deg);
-  }
-
-  .cover strong,
-  .detailCover strong,
-  .coverType,
-  .saleFlag {
-    @apply relative z-[1];
-  }
-
-  .cover strong,
-  .detailCover strong {
-    @apply text-[17px] font-bold leading-6;
-    word-break: keep-all;
-  }
-
-  .coverType {
-    @apply self-start text-xs font-bold leading-4 text-white/80;
+  .artworkFallback span {
+    @apply text-xl font-bold leading-7;
   }
 
   .saleFlag {
-    @apply absolute right-2.5 top-2.5 inline-flex min-h-6 items-center rounded bg-danger px-2 text-xs font-bold leading-4 text-white;
-  }
-
-  .artLibrary .coverType,
-  .artDawn .coverType {
-    @apply text-fg-secondary;
-  }
-
-  .artLibrary .artworkTitle,
-  .artDawn .artworkTitle {
-    text-shadow: none;
-  }
-
-  .artLibrary .saleFlag,
-  .artDawn .saleFlag {
+    @apply absolute right-2.5 top-2.5 z-[1] inline-flex min-h-6 items-center rounded bg-danger px-2 text-xs font-bold leading-4 text-white;
     box-shadow: 0 2px 8px rgb(0 0 0 / 0.12);
   }
 
@@ -332,7 +270,7 @@
   }
 
   .detailCover {
-    @apply min-h-[480px];
+    @apply w-full;
   }
 
   .detailInfo {
@@ -450,35 +388,15 @@
 
   .cartRow {
     @apply grid items-center gap-4 rounded-lg bg-surface-card p-4 shadow-soft;
-    grid-template-columns: auto 64px minmax(0, 1fr) auto;
+    grid-template-columns: auto 80px minmax(0, 1fr) auto;
   }
 
   .thumb {
-    @apply grid h-24 w-16 place-items-center rounded bg-brand text-sm font-bold text-white;
+    @apply grid h-20 w-20 place-items-center rounded bg-surface-card text-sm font-bold text-brand shadow-soft;
   }
 
   .thumb.productArtwork {
     @apply block p-0 text-fg-primary;
-  }
-
-  .thumb.productArtwork.artMoon {
-    background: #182232;
-  }
-
-  .thumb.productArtwork.artStar {
-    background: #202020;
-  }
-
-  .thumb.productArtwork.artLibrary {
-    background: #eaf5ff;
-  }
-
-  .thumb.productArtwork.artOrchestra {
-    background: #3d3d3d;
-  }
-
-  .thumb.productArtwork.artDawn {
-    background: #fff9ea;
   }
 
   .cartText,
@@ -723,7 +641,7 @@
 
   .checkoutLineItem {
     @apply grid items-center gap-4 rounded-lg bg-surface-card p-4 shadow-soft;
-    grid-template-columns: 64px minmax(0, 1fr) minmax(180px, 220px) auto;
+    grid-template-columns: 80px minmax(0, 1fr) minmax(180px, 220px) auto;
   }
 
   .checkoutLineItem > .iconButton {
@@ -732,7 +650,7 @@
 
   .checkoutThumb,
   .orderItemThumb {
-    @apply h-24 w-16;
+    @apply h-20 w-20;
   }
 
   .checkoutItemBody {
@@ -874,7 +792,7 @@
 
   .orderItemRow {
     @apply grid items-center gap-4 rounded-lg bg-surface-card p-4 shadow-soft;
-    grid-template-columns: 64px minmax(0, 1fr) minmax(140px, auto);
+    grid-template-columns: 80px minmax(0, 1fr) minmax(140px, auto);
   }
 
   .orderItemPrice {
@@ -1134,7 +1052,7 @@
 
   .checkoutLineItem {
     @apply items-start;
-    grid-template-columns: 64px minmax(0, 1fr) 36px;
+    grid-template-columns: 72px minmax(0, 1fr) 36px;
   }
 
   .checkoutItemAction {
@@ -1181,12 +1099,16 @@
   }
 
   .detailCover {
-    @apply min-h-0 w-full max-w-[260px];
+    @apply w-full max-w-[320px];
   }
 
   .cartRow {
     @apply gap-3;
-    grid-template-columns: auto 56px minmax(0, 1fr);
+    grid-template-columns: auto 64px minmax(0, 1fr);
+  }
+
+  .thumb {
+    @apply h-16 w-16;
   }
 
   .cartActions {
@@ -1223,12 +1145,12 @@
 
   .checkoutLineItem {
     @apply gap-3;
-    grid-template-columns: 56px minmax(0, 1fr) 36px;
+    grid-template-columns: 64px minmax(0, 1fr) 36px;
   }
 
   .checkoutThumb,
   .orderItemThumb {
-    @apply h-[84px] w-14;
+    @apply h-16 w-16;
   }
 
   .checkoutItemAction {
@@ -1265,7 +1187,7 @@
 
   .orderItemRow {
     @apply gap-3;
-    grid-template-columns: 56px minmax(0, 1fr);
+    grid-template-columns: 64px minmax(0, 1fr);
   }
 
   .orderItemPrice {
