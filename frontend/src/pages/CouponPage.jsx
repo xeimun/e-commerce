@@ -74,6 +74,7 @@ export default function CouponPage({ customerId, onApiEvent }) {
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState('info');
   const [pendingCouponId, setPendingCouponId] = useState(null);
+  const [activeTab, setActiveTab] = useState('issuable');
 
   async function loadCoupons() {
     setStatus('loading');
@@ -103,6 +104,10 @@ export default function CouponPage({ customerId, onApiEvent }) {
     () => myCoupons.filter((coupon) => coupon.status === 'AVAILABLE').length,
     [myCoupons]
   );
+  const issuableCouponCount = useMemo(
+    () => issuableCoupons.filter((coupon) => coupon.issuable).length,
+    [issuableCoupons]
+  );
 
   async function issueCoupon(couponId) {
     setPendingCouponId(couponId);
@@ -112,6 +117,7 @@ export default function CouponPage({ customerId, onApiEvent }) {
     try {
       await api.issueCoupon(couponId, { customerId, onApiEvent });
       await loadCoupons();
+      setActiveTab('mine');
       setMessage('쿠폰을 발급했어요.');
       setMessageType('success');
     } catch (error) {
@@ -139,7 +145,7 @@ export default function CouponPage({ customerId, onApiEvent }) {
         </div>
         <div>
           <span>발급 가능</span>
-          <strong>{issuableCoupons.filter((coupon) => coupon.issuable).length}장</strong>
+          <strong>{issuableCouponCount}장</strong>
         </div>
         <button className="textButton" type="button" onClick={loadCoupons}>
           <RefreshCw aria-hidden="true" size={18} />
@@ -181,7 +187,40 @@ export default function CouponPage({ customerId, onApiEvent }) {
 
       {status === 'success' && (
         <>
-          <section className="couponSection" aria-labelledby="issuable-coupon-title">
+          <div className="segmentedTabs" role="tablist" aria-label="쿠폰 보기">
+            <button
+              className={`segmentedTab ${activeTab === 'issuable' ? 'active' : ''}`}
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'issuable'}
+              aria-controls="issuable-coupon-panel"
+              id="issuable-coupon-tab"
+              onClick={() => setActiveTab('issuable')}
+            >
+              발급 가능
+              <span>{issuableCoupons.length}</span>
+            </button>
+            <button
+              className={`segmentedTab ${activeTab === 'mine' ? 'active' : ''}`}
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'mine'}
+              aria-controls="my-coupon-panel"
+              id="my-coupon-tab"
+              onClick={() => setActiveTab('mine')}
+            >
+              내 보유 쿠폰
+              <span>{myCoupons.length}</span>
+            </button>
+          </div>
+
+          {activeTab === 'issuable' && (
+          <section
+            className="couponSection"
+            id="issuable-coupon-panel"
+            role="tabpanel"
+            aria-labelledby="issuable-coupon-tab"
+          >
             <div className="sectionTitle">
               <h2 id="issuable-coupon-title">발급 가능 쿠폰</h2>
               <span>{issuableCoupons.length}개</span>
@@ -218,8 +257,15 @@ export default function CouponPage({ customerId, onApiEvent }) {
               </div>
             )}
           </section>
+          )}
 
-          <section className="couponSection" aria-labelledby="my-coupon-title">
+          {activeTab === 'mine' && (
+          <section
+            className="couponSection"
+            id="my-coupon-panel"
+            role="tabpanel"
+            aria-labelledby="my-coupon-tab"
+          >
             <div className="sectionTitle">
               <h2 id="my-coupon-title">내 보유 쿠폰</h2>
               <span>{myCoupons.length}장</span>
@@ -243,6 +289,7 @@ export default function CouponPage({ customerId, onApiEvent }) {
               </div>
             )}
           </section>
+          )}
         </>
       )}
     </section>

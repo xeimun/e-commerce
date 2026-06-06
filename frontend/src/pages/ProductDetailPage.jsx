@@ -2,11 +2,10 @@ import { ArrowLeft, Minus, Plus, ShoppingCart } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../api/client.js';
+import ProductArtwork from '../components/ProductArtwork.jsx';
 import {
-  formatContentType,
   formatWon,
-  getDiscountedPrice,
-  getProductTone
+  getDiscountedPrice
 } from '../utils/format.js';
 
 export default function ProductDetailPage({ customerId, onApiEvent }) {
@@ -103,15 +102,7 @@ export default function ProductDetailPage({ customerId, onApiEvent }) {
       </Link>
 
       <div className="productDetail">
-        <div className={`detailCover ${getProductTone(product.productId)}`}>
-          {Number(product.instantDiscountAmount || 0) > 0 && (
-            <span className="saleFlag">
-              {formatWon(product.instantDiscountAmount)} 할인
-            </span>
-          )}
-          <span className="coverType">{formatContentType(product.contentType)}</span>
-          <strong>{product.contentTitle || product.category}</strong>
-        </div>
+        <ProductArtwork product={product} className="detailCover" />
 
         <div className="detailInfo">
           <p className="eyebrow">{product.category || '한정판 굿즈'}</p>

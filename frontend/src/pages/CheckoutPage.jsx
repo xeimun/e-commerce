@@ -1,6 +1,5 @@
 import {
   ArrowLeft,
-  CheckCircle2,
   CreditCard,
   RefreshCw,
   TicketPercent,
@@ -9,6 +8,7 @@ import {
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../api/client.js';
+import ProductArtwork from '../components/ProductArtwork.jsx';
 import { formatWon, getCartItemUnitPrice } from '../utils/format.js';
 
 const CHECKOUT_CART_ITEM_IDS_KEY = 'checkout-cart-item-ids';
@@ -26,25 +26,6 @@ function readCheckoutCartItemIds() {
   } catch {
     return [];
   }
-}
-
-function formatExpiresAt(value) {
-  if (!value) {
-    return '-';
-  }
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  return date.toLocaleString('ko-KR', {
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
 }
 
 function findCouponById(coupons, couponId) {
@@ -68,9 +49,7 @@ function CheckoutLineItem({ item, onRemove, productCoupon, productCoupons, onPro
 
   return (
     <article className="checkoutLineItem">
-      <div className="thumb checkoutThumb">
-        <span>{item.productName.slice(0, 2)}</span>
-      </div>
+      <ProductArtwork product={item} className="thumb checkoutThumb" compact />
       <div className="checkoutItemBody">
         <div>
           <h2>{item.productName}</h2>
@@ -123,13 +102,11 @@ export default function CheckoutPage({ customerId, onApiEvent }) {
   const [status, setStatus] = useState('loading');
   const [message, setMessage] = useState('');
   const [mutationStatus, setMutationStatus] = useState('idle');
-  const [createdOrder, setCreatedOrder] = useState(null);
 
   async function loadCheckout() {
     setStatus('loading');
     setMessage('');
     setMutationStatus('idle');
-    setCreatedOrder(null);
 
     try {
       const [cartPayload, couponPayload] = await Promise.all([
@@ -250,7 +227,6 @@ export default function CheckoutPage({ customerId, onApiEvent }) {
   async function createOrder() {
     setMutationStatus('pending');
     setMessage('');
-    setCreatedOrder(null);
 
     const productCouponRequests = selectedItems
       .map((item) => {
@@ -275,8 +251,8 @@ export default function CheckoutPage({ customerId, onApiEvent }) {
       }, { customerId, onApiEvent });
 
       window.sessionStorage.removeItem(CHECKOUT_CART_ITEM_IDS_KEY);
-      setCreatedOrder(payload);
       setMutationStatus('success');
+      navigate(`/orders/${payload.orderId}`);
     } catch (error) {
       setMutationStatus('error');
       setMessage(error.message || '주문을 생성하지 못했습니다.');
@@ -329,44 +305,6 @@ export default function CheckoutPage({ customerId, onApiEvent }) {
             <RefreshCw aria-hidden="true" size={18} />
             다시 시도
           </button>
-        </div>
-      </section>
-    );
-  }
-
-  if (createdOrder) {
-    return (
-      <section className="pageStack">
-        <div className="checkoutComplete">
-          <CheckCircle2 aria-hidden="true" size={32} />
-          <p className="eyebrow">Payment Pending</p>
-          <h1>주문이 생성됐어요.</h1>
-          <dl className="checkoutCompleteFacts">
-            <div>
-              <dt>주문 번호</dt>
-              <dd>#{createdOrder.orderId}</dd>
-            </div>
-            <div>
-              <dt>결제 금액</dt>
-              <dd>{formatWon(createdOrder.finalPaymentAmount)}</dd>
-            </div>
-            <div>
-              <dt>결제 만료</dt>
-              <dd>{formatExpiresAt(createdOrder.expiresAt)}</dd>
-            </div>
-          </dl>
-          <div className="checkoutCompleteActions">
-            <button
-              className="primaryButton"
-              type="button"
-              onClick={() => navigate(`/orders/${createdOrder.orderId}`)}
-            >
-              주문 상세
-            </button>
-            <button className="textButton" type="button" onClick={() => navigate('/products')}>
-              상품 더 보기
-            </button>
-          </div>
         </div>
       </section>
     );

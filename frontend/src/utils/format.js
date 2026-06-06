@@ -45,8 +45,3 @@ export function getCartItemUnitPrice(item) {
 
   return getDiscountedPrice(item);
 }
-
-export function getProductTone(productId) {
-  const tones = ['toneInk', 'tonePaper', 'toneBlue', 'toneGreen', 'toneCream'];
-  return tones[Number(productId || 0) % tones.length];
-}

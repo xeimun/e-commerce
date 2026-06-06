@@ -7,6 +7,7 @@ import {
   UserRound
 } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
+import dropGoodsLogo from '../assets/brand/drop-goods-logo.png';
 import StatusPanel from './StatusPanel.jsx';
 
 const navigationItems = [
@@ -22,11 +23,7 @@ export default function AppShell({ apiEvents, children, customerId, onCustomerId
     <div className="app">
       <header className="topbar">
         <NavLink className="brand" to="/products" aria-label="Drop Goods 상품">
-          <span className="brandMark">DG</span>
-          <span>
-            <strong>Drop Goods</strong>
-            <small>Limited IP Merch</small>
-          </span>
+          <img className="brandLogo" src={dropGoodsLogo} alt="Drop Goods Limited IP Merch" />
         </NavLink>
 
         <nav className="navTabs" aria-label="주요 화면">

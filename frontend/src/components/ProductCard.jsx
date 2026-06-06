@@ -1,6 +1,7 @@
 import { ShoppingBag } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { formatContentType, formatWon, getDiscountedPrice, getProductTone } from '../utils/format.js';
+import { formatWon, getDiscountedPrice } from '../utils/format.js';
+import ProductArtwork from './ProductArtwork.jsx';
 
 export default function ProductCard({ product }) {
   const hasDiscount = Number(product.instantDiscountAmount || 0) > 0;
@@ -9,15 +10,7 @@ export default function ProductCard({ product }) {
 
   return (
     <Link className="bookCard" to={`/products/${product.productId}`}>
-      <div className={`cover ${getProductTone(product.productId)}`}>
-        {hasDiscount && (
-          <span className="saleFlag">
-            {formatWon(product.instantDiscountAmount)} 할인
-          </span>
-        )}
-        <span className="coverType">{formatContentType(product.contentType)}</span>
-        <strong>{product.contentTitle || product.category || 'Drop Goods'}</strong>
-      </div>
+      <ProductArtwork product={product} className="cover" />
 
       <div className="bookMeta">
         <h2>{product.name}</h2>
