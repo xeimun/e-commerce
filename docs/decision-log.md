@@ -877,3 +877,27 @@ PostgreSQL의 identity 컬럼은 명시적으로 지정한 ID insert만으로 �
 
 - 잘못 생성된 데모 쿠폰이 이미 발급된 DB에서도 애플리케이션 시작이 막히지 않는다.
 - 발급 이력은 보존되고, 참조 없는 잘못된 데모 쿠폰은 깔끔하게 제거된다.
+
+## 026 (2026-06-07)
+
+### 적용된 Flyway V9 마이그레이션 유지
+
+#### 선택
+
+PR에서는 base 브랜치의 `V9__insert_demo_products_and_coupons.sql`을 수정하지 않고, 추가 정리 작업은 새 `V11` 마이그레이션과 명시적인 로컬 repair 절차로 분리한다.
+
+#### 배경
+
+Flyway는 새 마이그레이션을 실행하기 전에 이미 적용된 versioned migration의 체크섬을 먼저 검증한다.
+따라서 base 브랜치의 현재 `V9`를 이미 적용한 환경에서 PR이 `V9` 내용을 바꾸면, `V11` 정리 로직에 도달하기 전에 checksum mismatch로 시작이 실패한다.
+
+#### 선택 이유
+
+- versioned migration은 적용 후 변경하지 않는 것이 Flyway 운영 원칙이다.
+- 오래된 로컬 개발 DB의 과거 `V9` 체크섬 문제는 PR 코드가 아니라 DB reset 또는 명시적인 Flyway repair로 해결해야 한다.
+- `V11`은 base `V9`를 정상 적용한 DB에서도 안전하게 no-op 또는 데이터 정리만 수행해야 한다.
+
+#### 기대 효과
+
+- 이미 base `V9`를 적용한 환경에서 PR 머지 후 checksum mismatch가 발생하지 않는다.
+- 과거 로컬 DB 복구 절차와 코드 마이그레이션 책임을 분리해 설명할 수 있다.

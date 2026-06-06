@@ -57,6 +57,8 @@ class FlywayMigrationTest {
         migrateToV8(dataSource);
         JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
         insertCollidingProduct(jdbcTemplate);
+        migrateToV10(dataSource);
+        insertInvalidDemoProductCoupon(jdbcTemplate, 800L);
 
         migrateToLatest(dataSource);
 
@@ -89,10 +91,8 @@ class FlywayMigrationTest {
         JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
         insertCollidingProduct(jdbcTemplate);
         migrateToV10(dataSource);
-        Long couponId = jdbcTemplate.queryForObject(
-                "select id from coupons where name = '달빛 상점 아트북 4000원 할인' and target_product_id = 10001",
-                Long.class
-        );
+        Long couponId = 801L;
+        insertInvalidDemoProductCoupon(jdbcTemplate, couponId);
         insertIssuedCoupon(jdbcTemplate, 700L, couponId, 11L);
 
         migrateToLatest(dataSource);
@@ -274,6 +274,21 @@ class FlywayMigrationTest {
                     timestamp '2026-06-06 12:00:00'
                 )
                 """, issuedCouponId, couponId, customerId);
+    }
+
+    private void insertInvalidDemoProductCoupon(JdbcTemplate jdbcTemplate, Long couponId) {
+        jdbcTemplate.update("""
+                insert into coupons (
+                    id, name, type, discount_amount, target_product_id,
+                    expires_at, created_at, updated_at
+                )
+                values (
+                    ?, '달빛 상점 아트북 4000원 할인', 'PRODUCT', 4000.00, 10001,
+                    timestamp '2027-12-31 23:59:59',
+                    timestamp '2026-06-06 00:00:00',
+                    timestamp '2026-06-06 00:00:00'
+                )
+                """, couponId);
     }
 
     private void insertExistingProduct(JdbcTemplate jdbcTemplate, Long productId, String name) {
