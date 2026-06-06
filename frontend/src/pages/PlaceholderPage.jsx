@@ -5,7 +5,7 @@ export default function PlaceholderPage({ title }) {
         <p className="eyebrow">Next</p>
         <div>
           <h1>{title}</h1>
-          <p>다음 프론트 기능에서 이어서 연결합니다.</p>
+          <p>성능 개선 후 구현 예정</p>
         </div>
       </div>
     </section>

@@ -3,15 +3,13 @@ import {
   Boxes,
   ChevronDown,
   ChevronUp,
-  Clock3,
   Package,
-  ReceiptText,
   RefreshCw,
   ShoppingCart,
   Ticket,
   UserRound
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { api } from '../api/client.js';
 import { formatDateTime, formatWon, getCartItemUnitPrice, getDiscountedPrice } from '../utils/format.js';
 
@@ -22,12 +20,6 @@ const couponStatusLabels = {
   EXPIRED: '만료'
 };
 
-const orderStatusLabels = {
-  PAYMENT_PENDING: '결제 대기',
-  COMPLETED: '완료',
-  CANCELED: '취소'
-};
-
 const productStatusLabels = {
   ON_SALE: '판매 중',
   STOPPED: '판매 중지'
@@ -36,8 +28,7 @@ const productStatusLabels = {
 const emptySnapshot = {
   products: [],
   cartItems: [],
-  coupons: [],
-  orders: []
+  coupons: []
 };
 
 function formatShortTime() {
@@ -48,18 +39,13 @@ function formatShortTime() {
   });
 }
 
-function getTimeValue(value) {
-  const time = new Date(value).getTime();
-  return Number.isNaN(time) ? Number.MAX_SAFE_INTEGER : time;
-}
-
 function EmptyPanelRow({ text }) {
   return <p className="mutedText statusEmpty">{text}</p>;
 }
 
-function StatusSection({ children, count, icon: Icon, id, title }) {
+function StatusSection({ children, className = '', count, icon: Icon, id, title }) {
   return (
-    <section className="statusSection" aria-labelledby={`status-${id}`}>
+    <section className={`statusSection ${className}`} aria-labelledby={`status-${id}`}>
       <div className="statusSectionHeader">
         <span>
           <Icon aria-hidden="true" size={16} />
@@ -72,6 +58,19 @@ function StatusSection({ children, count, icon: Icon, id, title }) {
   );
 }
 
+function StatusSignal({ icon: Icon, label, meta, value }) {
+  return (
+    <div className="statusSignal">
+      <Icon aria-hidden="true" size={16} />
+      <div>
+        <span>{label}</span>
+        <strong>{value}</strong>
+        {meta && <small>{meta}</small>}
+      </div>
+    </div>
+  );
+}
+
 export default function StatusPanel({ apiEvents, customerId }) {
   const [isOpen, setIsOpen] = useState(true);
   const [snapshot, setSnapshot] = useState(emptySnapshot);
@@ -79,7 +78,8 @@ export default function StatusPanel({ apiEvents, customerId }) {
   const [snapshotMessage, setSnapshotMessage] = useState('');
   const [lastSyncedAt, setLastSyncedAt] = useState('');
   const [refreshKey, setRefreshKey] = useState(0);
-  const latestApiEventId = apiEvents[0]?.id || '';
+  const latestApiEvent = apiEvents[0];
+  const latestApiEventId = latestApiEvent?.id || '';
 
   useEffect(() => {
     let ignore = false;
@@ -89,11 +89,10 @@ export default function StatusPanel({ apiEvents, customerId }) {
       setSnapshotMessage('');
 
       try {
-        const [products, cart, coupons, orders] = await Promise.all([
+        const [products, cart, coupons] = await Promise.all([
           api.getProducts(),
           api.getCart({ customerId }),
-          api.getMyCoupons({ customerId }),
-          api.getOrders({ customerId })
+          api.getMyCoupons({ customerId })
         ]);
 
         if (ignore) {
@@ -103,8 +102,7 @@ export default function StatusPanel({ apiEvents, customerId }) {
         setSnapshot({
           products: products || [],
           cartItems: cart?.items || [],
-          coupons: coupons || [],
-          orders: orders || []
+          coupons: coupons || []
         });
         setLastSyncedAt(formatShortTime());
         setSnapshotStatus('success');
@@ -125,16 +123,13 @@ export default function StatusPanel({ apiEvents, customerId }) {
     };
   }, [customerId, latestApiEventId, refreshKey]);
 
-  const pendingOrders = useMemo(
-    () => snapshot.orders.filter((order) => order.status === 'PAYMENT_PENDING'),
-    [snapshot.orders]
-  );
-  const nearestPendingOrder = useMemo(() => {
-    return [...pendingOrders].sort((left, right) => getTimeValue(left.expiresAt) - getTimeValue(right.expiresAt))[0];
-  }, [pendingOrders]);
   const availableCouponCount = snapshot.coupons.filter((coupon) => coupon.status === 'AVAILABLE').length;
   const reservedCouponCount = snapshot.coupons.filter((coupon) => coupon.status === 'RESERVED').length;
   const selectableCartCount = snapshot.cartItems.filter((item) => item.selectable).length;
+  const lowStockCount = snapshot.products.filter((product) => {
+    const stockQuantity = Number(product.stockQuantity || 0);
+    return product.status !== 'ON_SALE' || stockQuantity <= 10;
+  }).length;
   const isSnapshotLoading = snapshotStatus === 'loading';
   const isRefreshing = snapshotStatus === 'loading' || snapshotStatus === 'refreshing';
 
@@ -168,66 +163,39 @@ export default function StatusPanel({ apiEvents, customerId }) {
 
       {isOpen && (
         <div className="statusPanelBody">
-          <dl className="stateList statusSummary">
-            <div>
-              <dt>
-                <UserRound aria-hidden="true" size={16} />
-                고객 ID
-              </dt>
-              <dd>{customerId}</dd>
-            </div>
-            <div>
-              <dt>
-                <Package aria-hidden="true" size={16} />
-                상품 재고
-              </dt>
-              <dd>{snapshot.products.length}종</dd>
-            </div>
-            <div>
-              <dt>
-                <ShoppingCart aria-hidden="true" size={16} />
-                장바구니
-              </dt>
-              <dd>{snapshot.cartItems.length}개</dd>
-            </div>
-            <div>
-              <dt>
-                <Ticket aria-hidden="true" size={16} />
-                쿠폰
-              </dt>
-              <dd>{availableCouponCount}장</dd>
-            </div>
-            <div>
-              <dt>
-                <ReceiptText aria-hidden="true" size={16} />
-                결제 대기
-              </dt>
-              <dd>{pendingOrders.length}건</dd>
-            </div>
-            <div>
-              <dt>
-                <Clock3 aria-hidden="true" size={16} />
-                최근 API
-              </dt>
-              <dd>{apiEvents.length ? `${apiEvents.length}건` : '대기'}</dd>
-            </div>
-          </dl>
+          <div className="statusOverview" aria-label="상태 요약">
+            <StatusSignal icon={UserRound} label="고객 ID" value={customerId} meta="X-Customer-Id" />
+            <StatusSignal
+              icon={Package}
+              label="상품 재고"
+              value={`${snapshot.products.length}종`}
+              meta={lowStockCount > 0 ? `주의 ${lowStockCount}종` : '전체 정상'}
+            />
+            <StatusSignal
+              icon={ShoppingCart}
+              label="장바구니"
+              value={`${snapshot.cartItems.length}개`}
+              meta={`${selectableCartCount}개 주문 가능`}
+            />
+            <StatusSignal
+              icon={Ticket}
+              label="보유 쿠폰"
+              value={`${availableCouponCount}장`}
+              meta={reservedCouponCount > 0 ? `예약 ${reservedCouponCount}장` : '예약 없음'}
+            />
+            <StatusSignal
+              icon={Activity}
+              label="최근 API"
+              value={latestApiEvent ? `${latestApiEvent.status}` : '대기'}
+              meta={latestApiEvent ? `${latestApiEvent.method} ${latestApiEvent.path}` : '호출 없음'}
+            />
+          </div>
 
           {lastSyncedAt && <p className="statusSyncedAt">동기화 {lastSyncedAt}</p>}
 
           {snapshotStatus === 'error' && (
             <div className="inlineNotice error">
               <span>{snapshotMessage}</span>
-            </div>
-          )}
-
-          {nearestPendingOrder && (
-            <div className="pendingExpiry">
-              <Clock3 aria-hidden="true" size={16} />
-              <div>
-                <span>가장 가까운 결제 만료</span>
-                <strong>주문 #{nearestPendingOrder.orderId} · {formatDateTime(nearestPendingOrder.expiresAt)}</strong>
-              </div>
             </div>
           )}
 
@@ -247,12 +215,17 @@ export default function StatusPanel({ apiEvents, customerId }) {
                     {snapshot.products.slice(0, 5).map((product) => {
                       const stockQuantity = Number(product.stockQuantity || 0);
                       const hasStock = product.status === 'ON_SALE' && stockQuantity > 0;
+                      const hasDiscount = Number(product.instantDiscountAmount || 0) > 0;
 
                       return (
                         <div className="statusMiniRow" key={product.productId}>
                           <div>
                             <strong>{product.name}</strong>
-                            <p>{formatWon(getDiscountedPrice(product))} · {productStatusLabels[product.status] || product.status}</p>
+                            <p>
+                              {formatWon(getDiscountedPrice(product))}
+                              {hasDiscount && ` · 즉시 할인 ${formatWon(product.instantDiscountAmount)}`}
+                              {!hasDiscount && ` · ${productStatusLabels[product.status] || product.status}`}
+                            </p>
                           </div>
                           <span className={hasStock ? 'stockBadge' : 'stockBadge danger'}>{stockQuantity}개</span>
                         </div>
@@ -286,7 +259,7 @@ export default function StatusPanel({ apiEvents, customerId }) {
                 )}
               </StatusSection>
 
-              <StatusSection count={`사용 가능 ${availableCouponCount}장 · 예약 ${reservedCouponCount}장`} icon={Ticket} id="coupons" title="보유 쿠폰">
+              <StatusSection count={`사용 가능 ${availableCouponCount}장`} icon={Ticket} id="coupons" title="보유 쿠폰">
                 {snapshot.coupons.length === 0 ? (
                   <EmptyPanelRow text="보유 쿠폰이 없어요." />
                 ) : (
@@ -305,30 +278,16 @@ export default function StatusPanel({ apiEvents, customerId }) {
                   </div>
                 )}
               </StatusSection>
-
-              <StatusSection count={`${snapshot.orders.length}건`} icon={ReceiptText} id="orders" title="최근 주문">
-                {snapshot.orders.length === 0 ? (
-                  <EmptyPanelRow text="최근 주문이 없어요." />
-                ) : (
-                  <div className="statusMiniList">
-                    {snapshot.orders.slice(0, 4).map((order) => (
-                      <div className="statusMiniRow" key={order.orderId}>
-                        <div>
-                          <strong>주문 #{order.orderId}</strong>
-                          <p>{formatWon(order.finalPaymentAmount)} · 만료 {formatDateTime(order.expiresAt)}</p>
-                        </div>
-                        <span className={`statusBadge orderStatus status${order.status || ''}`}>
-                          {orderStatusLabels[order.status] || order.status}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </StatusSection>
             </>
           )}
 
-          <StatusSection count={apiEvents.length ? `${apiEvents.length}건` : '대기'} icon={Activity} id="api-events" title="최근 API">
+          <StatusSection
+            className="apiStatusSection"
+            count={apiEvents.length ? `${apiEvents.length}건` : '대기'}
+            icon={Activity}
+            id="api-events"
+            title="호출 API"
+          >
             <div className="apiTimeline">
               {apiEvents.length === 0 ? (
                 <EmptyPanelRow text="호출 기록이 아직 없어요." />

@@ -587,11 +587,11 @@ X-Customer-Id: 1
 [
   {
     "couponId": 1,
-    "name": "전체 상품 3000원 할인",
+    "name": "드롭 기념 전체 상품 5000원 할인",
     "type": "ORDER",
-    "discountAmount": 3000,
+    "discountAmount": 5000,
     "targetProductId": null,
-    "expiresAt": "2026-06-30T23:59:59",
+    "expiresAt": "2027-12-31T23:59:59",
     "issuable": true
   }
 ]
@@ -637,12 +637,12 @@ X-Customer-Id: 1
   {
     "issuedCouponId": 1,
     "couponId": 1,
-    "name": "전체 상품 3000원 할인",
+    "name": "드롭 기념 전체 상품 5000원 할인",
     "type": "ORDER",
-    "discountAmount": 3000,
+    "discountAmount": 5000,
     "targetProductId": null,
     "status": "AVAILABLE",
-    "expiresAt": "2026-06-30T23:59:59"
+    "expiresAt": "2027-12-31T23:59:59"
   }
 ]
 ```

@@ -139,7 +139,7 @@ class FlywayMigrationTest {
     }
 
     @Test
-    void v11RenamesFirstOrderDemoCouponToDropDemoCoupon() {
+    void v14RemovesDropDemo3000OrderCouponFromFinalSeed() {
         DriverManagerDataSource dataSource = dataSource();
         migrateToLatest(dataSource);
         JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
@@ -153,7 +153,7 @@ class FlywayMigrationTest {
                 Integer.class
         );
         assertThat(oldNameCount).isZero();
-        assertThat(newNameCount).isEqualTo(1);
+        assertThat(newNameCount).isZero();
     }
 
     @Test
@@ -174,7 +174,7 @@ class FlywayMigrationTest {
                 Integer.class
         );
         assertThat(couponName).isEqualTo("첫 주문 전체 상품 3000원 할인");
-        assertThat(renamedDemoCouponCount).isEqualTo(1);
+        assertThat(renamedDemoCouponCount).isZero();
     }
 
     @Test
@@ -195,8 +195,8 @@ class FlywayMigrationTest {
                 "select price from products where id between 10001 and 10005 order by id",
                 BigDecimal.class
         );
-        Integer activeDiscountCount = jdbcTemplate.queryForObject(
-                "select count(*) from product_discounts where product_id in (10001, 10004) and active = true",
+        Integer activeLpDiscountCount = jdbcTemplate.queryForObject(
+                "select count(*) from product_discounts where product_id = 10001 and active = true",
                 Integer.class
         );
         var productCouponNames = jdbcTemplate.queryForList(
@@ -225,11 +225,53 @@ class FlywayMigrationTest {
                 new BigDecimal("45000.00"),
                 new BigDecimal("12000.00")
         );
-        assertThat(activeDiscountCount).isZero();
+        assertThat(activeLpDiscountCount).isZero();
         assertThat(productCouponNames).containsExactly(
                 "Sunny Side Up LP 4000원 할인",
                 "묘코 마스코트 봉제 인형 7000원 할인"
         );
+    }
+
+    @Test
+    void v14AppliesFinalDemoInstantDiscountsAndKeepsOnly5000OrderCoupon() {
+        DriverManagerDataSource dataSource = dataSource();
+        migrateToLatest(dataSource);
+        JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+
+        var activeDiscountNames = jdbcTemplate.queryForList(
+                "select name from product_discounts where product_id in (10002, 10004) and active = true order by product_id",
+                String.class
+        );
+        var activeDiscountAmounts = jdbcTemplate.queryForList(
+                "select discount_amount from product_discounts where product_id in (10002, 10004) and active = true order by product_id",
+                BigDecimal.class
+        );
+        Integer removed3000OrderCouponCount = jdbcTemplate.queryForObject(
+                "select count(*) from coupons where name = '드롭 기념 전체 상품 3000원 할인' and type = 'ORDER'",
+                Integer.class
+        );
+        Integer remaining5000OrderCouponCount = jdbcTemplate.queryForObject(
+                """
+                        select count(*)
+                        from coupons
+                        where name = '드롭 기념 전체 상품 5000원 할인'
+                          and type = 'ORDER'
+                          and discount_amount = 5000.00
+                          and target_product_id is null
+                        """,
+                Integer.class
+        );
+
+        assertThat(activeDiscountNames).containsExactly(
+                "Savoia S-21 드롭 할인",
+                "묘코 봉제 인형 드롭 할인"
+        );
+        assertThat(activeDiscountAmounts).containsExactly(
+                new BigDecimal("5000.00"),
+                new BigDecimal("3000.00")
+        );
+        assertThat(removed3000OrderCouponCount).isZero();
+        assertThat(remaining5000OrderCouponCount).isEqualTo(1);
     }
 
     private DriverManagerDataSource dataSource() {
