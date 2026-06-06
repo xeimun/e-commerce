@@ -6,7 +6,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.ecommerce.coupon.dto.IssuableCouponResponse;
 import com.ecommerce.coupon.dto.IssuedCouponIssueResponse;
 import com.ecommerce.coupon.entity.Coupon;
+import com.ecommerce.coupon.entity.CouponStatus;
 import com.ecommerce.coupon.exception.CouponAlreadyIssuedException;
+import com.ecommerce.coupon.exception.CouponNotIssuableException;
 import com.ecommerce.coupon.repository.CouponRepository;
 import com.ecommerce.coupon.repository.IssuedCouponRepository;
 import java.math.BigDecimal;
@@ -16,6 +18,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @SpringBootTest
 class CouponServiceIntegrationTest {
@@ -72,5 +75,29 @@ class CouponServiceIntegrationTest {
                 .containsExactly(firstCoupon.getId(), secondCoupon.getId());
         assertThat(response.get(0).issuable()).isTrue();
         assertThat(response.get(1).issuable()).isFalse();
+    }
+
+    @Test
+    void stoppedCouponIsNotIssuableAndCannotBeIssuedDirectly() {
+        Coupon activeCoupon = couponRepository.save(Coupon.createOrderCoupon(
+                "전체 상품 5000원 할인",
+                new BigDecimal("5000.00"),
+                LocalDateTime.now().plusDays(1)
+        ));
+        Coupon stoppedCoupon = Coupon.createOrderCoupon(
+                "중단된 전체 상품 3000원 할인",
+                new BigDecimal("3000.00"),
+                LocalDateTime.now().plusDays(1)
+        );
+        ReflectionTestUtils.setField(stoppedCoupon, "status", CouponStatus.STOPPED);
+        stoppedCoupon = couponRepository.save(stoppedCoupon);
+        Long stoppedCouponId = stoppedCoupon.getId();
+
+        List<IssuableCouponResponse> response = couponService.getIssuableCoupons(7L);
+
+        assertThat(response).extracting(IssuableCouponResponse::couponId)
+                .containsExactly(activeCoupon.getId());
+        assertThatThrownBy(() -> couponService.issueCoupon(7L, stoppedCouponId))
+                .isInstanceOf(CouponNotIssuableException.class);
     }
 }

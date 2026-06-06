@@ -33,6 +33,10 @@ public class Coupon {
     @Column(nullable = false, length = 20)
     private CouponType type;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private CouponStatus status;
+
     @Column(name = "discount_amount", nullable = false, precision = 19, scale = 2)
     private BigDecimal discountAmount;
 
@@ -61,6 +65,7 @@ public class Coupon {
     ) {
         this.name = requireText(name, "쿠폰명");
         this.type = Objects.requireNonNull(type, "쿠폰 타입은 필수입니다.");
+        this.status = CouponStatus.ACTIVE;
         this.discountAmount = requirePositiveDiscountAmount(discountAmount);
         this.targetProduct = targetProduct;
         this.expiresAt = Objects.requireNonNull(expiresAt, "쿠폰 만료 시간은 필수입니다.");
@@ -90,6 +95,10 @@ public class Coupon {
         return Objects.requireNonNull(now, "현재 시간은 필수입니다.").isAfter(expiresAt);
     }
 
+    public boolean isActive() {
+        return status == CouponStatus.ACTIVE;
+    }
+
     public boolean isOrderCoupon() {
         return type == CouponType.ORDER;
     }
@@ -103,6 +112,9 @@ public class Coupon {
     @PrePersist
     void onCreate() {
         LocalDateTime now = LocalDateTime.now();
+        if (status == null) {
+            status = CouponStatus.ACTIVE;
+        }
         this.createdAt = now;
         this.updatedAt = now;
     }
@@ -122,6 +134,10 @@ public class Coupon {
 
     public CouponType getType() {
         return type;
+    }
+
+    public CouponStatus getStatus() {
+        return status;
     }
 
     public BigDecimal getDiscountAmount() {

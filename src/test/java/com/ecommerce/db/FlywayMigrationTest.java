@@ -304,9 +304,15 @@ class FlywayMigrationTest {
                 "select order_id from issued_coupons where id = 711",
                 Long.class
         );
+        String couponStatus = jdbcTemplate.queryForObject(
+                "select status from coupons where id = ?",
+                String.class,
+                couponId
+        );
 
         assertThat(statuses).containsExactly("EXPIRED", "RESERVED");
         assertThat(reservedOrderId).isEqualTo(910L);
+        assertThat(couponStatus).isEqualTo("STOPPED");
     }
 
     @Test
@@ -332,9 +338,14 @@ class FlywayMigrationTest {
                 "select expires_at from coupons where id in (901, 902) order by id",
                 java.sql.Timestamp.class
         );
+        var nonSeedCouponStatuses = jdbcTemplate.queryForList(
+                "select status from coupons where id in (901, 902) order by id",
+                String.class
+        );
 
         assertThat(nonSeedCouponCount).isEqualTo(2);
         assertThat(issuedCouponStatus).isEqualTo("AVAILABLE");
+        assertThat(nonSeedCouponStatuses).containsExactly("ACTIVE", "ACTIVE");
         assertThat(nonSeedExpiresAt)
                 .extracting(java.sql.Timestamp::toLocalDateTime)
                 .containsExactly(

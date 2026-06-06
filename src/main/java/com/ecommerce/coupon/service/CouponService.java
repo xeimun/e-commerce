@@ -4,10 +4,12 @@ import com.ecommerce.coupon.dto.IssuableCouponResponse;
 import com.ecommerce.coupon.dto.IssuedCouponIssueResponse;
 import com.ecommerce.coupon.dto.MyCouponResponse;
 import com.ecommerce.coupon.entity.Coupon;
+import com.ecommerce.coupon.entity.CouponStatus;
 import com.ecommerce.coupon.entity.IssuedCoupon;
 import com.ecommerce.coupon.exception.CouponAlreadyIssuedException;
 import com.ecommerce.coupon.exception.CouponExpiredException;
 import com.ecommerce.coupon.exception.CouponNotFoundException;
+import com.ecommerce.coupon.exception.CouponNotIssuableException;
 import com.ecommerce.coupon.repository.CouponRepository;
 import com.ecommerce.coupon.repository.IssuedCouponRepository;
 import java.time.LocalDateTime;
@@ -33,7 +35,10 @@ public class CouponService {
     public List<IssuableCouponResponse> getIssuableCoupons(Long customerId) {
         Long validCustomerId = requirePositiveCustomerId(customerId);
         LocalDateTime now = LocalDateTime.now();
-        List<Coupon> coupons = couponRepository.findAllByExpiresAtGreaterThanEqualOrderByIdAsc(now);
+        List<Coupon> coupons = couponRepository.findAllByStatusAndExpiresAtGreaterThanEqualOrderByIdAsc(
+                CouponStatus.ACTIVE,
+                now
+        );
         Set<Long> issuedCouponIds = findIssuedCouponIds(validCustomerId, coupons);
 
         return coupons.stream()
@@ -48,6 +53,9 @@ public class CouponService {
         LocalDateTime now = LocalDateTime.now();
         Coupon coupon = couponRepository.findById(validCouponId)
                 .orElseThrow(() -> new CouponNotFoundException(validCouponId));
+        if (!coupon.isActive()) {
+            throw new CouponNotIssuableException(validCouponId);
+        }
         if (coupon.isExpired(now)) {
             throw new CouponExpiredException(validCouponId);
         }
