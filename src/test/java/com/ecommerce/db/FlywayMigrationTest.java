@@ -2,6 +2,7 @@ package com.ecommerce.db;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.MigrationVersion;
@@ -177,7 +178,7 @@ class FlywayMigrationTest {
     }
 
     @Test
-    void v12ReplacesDemoProductsWithFinalCatalog() {
+    void v13UpdatesFinalCatalogPricesAndCategories() {
         DriverManagerDataSource dataSource = dataSource();
         migrateToLatest(dataSource);
         JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
@@ -190,9 +191,13 @@ class FlywayMigrationTest {
                 "select category from products where id between 10001 and 10005 order by id",
                 String.class
         );
-        var discountNames = jdbcTemplate.queryForList(
-                "select name from product_discounts where product_id in (10001, 10004) order by product_id",
-                String.class
+        var productPrices = jdbcTemplate.queryForList(
+                "select price from products where id between 10001 and 10005 order by id",
+                BigDecimal.class
+        );
+        Integer activeDiscountCount = jdbcTemplate.queryForObject(
+                "select count(*) from product_discounts where product_id in (10001, 10004) and active = true",
+                Integer.class
         );
         var productCouponNames = jdbcTemplate.queryForList(
                 "select name from coupons where type = 'PRODUCT' and target_product_id in (10001, 10004) order by target_product_id",
@@ -207,16 +212,20 @@ class FlywayMigrationTest {
                 "[사이버펑크 2088] 네온 로고 아크릴 키링"
         );
         assertThat(productCategories).containsExactly(
-                "한정 LP",
-                "수상비행기 피규어",
-                "드로잉 원화",
-                "마스코트 봉제 인형",
-                "아크릴 키링"
+                "음반",
+                "피규어",
+                "아트워크",
+                "봉제 인형",
+                "키링"
         );
-        assertThat(discountNames).containsExactly(
-                "Sunny Side Up LP 발매 할인",
-                "묘코 마스코트 출시 할인"
+        assertThat(productPrices).containsExactly(
+                new BigDecimal("179000.00"),
+                new BigDecimal("88000.00"),
+                new BigDecimal("60000.00"),
+                new BigDecimal("45000.00"),
+                new BigDecimal("12000.00")
         );
+        assertThat(activeDiscountCount).isZero();
         assertThat(productCouponNames).containsExactly(
                 "Sunny Side Up LP 4000원 할인",
                 "묘코 마스코트 봉제 인형 7000원 할인"

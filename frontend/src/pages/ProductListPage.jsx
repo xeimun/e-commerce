@@ -32,7 +32,7 @@ export default function ProductListPage({ onApiEvent }) {
         <p className="eyebrow">Drop Goods</p>
         <div>
           <h1>콘텐츠 IP 한정판 굿즈</h1>
-          <p>웹툰, 영화, 음악에서 출발한 드롭 상품을 한곳에서 확인합니다.</p>
+          <p>모든 콘텐츠 IP의 한정판 드롭 상품을 한곳에서 만나보세요.</p>
         </div>
       </div>
 

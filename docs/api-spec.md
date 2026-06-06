@@ -107,14 +107,14 @@ GET /api/v1/products
   {
     "productId": 10001,
     "name": "[Sunny Side Up] Original Soundtrack Limited LP",
-    "price": 35000,
+    "price": 179000,
     "status": "ON_SALE",
     "contentTitle": "Sunny Side Up",
     "contentType": "MUSIC",
-    "category": "한정 LP",
+    "category": "음반",
     "description": "Sunny Side Up 오리지널 사운드트랙을 바이닐로 담은 한정판 LP",
     "stockQuantity": 120,
-    "instantDiscountAmount": 3000
+    "instantDiscountAmount": 0
   }
 ]
 ```
@@ -131,14 +131,14 @@ GET /api/v1/products/10001
 {
   "productId": 10001,
   "name": "[Sunny Side Up] Original Soundtrack Limited LP",
-  "price": 35000,
+  "price": 179000,
   "status": "ON_SALE",
   "contentTitle": "Sunny Side Up",
   "contentType": "MUSIC",
-  "category": "한정 LP",
+  "category": "음반",
   "description": "Sunny Side Up 오리지널 사운드트랙을 바이닐로 담은 한정판 LP",
   "stockQuantity": 120,
-  "instantDiscountAmount": 3000
+  "instantDiscountAmount": 0
 }
 ```
 
@@ -157,11 +157,11 @@ POST /api/v1/products
 ```json
 {
   "name": "[Sunny Side Up] Original Soundtrack Limited LP",
-  "price": 35000,
+  "price": 179000,
   "status": "ON_SALE",
   "contentTitle": "Sunny Side Up",
   "contentType": "MUSIC",
-  "category": "한정 LP",
+  "category": "음반",
   "description": "Sunny Side Up 오리지널 사운드트랙을 바이닐로 담은 한정판 LP",
   "stockQuantity": 120
 }
@@ -173,11 +173,11 @@ POST /api/v1/products
 {
   "productId": 1,
   "name": "[Sunny Side Up] Original Soundtrack Limited LP",
-  "price": 35000,
+  "price": 179000,
   "status": "ON_SALE",
   "contentTitle": "Sunny Side Up",
   "contentType": "MUSIC",
-  "category": "한정 LP",
+  "category": "음반",
   "description": "Sunny Side Up 오리지널 사운드트랙을 바이닐로 담은 한정판 LP",
   "stockQuantity": 120,
   "instantDiscountAmount": 0
@@ -195,10 +195,10 @@ PUT /api/v1/products/1
 ```json
 {
   "name": "[Sunny Side Up] Original Soundtrack Limited LP",
-  "price": 36000,
+  "price": 180000,
   "contentTitle": "Sunny Side Up",
   "contentType": "MUSIC",
-  "category": "한정 LP",
+  "category": "음반",
   "description": "Sunny Side Up 오리지널 사운드트랙 리마스터 한정판 LP"
 }
 ```
