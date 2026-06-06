@@ -176,6 +176,53 @@ class FlywayMigrationTest {
         assertThat(renamedDemoCouponCount).isEqualTo(1);
     }
 
+    @Test
+    void v12ReplacesDemoProductsWithFinalCatalog() {
+        DriverManagerDataSource dataSource = dataSource();
+        migrateToLatest(dataSource);
+        JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+
+        var productNames = jdbcTemplate.queryForList(
+                "select name from products where id between 10001 and 10005 order by id",
+                String.class
+        );
+        var productCategories = jdbcTemplate.queryForList(
+                "select category from products where id between 10001 and 10005 order by id",
+                String.class
+        );
+        var discountNames = jdbcTemplate.queryForList(
+                "select name from product_discounts where product_id in (10001, 10004) order by product_id",
+                String.class
+        );
+        var productCouponNames = jdbcTemplate.queryForList(
+                "select name from coupons where type = 'PRODUCT' and target_product_id in (10001, 10004) order by target_product_id",
+                String.class
+        );
+
+        assertThat(productNames).containsExactly(
+                "[Sunny Side Up] Original Soundtrack Limited LP",
+                "[Savoia] S-21 수상비행기 피규어",
+                "[구름을 만드는 정비소] 하레 작가 드로잉 원화",
+                "[우주에서 온 묘코] 묘코 마스코트 봉제 인형",
+                "[사이버펑크 2088] 네온 로고 아크릴 키링"
+        );
+        assertThat(productCategories).containsExactly(
+                "한정 LP",
+                "수상비행기 피규어",
+                "드로잉 원화",
+                "마스코트 봉제 인형",
+                "아크릴 키링"
+        );
+        assertThat(discountNames).containsExactly(
+                "Sunny Side Up LP 발매 할인",
+                "묘코 마스코트 출시 할인"
+        );
+        assertThat(productCouponNames).containsExactly(
+                "Sunny Side Up LP 4000원 할인",
+                "묘코 마스코트 봉제 인형 7000원 할인"
+        );
+    }
+
     private DriverManagerDataSource dataSource() {
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
         dataSource.setDriverClassName("org.h2.Driver");

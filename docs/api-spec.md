@@ -105,16 +105,16 @@ GET /api/v1/products
 ```json
 [
   {
-    "productId": 1,
-    "name": "상품 A",
-    "price": 10000,
+    "productId": 10001,
+    "name": "[Sunny Side Up] Original Soundtrack Limited LP",
+    "price": 35000,
     "status": "ON_SALE",
-    "contentTitle": "달빛 상점",
-    "contentType": "WEBTOON",
-    "category": "ARTBOOK",
-    "description": "달빛 상점 한정판 아트북",
-    "stockQuantity": 10,
-    "instantDiscountAmount": 1000
+    "contentTitle": "Sunny Side Up",
+    "contentType": "MUSIC",
+    "category": "한정 LP",
+    "description": "Sunny Side Up 오리지널 사운드트랙을 바이닐로 담은 한정판 LP",
+    "stockQuantity": 120,
+    "instantDiscountAmount": 3000
   }
 ]
 ```
@@ -122,23 +122,23 @@ GET /api/v1/products
 ### 상품 상세 조회
 
 ```http
-GET /api/v1/products/1
+GET /api/v1/products/10001
 ```
 
 응답 예시:
 
 ```json
 {
-  "productId": 1,
-  "name": "상품 A",
-  "price": 10000,
+  "productId": 10001,
+  "name": "[Sunny Side Up] Original Soundtrack Limited LP",
+  "price": 35000,
   "status": "ON_SALE",
-  "contentTitle": "달빛 상점",
-  "contentType": "WEBTOON",
-  "category": "ARTBOOK",
-  "description": "달빛 상점 한정판 아트북",
-  "stockQuantity": 10,
-  "instantDiscountAmount": 1000
+  "contentTitle": "Sunny Side Up",
+  "contentType": "MUSIC",
+  "category": "한정 LP",
+  "description": "Sunny Side Up 오리지널 사운드트랙을 바이닐로 담은 한정판 LP",
+  "stockQuantity": 120,
+  "instantDiscountAmount": 3000
 }
 ```
 
@@ -156,14 +156,14 @@ POST /api/v1/products
 
 ```json
 {
-  "name": "달빛 상점 한정판 아트북",
+  "name": "[Sunny Side Up] Original Soundtrack Limited LP",
   "price": 35000,
   "status": "ON_SALE",
-  "contentTitle": "달빛 상점",
-  "contentType": "WEBTOON",
-  "category": "ARTBOOK",
-  "description": "웹툰 달빛 상점의 시즌 1 한정판 아트북",
-  "stockQuantity": 100
+  "contentTitle": "Sunny Side Up",
+  "contentType": "MUSIC",
+  "category": "한정 LP",
+  "description": "Sunny Side Up 오리지널 사운드트랙을 바이닐로 담은 한정판 LP",
+  "stockQuantity": 120
 }
 ```
 
@@ -172,14 +172,14 @@ POST /api/v1/products
 ```json
 {
   "productId": 1,
-  "name": "달빛 상점 한정판 아트북",
+  "name": "[Sunny Side Up] Original Soundtrack Limited LP",
   "price": 35000,
   "status": "ON_SALE",
-  "contentTitle": "달빛 상점",
-  "contentType": "WEBTOON",
-  "category": "ARTBOOK",
-  "description": "웹툰 달빛 상점의 시즌 1 한정판 아트북",
-  "stockQuantity": 100,
+  "contentTitle": "Sunny Side Up",
+  "contentType": "MUSIC",
+  "category": "한정 LP",
+  "description": "Sunny Side Up 오리지널 사운드트랙을 바이닐로 담은 한정판 LP",
+  "stockQuantity": 120,
   "instantDiscountAmount": 0
 }
 ```
@@ -194,12 +194,12 @@ PUT /api/v1/products/1
 
 ```json
 {
-  "name": "달빛 상점 한정판 아트북",
+  "name": "[Sunny Side Up] Original Soundtrack Limited LP",
   "price": 36000,
-  "contentTitle": "달빛 상점",
-  "contentType": "WEBTOON",
-  "category": "ARTBOOK",
-  "description": "웹툰 달빛 상점의 시즌 1 개정판 한정 아트북"
+  "contentTitle": "Sunny Side Up",
+  "contentType": "MUSIC",
+  "category": "한정 LP",
+  "description": "Sunny Side Up 오리지널 사운드트랙 리마스터 한정판 LP"
 }
 ```
 
