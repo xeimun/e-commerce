@@ -155,6 +155,27 @@ class FlywayMigrationTest {
         assertThat(newNameCount).isEqualTo(1);
     }
 
+    @Test
+    void v11DoesNotRenameNonSeedOrderCouponWithSameNameAndAmount() {
+        DriverManagerDataSource dataSource = dataSource();
+        migrateToV10(dataSource);
+        JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        insertNonSeedOrderCouponWithOldDemoName(jdbcTemplate, 900L);
+
+        migrateToLatest(dataSource);
+
+        String couponName = jdbcTemplate.queryForObject(
+                "select name from coupons where id = 900",
+                String.class
+        );
+        Integer renamedDemoCouponCount = jdbcTemplate.queryForObject(
+                "select count(*) from coupons where name = '드롭 기념 전체 상품 3000원 할인'",
+                Integer.class
+        );
+        assertThat(couponName).isEqualTo("첫 주문 전체 상품 3000원 할인");
+        assertThat(renamedDemoCouponCount).isEqualTo(1);
+    }
+
     private DriverManagerDataSource dataSource() {
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
         dataSource.setDriverClassName("org.h2.Driver");
@@ -287,6 +308,21 @@ class FlywayMigrationTest {
                     timestamp '2027-12-31 23:59:59',
                     timestamp '2026-06-06 00:00:00',
                     timestamp '2026-06-06 00:00:00'
+                )
+                """, couponId);
+    }
+
+    private void insertNonSeedOrderCouponWithOldDemoName(JdbcTemplate jdbcTemplate, Long couponId) {
+        jdbcTemplate.update("""
+                insert into coupons (
+                    id, name, type, discount_amount, target_product_id,
+                    expires_at, created_at, updated_at
+                )
+                values (
+                    ?, '첫 주문 전체 상품 3000원 할인', 'ORDER', 3000.00, null,
+                    timestamp '2028-12-31 23:59:59',
+                    timestamp '2026-06-07 00:00:00',
+                    timestamp '2026-06-07 00:00:00'
                 )
                 """, couponId);
     }
