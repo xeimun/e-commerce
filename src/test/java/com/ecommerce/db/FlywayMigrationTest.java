@@ -51,6 +51,37 @@ class FlywayMigrationTest {
         assertThat(sourceCartItemId).isNull();
     }
 
+    @Test
+    void v9DoesNotAttachDemoChildRowsToCollidingProductId() {
+        DriverManagerDataSource dataSource = dataSource();
+        migrateToV8(dataSource);
+        JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        insertCollidingProduct(jdbcTemplate);
+
+        migrateToLatest(dataSource);
+
+        String productName = jdbcTemplate.queryForObject(
+                "select name from products where id = 10001",
+                String.class
+        );
+        Integer stockCount = jdbcTemplate.queryForObject(
+                "select count(*) from stocks where product_id = 10001",
+                Integer.class
+        );
+        Integer discountCount = jdbcTemplate.queryForObject(
+                "select count(*) from product_discounts where product_id = 10001",
+                Integer.class
+        );
+        Integer productCouponCount = jdbcTemplate.queryForObject(
+                "select count(*) from coupons where target_product_id = 10001",
+                Integer.class
+        );
+        assertThat(productName).isEqualTo("기존 상품");
+        assertThat(stockCount).isZero();
+        assertThat(discountCount).isZero();
+        assertThat(productCouponCount).isZero();
+    }
+
     private DriverManagerDataSource dataSource() {
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
         dataSource.setDriverClassName("org.h2.Driver");
@@ -66,6 +97,15 @@ class FlywayMigrationTest {
                 .dataSource(dataSource)
                 .locations("classpath:db/migration")
                 .target(MigrationVersion.fromVersion("4"))
+                .load()
+                .migrate();
+    }
+
+    private void migrateToV8(DriverManagerDataSource dataSource) {
+        Flyway.configure()
+                .dataSource(dataSource)
+                .locations("classpath:db/migration")
+                .target(MigrationVersion.fromVersion("8"))
                 .load()
                 .migrate();
     }
@@ -129,5 +169,18 @@ class FlywayMigrationTest {
                     %s, %s
                 )
                 """.formatted(orderCreatedAt, orderCreatedAt));
+    }
+
+    private void insertCollidingProduct(JdbcTemplate jdbcTemplate) {
+        jdbcTemplate.update("""
+                insert into products (
+                    id, name, price, status, content_title, content_type, category, description, created_at, updated_at
+                )
+                values (
+                    10001, '기존 상품', 10000.00, 'ON_SALE',
+                    '기존 콘텐츠', 'ETC', 'LEGACY', '데모 상품 ID와 충돌하는 기존 상품',
+                    timestamp '2026-06-05 00:00:00', timestamp '2026-06-05 00:00:00'
+                )
+                """);
     }
 }
