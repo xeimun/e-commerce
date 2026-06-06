@@ -285,7 +285,12 @@ public class OrderService {
         IssuedCoupon orderCoupon = null;
         if (couponRequest.orderCouponId() != null) {
             orderCoupon = issuedCouponsById.get(couponRequest.orderCouponId());
-            details.addAll(validateIssuedCoupon(couponRequest.orderCouponId(), orderCoupon, customerId, now));
+            details.addAll(validateIssuedCoupon(
+                    couponRequest.orderCouponId(),
+                    orderCoupon,
+                    customerId,
+                    now
+            ));
             if (details.isEmpty() && !orderCoupon.getCoupon().isOrderCoupon()) {
                 details.add(ErrorDetail.coupon(couponRequest.orderCouponId(), "COUPON_TARGET_MISMATCH"));
             }
@@ -296,7 +301,12 @@ public class OrderService {
             Long cartItemId = entry.getKey();
             Long couponId = entry.getValue();
             IssuedCoupon issuedCoupon = issuedCouponsById.get(couponId);
-            List<ErrorDetail> couponDetails = validateIssuedCoupon(couponId, issuedCoupon, customerId, now);
+            List<ErrorDetail> couponDetails = validateIssuedCoupon(
+                    couponId,
+                    issuedCoupon,
+                    customerId,
+                    now
+            );
             details.addAll(couponDetails);
             if (!couponDetails.isEmpty()) {
                 continue;

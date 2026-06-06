@@ -14,6 +14,22 @@ omd: "0.1"
 
 # Design System Inspiration of RIDI (리디)
 
+## 0. E-Commerce 적용 기준
+
+이 프로젝트는 RIDI 디자인을 그대로 복제하지 않고, 콘텐츠 IP 기반 한정판 굿즈 쇼핑 경험에 맞게 참고한다.
+프론트엔드 전체 리팩토링에는 Tailwind CSS를 사용하고, Tailwind 설정에 아래 기준을 우선 반영한다.
+
+- UI 폰트는 Pretendard 계열을 실제로 불러와 적용한다.
+- 기본 CTA와 주요 액션은 Deep Charcoal `#3D3D3D`를 사용한다.
+- RIDI Blue `#1F8CE6`는 정보성 강조, 활성 탭, 포커스 링, 보조 CTA에 사용한다.
+- 페이지 배경은 Pure White만 사용하지 않고 `#F9F9F9` 계열 subtle band를 함께 사용해 본문, 카드, 상태 관찰 패널을 구분한다.
+- 상품 카드와 패널은 무거운 테두리보다 부드러운 그림자와 옅은 경계선을 사용한다.
+- 쿠폰 화면은 발급 가능 쿠폰과 내 보유 쿠폰을 탭 또는 segmented control로 분리한다.
+- 체크아웃 화면은 좁은 화면에서 상품 정보와 쿠폰 선택이 겹치지 않도록 세로 배치로 전환한다.
+- 네비게이션 로고는 리본 달린 선물 상자 또는 미니멀한 굿즈 상징을 사용한다.
+- 상품 이미지와 썸네일은 실제 상품 경험을 보여주는 핵심 요소로 다룬다.
+- 아이콘은 `lucide-react`를 일관되게 사용하고, 이모지는 사용하지 않는다.
+
 ## 1. Visual Theme & Atmosphere
 
 RIDI's interface is a long-form reading room dressed as a storefront. It is the rare consumer surface in Korean tech that treats *typography itself* as the brand — the screen opens on a near-pure white canvas (`#ffffff`) with a deep charcoal foreground (`#3D3D3D` to `#222222`) and sits the user inside a layout that is more bookshop than marketplace. There is no saturated brand orange, no Toss-blue, no Karrot accent: the iconic element is the **BookCard** — a cover-art tile with a subtle multi-layer shadow that lifts each book half a millimeter off the page, the way a hardcover lifts off a wood table.
