@@ -32,7 +32,7 @@ function resolveProductImage(product = {}) {
     product.category
   ].filter(Boolean).join(' ');
 
-  if (/sunny|side up|soundtrack|lp|사운드트랙/i.test(searchableText)) {
+  if (/sunny|side up|soundtrack|\blp\b|사운드트랙/i.test(searchableText)) {
     return productImages[10001];
   }
 
