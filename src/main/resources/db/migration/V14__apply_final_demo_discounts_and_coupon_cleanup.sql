@@ -65,7 +65,7 @@ where p.id = 10004
 update issued_coupons
 set status = 'EXPIRED',
     updated_at = timestamp '2026-06-07 12:00:00'
-where status in ('AVAILABLE', 'RESERVED')
+where status = 'AVAILABLE'
   and exists (
       select 1
       from coupons

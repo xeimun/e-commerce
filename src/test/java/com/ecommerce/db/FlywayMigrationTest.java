@@ -274,6 +274,41 @@ class FlywayMigrationTest {
         assertThat(remaining5000OrderCouponCount).isEqualTo(1);
     }
 
+    @Test
+    void v14KeepsReserved3000OrderCouponReservedForPendingOrderLifecycle() {
+        DriverManagerDataSource dataSource = dataSource();
+        migrateToV13(dataSource);
+        JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        Long couponId = jdbcTemplate.queryForObject(
+                """
+                        select id
+                        from coupons
+                        where name = '드롭 기념 전체 상품 3000원 할인'
+                          and type = 'ORDER'
+                          and discount_amount = 3000.00
+                          and target_product_id is null
+                        """,
+                Long.class
+        );
+        insertIssuedCoupon(jdbcTemplate, 710L, couponId, 31L);
+        insertPendingOrder(jdbcTemplate, 910L, 32L);
+        insertReservedIssuedCoupon(jdbcTemplate, 711L, couponId, 32L, 910L);
+
+        migrateToLatest(dataSource);
+
+        var statuses = jdbcTemplate.queryForList(
+                "select status from issued_coupons where id in (710, 711) order by id",
+                String.class
+        );
+        Long reservedOrderId = jdbcTemplate.queryForObject(
+                "select order_id from issued_coupons where id = 711",
+                Long.class
+        );
+
+        assertThat(statuses).containsExactly("EXPIRED", "RESERVED");
+        assertThat(reservedOrderId).isEqualTo(910L);
+    }
+
     private DriverManagerDataSource dataSource() {
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
         dataSource.setDriverClassName("org.h2.Driver");
@@ -307,6 +342,15 @@ class FlywayMigrationTest {
                 .dataSource(dataSource)
                 .locations("classpath:db/migration")
                 .target(MigrationVersion.fromVersion("10"))
+                .load()
+                .migrate();
+    }
+
+    private void migrateToV13(DriverManagerDataSource dataSource) {
+        Flyway.configure()
+                .dataSource(dataSource)
+                .locations("classpath:db/migration")
+                .target(MigrationVersion.fromVersion("13"))
                 .load()
                 .migrate();
     }
@@ -393,6 +437,43 @@ class FlywayMigrationTest {
                     timestamp '2026-06-06 12:00:00'
                 )
                 """, issuedCouponId, couponId, customerId);
+    }
+
+    private void insertReservedIssuedCoupon(
+            JdbcTemplate jdbcTemplate,
+            Long issuedCouponId,
+            Long couponId,
+            Long customerId,
+            Long orderId
+    ) {
+        jdbcTemplate.update("""
+                insert into issued_coupons (
+                    id, coupon_id, customer_id, order_id, status, issued_at, reserved_at, created_at, updated_at
+                )
+                values (
+                    ?, ?, ?, ?, 'RESERVED',
+                    timestamp '2026-06-07 12:00:00',
+                    timestamp '2026-06-07 12:01:00',
+                    timestamp '2026-06-07 12:00:00',
+                    timestamp '2026-06-07 12:01:00'
+                )
+                """, issuedCouponId, couponId, customerId, orderId);
+    }
+
+    private void insertPendingOrder(JdbcTemplate jdbcTemplate, Long orderId, Long customerId) {
+        jdbcTemplate.update("""
+                insert into orders (
+                    id, customer_id, status, expires_at, cancel_reason,
+                    total_product_amount, total_instant_discount_amount, total_coupon_discount_amount,
+                    final_payment_amount, created_at, updated_at, paid_at, payment_canceled_at
+                )
+                values (
+                    ?, ?, 'PAYMENT_PENDING', timestamp '2026-06-07 12:11:00', null,
+                    88000.00, 0.00, 3000.00, 85000.00,
+                    timestamp '2026-06-07 12:01:00', timestamp '2026-06-07 12:01:00',
+                    null, null
+                )
+                """, orderId, customerId);
     }
 
     private void insertInvalidDemoProductCoupon(JdbcTemplate jdbcTemplate, Long couponId) {
