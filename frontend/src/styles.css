@@ -338,7 +338,7 @@
   }
 
   .detailPurchaseBar {
-    @apply grid rounded-lg bg-surface-subtle p-3;
+    @apply grid min-w-0 rounded-lg bg-surface-subtle p-3;
     grid-template-columns: auto minmax(180px, 1fr);
   }
 
@@ -1047,6 +1047,16 @@
   }
 }
 
+@media (max-width: 1200px) {
+  .detailPurchaseBar {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .quantityControl {
+    @apply w-full;
+  }
+}
+
 @media (max-width: 1080px) {
   .topbar {
     @apply gap-4 px-6;
@@ -1074,14 +1084,6 @@
 
   .checkoutSummary {
     @apply static;
-  }
-
-  .detailPurchaseBar {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .quantityControl {
-    @apply w-full;
   }
 
   .checkoutLineItem {
