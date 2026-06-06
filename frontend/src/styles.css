@@ -72,42 +72,11 @@
   }
 
   .brand {
-    @apply inline-flex items-center gap-3;
+    @apply inline-flex min-w-0 items-center;
   }
 
-  .brandMark {
-    @apply relative grid h-10 w-10 place-items-center overflow-hidden rounded-lg bg-brand text-white;
-    box-shadow: 0 4px 16px rgb(61 61 61 / 0.2);
-  }
-
-  .brandMark::before {
-    @apply absolute content-[""];
-    inset: 0 18px;
-    background: rgb(255 255 255 / 0.22);
-  }
-
-  .brandMark::after {
-    @apply absolute content-[""];
-    inset: 18px 0 auto;
-    height: 3px;
-    background: rgb(255 255 255 / 0.22);
-  }
-
-  .brandMark svg {
-    @apply relative z-[1];
-  }
-
-  .brand strong,
-  .brand small {
-    @apply block tracking-normal;
-  }
-
-  .brand strong {
-    @apply text-base font-bold leading-6;
-  }
-
-  .brand small {
-    @apply text-xs leading-4 text-fg-secondary;
+  .brandLogo {
+    @apply block h-12 w-auto max-w-[220px] object-contain;
   }
 
   .navTabs {
@@ -1184,9 +1153,12 @@
     @apply min-h-14 gap-3 px-4 pt-2;
   }
 
-  .brand small,
   .customerControl span {
     @apply hidden;
+  }
+
+  .brandLogo {
+    @apply h-10 max-w-[170px];
   }
 
   .appFrame {
