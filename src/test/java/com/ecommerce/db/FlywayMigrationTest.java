@@ -309,6 +309,40 @@ class FlywayMigrationTest {
         assertThat(reservedOrderId).isEqualTo(910L);
     }
 
+    @Test
+    void v14DoesNotCleanupNonSeed3000OrderCouponsWithSameDisplayValues() {
+        DriverManagerDataSource dataSource = dataSource();
+        migrateToV13(dataSource);
+        JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        insertNonSeedOrderCouponWithDropDemoName(jdbcTemplate, 901L);
+        insertNonSeedOrderCouponWithDropDemoName(jdbcTemplate, 902L);
+        insertIssuedCoupon(jdbcTemplate, 720L, 902L, 41L);
+
+        migrateToLatest(dataSource);
+
+        Integer nonSeedCouponCount = jdbcTemplate.queryForObject(
+                "select count(*) from coupons where id in (901, 902)",
+                Integer.class
+        );
+        String issuedCouponStatus = jdbcTemplate.queryForObject(
+                "select status from issued_coupons where id = 720",
+                String.class
+        );
+        var nonSeedExpiresAt = jdbcTemplate.queryForList(
+                "select expires_at from coupons where id in (901, 902) order by id",
+                java.sql.Timestamp.class
+        );
+
+        assertThat(nonSeedCouponCount).isEqualTo(2);
+        assertThat(issuedCouponStatus).isEqualTo("AVAILABLE");
+        assertThat(nonSeedExpiresAt)
+                .extracting(java.sql.Timestamp::toLocalDateTime)
+                .containsExactly(
+                        java.time.LocalDateTime.of(2028, 12, 31, 23, 59, 59),
+                        java.time.LocalDateTime.of(2028, 12, 31, 23, 59, 59)
+                );
+    }
+
     private DriverManagerDataSource dataSource() {
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
         dataSource.setDriverClassName("org.h2.Driver");
@@ -502,6 +536,21 @@ class FlywayMigrationTest {
                     timestamp '2028-12-31 23:59:59',
                     timestamp '2026-06-07 00:00:00',
                     timestamp '2026-06-07 00:00:00'
+                )
+                """, couponId);
+    }
+
+    private void insertNonSeedOrderCouponWithDropDemoName(JdbcTemplate jdbcTemplate, Long couponId) {
+        jdbcTemplate.update("""
+                insert into coupons (
+                    id, name, type, discount_amount, target_product_id,
+                    expires_at, created_at, updated_at
+                )
+                values (
+                    ?, '드롭 기념 전체 상품 3000원 할인', 'ORDER', 3000.00, null,
+                    timestamp '2028-12-31 23:59:59',
+                    timestamp '2026-06-07 12:00:00',
+                    timestamp '2026-06-07 12:00:00'
                 )
                 """, couponId);
     }
