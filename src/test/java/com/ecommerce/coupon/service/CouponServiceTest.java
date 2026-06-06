@@ -17,8 +17,11 @@ import com.ecommerce.coupon.entity.IssuedCouponStatus;
 import com.ecommerce.coupon.exception.CouponAlreadyIssuedException;
 import com.ecommerce.coupon.exception.CouponExpiredException;
 import com.ecommerce.coupon.exception.CouponNotFoundException;
+import com.ecommerce.coupon.exception.FirstOrderCouponNotAvailableException;
 import com.ecommerce.coupon.repository.CouponRepository;
 import com.ecommerce.coupon.repository.IssuedCouponRepository;
+import com.ecommerce.order.entity.OrderStatus;
+import com.ecommerce.order.repository.OrderRepository;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -39,11 +42,14 @@ class CouponServiceTest {
     @Mock
     private IssuedCouponRepository issuedCouponRepository;
 
+    @Mock
+    private OrderRepository orderRepository;
+
     private CouponService couponService;
 
     @BeforeEach
     void setUp() {
-        couponService = new CouponService(couponRepository, issuedCouponRepository);
+        couponService = new CouponService(couponRepository, issuedCouponRepository, orderRepository);
     }
 
     @Test
@@ -62,6 +68,25 @@ class CouponServiceTest {
         assertThat(response.get(0).issuable()).isTrue();
         assertThat(response.get(1).couponId()).isEqualTo(2L);
         assertThat(response.get(1).issuable()).isFalse();
+    }
+
+    @Test
+    void getIssuableCouponsMarksFirstOrderCouponAsNotIssuableWhenCustomerHasCompletedOrder() {
+        Coupon firstOrderCoupon = firstOrderCouponFixture(1L, "첫 주문 전체 상품 3000원 할인", LocalDateTime.now().plusDays(1));
+        Coupon orderCoupon = orderCouponFixture(2L, "전체 상품 5000원 할인", LocalDateTime.now().plusDays(1));
+        when(couponRepository.findAllByExpiresAtGreaterThanEqualOrderByIdAsc(any(LocalDateTime.class)))
+                .thenReturn(List.of(firstOrderCoupon, orderCoupon));
+        when(issuedCouponRepository.findIssuedCouponIdsByCustomerIdAndCouponIdIn(eq(7L), any()))
+                .thenReturn(List.of());
+        when(orderRepository.existsByCustomerIdAndStatus(7L, OrderStatus.COMPLETED)).thenReturn(true);
+
+        List<IssuableCouponResponse> response = couponService.getIssuableCoupons(7L);
+
+        assertThat(response).hasSize(2);
+        assertThat(response.get(0).firstOrderOnly()).isTrue();
+        assertThat(response.get(0).issuable()).isFalse();
+        assertThat(response.get(1).firstOrderOnly()).isFalse();
+        assertThat(response.get(1).issuable()).isTrue();
     }
 
     @Test
@@ -90,6 +115,18 @@ class CouponServiceTest {
 
         assertThatThrownBy(() -> couponService.issueCoupon(7L, 99L))
                 .isInstanceOf(CouponNotFoundException.class);
+        verify(issuedCouponRepository, never()).saveAndFlush(any());
+    }
+
+    @Test
+    void issueCouponThrowsExceptionWhenFirstOrderCouponIsNotAvailable() {
+        Coupon coupon = firstOrderCouponFixture(1L, "첫 주문 전체 상품 3000원 할인", LocalDateTime.now().plusDays(1));
+        when(couponRepository.findById(1L)).thenReturn(Optional.of(coupon));
+        when(issuedCouponRepository.existsByCouponIdAndCustomerId(1L, 7L)).thenReturn(false);
+        when(orderRepository.existsByCustomerIdAndStatus(7L, OrderStatus.COMPLETED)).thenReturn(true);
+
+        assertThatThrownBy(() -> couponService.issueCoupon(7L, 1L))
+                .isInstanceOf(FirstOrderCouponNotAvailableException.class);
         verify(issuedCouponRepository, never()).saveAndFlush(any());
     }
 
@@ -144,6 +181,13 @@ class CouponServiceTest {
 
     private Coupon orderCouponFixture(Long couponId, String name, LocalDateTime expiresAt) {
         Coupon coupon = Coupon.createOrderCoupon(name, new BigDecimal("3000.00"), expiresAt);
+        ReflectionTestUtils.setField(coupon, "id", couponId);
+
+        return coupon;
+    }
+
+    private Coupon firstOrderCouponFixture(Long couponId, String name, LocalDateTime expiresAt) {
+        Coupon coupon = Coupon.createFirstOrderCoupon(name, new BigDecimal("3000.00"), expiresAt);
         ReflectionTestUtils.setField(coupon, "id", couponId);
 
         return coupon;

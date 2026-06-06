@@ -342,6 +342,28 @@ class OrderServiceTest {
     }
 
     @Test
+    void createOrderThrowsExceptionWhenFirstOrderCouponIsNotAvailable() {
+        Product product = productFixture(1L, ProductStatus.ON_SALE, 5);
+        Cart cart = cartFixture(7L);
+        CartItem cartItem = cart.addItem(product, 2);
+        ReflectionTestUtils.setField(cartItem, "id", 10L);
+        IssuedCoupon issuedCoupon = issuedFirstOrderCouponFixture(100L, 7L, new BigDecimal("10000.00"));
+        when(cartRepository.findForOrderByCustomerId(7L)).thenReturn(Optional.of(cart));
+        when(issuedCouponRepository.findAllByIdInForUpdate(any())).thenReturn(List.of(issuedCoupon));
+        when(orderRepository.existsByCustomerIdAndStatus(7L, OrderStatus.COMPLETED)).thenReturn(true);
+
+        assertThatThrownBy(() -> orderService.createOrder(
+                7L,
+                new OrderCreateRequest(List.of(10L), 100L, List.of())
+        ))
+                .isInstanceOfSatisfying(OrderValidationException.class, exception -> assertThat(exception.getDetails())
+                        .extracting(ErrorDetail::reason)
+                        .containsOnly("FIRST_ORDER_COUPON_NOT_AVAILABLE"));
+        verify(stockRepository, never()).findAllByProductIdInForUpdate(any());
+        verify(orderRepository, never()).save(any());
+    }
+
+    @Test
     void completePaymentCompletesPendingOrderAndRemovesOrderedCartItems() {
         Product product = productFixture(1L, ProductStatus.ON_SALE, 3);
         Order order = orderFixture(1L, 7L, product, 2, 10L, LocalDateTime.now().plusMinutes(5));
@@ -587,6 +609,19 @@ class OrderServiceTest {
                 "전체 상품 할인 쿠폰",
                 discountAmount,
                 expiresAt
+        );
+        ReflectionTestUtils.setField(coupon, "id", issuedCouponId + 1000);
+        IssuedCoupon issuedCoupon = IssuedCoupon.issue(coupon, customerId, LocalDateTime.now().minusDays(1));
+        ReflectionTestUtils.setField(issuedCoupon, "id", issuedCouponId);
+
+        return issuedCoupon;
+    }
+
+    private IssuedCoupon issuedFirstOrderCouponFixture(Long issuedCouponId, Long customerId, BigDecimal discountAmount) {
+        Coupon coupon = Coupon.createFirstOrderCoupon(
+                "첫 주문 전체 상품 할인 쿠폰",
+                discountAmount,
+                LocalDateTime.now().plusDays(1)
         );
         ReflectionTestUtils.setField(coupon, "id", issuedCouponId + 1000);
         IssuedCoupon issuedCoupon = IssuedCoupon.issue(coupon, customerId, LocalDateTime.now().minusDays(1));

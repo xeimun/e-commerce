@@ -5,6 +5,7 @@ import com.ecommerce.cart.exception.CartItemQuantityExceededException;
 import com.ecommerce.coupon.exception.CouponAlreadyIssuedException;
 import com.ecommerce.coupon.exception.CouponExpiredException;
 import com.ecommerce.coupon.exception.CouponNotFoundException;
+import com.ecommerce.coupon.exception.FirstOrderCouponNotAvailableException;
 import com.ecommerce.order.exception.OrderNotPaymentPendingException;
 import com.ecommerce.order.exception.OrderNotFoundException;
 import com.ecommerce.order.exception.OrderPaymentExpiredException;
@@ -82,6 +83,19 @@ public class GlobalExceptionHandler {
                 "COUPON_EXPIRED",
                 "만료된 쿠폰입니다.",
                 List.of(ErrorDetail.coupon(exception.getCouponId(), "COUPON_EXPIRED"))
+        );
+
+        return ResponseEntity.badRequest().body(response);
+    }
+
+    @ExceptionHandler(FirstOrderCouponNotAvailableException.class)
+    public ResponseEntity<ApiErrorResponse> handleFirstOrderCouponNotAvailable(
+            FirstOrderCouponNotAvailableException exception
+    ) {
+        ApiErrorResponse response = ApiErrorResponse.of(
+                "FIRST_ORDER_COUPON_NOT_AVAILABLE",
+                "첫 주문 전용 쿠폰을 발급할 수 없습니다.",
+                List.of(ErrorDetail.coupon(exception.getCouponId(), "FIRST_ORDER_COUPON_NOT_AVAILABLE"))
         );
 
         return ResponseEntity.badRequest().body(response);

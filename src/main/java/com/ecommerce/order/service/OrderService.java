@@ -280,12 +280,20 @@ public class OrderService {
         Map<Long, IssuedCoupon> issuedCouponsById = issuedCouponRepository.findAllByIdInForUpdate(couponRequest.couponIds())
                 .stream()
                 .collect(Collectors.toMap(IssuedCoupon::getId, Function.identity()));
+        boolean hasCompletedOrder = hasFirstOrderOnlyCoupon(issuedCouponsById.values())
+                && orderRepository.existsByCustomerIdAndStatus(customerId, OrderStatus.COMPLETED);
         List<ErrorDetail> details = new ArrayList<>();
 
         IssuedCoupon orderCoupon = null;
         if (couponRequest.orderCouponId() != null) {
             orderCoupon = issuedCouponsById.get(couponRequest.orderCouponId());
-            details.addAll(validateIssuedCoupon(couponRequest.orderCouponId(), orderCoupon, customerId, now));
+            details.addAll(validateIssuedCoupon(
+                    couponRequest.orderCouponId(),
+                    orderCoupon,
+                    customerId,
+                    now,
+                    hasCompletedOrder
+            ));
             if (details.isEmpty() && !orderCoupon.getCoupon().isOrderCoupon()) {
                 details.add(ErrorDetail.coupon(couponRequest.orderCouponId(), "COUPON_TARGET_MISMATCH"));
             }
@@ -296,7 +304,13 @@ public class OrderService {
             Long cartItemId = entry.getKey();
             Long couponId = entry.getValue();
             IssuedCoupon issuedCoupon = issuedCouponsById.get(couponId);
-            List<ErrorDetail> couponDetails = validateIssuedCoupon(couponId, issuedCoupon, customerId, now);
+            List<ErrorDetail> couponDetails = validateIssuedCoupon(
+                    couponId,
+                    issuedCoupon,
+                    customerId,
+                    now,
+                    hasCompletedOrder
+            );
             details.addAll(couponDetails);
             if (!couponDetails.isEmpty()) {
                 continue;
@@ -367,17 +381,27 @@ public class OrderService {
         return details;
     }
 
+    private static boolean hasFirstOrderOnlyCoupon(Collection<IssuedCoupon> issuedCoupons) {
+        return issuedCoupons.stream()
+                .map(IssuedCoupon::getCoupon)
+                .anyMatch(coupon -> coupon.isFirstOrderOnly());
+    }
+
     private List<ErrorDetail> validateIssuedCoupon(
             Long requestedCouponId,
             IssuedCoupon issuedCoupon,
             Long customerId,
-            LocalDateTime now
+            LocalDateTime now,
+            boolean hasCompletedOrder
     ) {
         if (issuedCoupon == null || !issuedCoupon.isOwnedBy(customerId)) {
             return List.of(ErrorDetail.coupon(requestedCouponId, "COUPON_NOT_OWNED"));
         }
         if (!issuedCoupon.isAvailableAt(now)) {
             return List.of(ErrorDetail.coupon(requestedCouponId, issuedCoupon.unavailableReason(now)));
+        }
+        if (!issuedCoupon.getCoupon().isEligibleForCustomer(hasCompletedOrder)) {
+            return List.of(ErrorDetail.coupon(requestedCouponId, "FIRST_ORDER_COUPON_NOT_AVAILABLE"));
         }
 
         return List.of();

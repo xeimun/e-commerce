@@ -20,6 +20,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     @EntityGraph(attributePaths = {"items", "items.product"})
     Optional<Order> findByIdAndCustomerId(Long id, Long customerId);
 
+    boolean existsByCustomerIdAndStatus(Long customerId, OrderStatus status);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @EntityGraph(attributePaths = {"items", "items.product"})
     @Query("select o from Order o where o.id = :id and o.customerId = :customerId")
