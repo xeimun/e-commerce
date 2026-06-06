@@ -557,3 +557,20 @@ Tailwind CSS는 미리 정의된 작은 utility class를 조합해 UI를 만드�
 - 데모 자식 데이터는 상품 ID뿐 아니라 이름, 가격, 상태, 콘텐츠, 카테고리, 설명까지 일치하는 데모 상품 row에만 연결한다.
 - 같은 ID의 다른 상품이 있는 DB에서는 데모 자식 데이터를 생성하지 않는다.
 - Flyway 테스트로 ID 충돌 시 재고, 즉시 할인, 상품 쿠폰이 붙지 않는지 검증한다.
+
+## Identity Sequence와 명시 ID Insert
+
+### 한 줄 정리
+
+DB identity 컬럼에 ID를 직접 넣는 것과 다음 자동 발급 ID를 관리하는 sequence가 전진하는 것은 별개의 문제다.
+
+### 왜 필요했나
+
+데모 상품은 `10001`부터 `10005`까지 고정 ID로 insert된다.
+PostgreSQL에서 이 값들을 명시적으로 넣어도 자동 발급 sequence가 낮은 값에 남아 있으면, 이후 상품 등록 시 이미 존재하는 ID를 다시 발급할 수 있다.
+
+### 프로젝트 적용
+
+- 데모 상품 insert 이후 `products.id` identity를 현재 `max(id) + 1`로 재시작한다.
+- PostgreSQL 전용 `setval` SQL 대신 Flyway Java migration을 사용해 PostgreSQL과 H2 테스트에서 같은 의도를 검증한다.
+- 기존 DB에 데모 ID보다 큰 상품 ID가 있어도 자동 발급 ID가 그 이후로 이동하는지 테스트한다.

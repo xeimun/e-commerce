@@ -82,6 +82,33 @@ class FlywayMigrationTest {
         assertThat(productCouponCount).isZero();
     }
 
+    @Test
+    void v11ResetsProductIdentityToCurrentMaxIdAfterExplicitDemoProductIds() {
+        DriverManagerDataSource dataSource = dataSource();
+        migrateToV8(dataSource);
+        JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        insertExistingProduct(jdbcTemplate, 20000L, "기존 고ID 상품");
+
+        migrateToLatest(dataSource);
+
+        jdbcTemplate.update("""
+                insert into products (
+                    name, price, status, content_title, content_type, category, description, created_at, updated_at
+                )
+                values (
+                    '마이그레이션 이후 등록 상품', 12000.00, 'ON_SALE',
+                    '테스트 콘텐츠', 'ETC', 'TEST', '마이그레이션 이후 자동 ID 검증 상품',
+                    timestamp '2026-06-07 00:00:00', timestamp '2026-06-07 00:00:00'
+                )
+                """);
+
+        Long productId = jdbcTemplate.queryForObject(
+                "select id from products where name = '마이그레이션 이후 등록 상품'",
+                Long.class
+        );
+        assertThat(productId).isGreaterThan(20000L);
+    }
+
     private DriverManagerDataSource dataSource() {
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
         dataSource.setDriverClassName("org.h2.Driver");
@@ -172,15 +199,19 @@ class FlywayMigrationTest {
     }
 
     private void insertCollidingProduct(JdbcTemplate jdbcTemplate) {
+        insertExistingProduct(jdbcTemplate, 10001L, "기존 상품");
+    }
+
+    private void insertExistingProduct(JdbcTemplate jdbcTemplate, Long productId, String name) {
         jdbcTemplate.update("""
                 insert into products (
                     id, name, price, status, content_title, content_type, category, description, created_at, updated_at
                 )
                 values (
-                    10001, '기존 상품', 10000.00, 'ON_SALE',
+                    ?, ?, 10000.00, 'ON_SALE',
                     '기존 콘텐츠', 'ETC', 'LEGACY', '데모 상품 ID와 충돌하는 기존 상품',
                     timestamp '2026-06-05 00:00:00', timestamp '2026-06-05 00:00:00'
                 )
-                """);
+                """, productId, name);
     }
 }
