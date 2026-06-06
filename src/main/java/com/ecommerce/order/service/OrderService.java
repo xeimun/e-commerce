@@ -5,6 +5,7 @@ import com.ecommerce.cart.entity.CartItem;
 import com.ecommerce.cart.repository.CartRepository;
 import com.ecommerce.common.exception.ErrorDetail;
 import com.ecommerce.coupon.entity.IssuedCoupon;
+import com.ecommerce.coupon.entity.IssuedCouponStatus;
 import com.ecommerce.coupon.repository.IssuedCouponRepository;
 import com.ecommerce.order.dto.OrderCreateRequest;
 import com.ecommerce.order.dto.OrderCreateResponse;
@@ -140,8 +141,10 @@ public class OrderService {
             throw new OrderPaymentExpiredException(order.getId());
         }
 
+        List<IssuedCoupon> reservedCoupons = issuedCouponRepository.findAllByOrderIdForUpdate(order.getId());
+        validateFirstOrderCouponPayment(order, reservedCoupons);
         order.completePayment(now);
-        useReservedCoupons(order, now);
+        useReservedCoupons(reservedCoupons, now);
         removeOrderedCartItems(order);
 
         return OrderPaymentSuccessResponse.from(order);
@@ -280,8 +283,8 @@ public class OrderService {
         Map<Long, IssuedCoupon> issuedCouponsById = issuedCouponRepository.findAllByIdInForUpdate(couponRequest.couponIds())
                 .stream()
                 .collect(Collectors.toMap(IssuedCoupon::getId, Function.identity()));
-        boolean hasCompletedOrder = hasFirstOrderOnlyCoupon(issuedCouponsById.values())
-                && orderRepository.existsByCustomerIdAndStatus(customerId, OrderStatus.COMPLETED);
+        boolean firstOrderCouponUnavailable = hasFirstOrderOnlyCoupon(issuedCouponsById.values())
+                && isFirstOrderCouponUnavailableForOrderCreation(customerId);
         List<ErrorDetail> details = new ArrayList<>();
 
         IssuedCoupon orderCoupon = null;
@@ -292,7 +295,7 @@ public class OrderService {
                     orderCoupon,
                     customerId,
                     now,
-                    hasCompletedOrder
+                    firstOrderCouponUnavailable
             ));
             if (details.isEmpty() && !orderCoupon.getCoupon().isOrderCoupon()) {
                 details.add(ErrorDetail.coupon(couponRequest.orderCouponId(), "COUPON_TARGET_MISMATCH"));
@@ -309,7 +312,7 @@ public class OrderService {
                     issuedCoupon,
                     customerId,
                     now,
-                    hasCompletedOrder
+                    firstOrderCouponUnavailable
             );
             details.addAll(couponDetails);
             if (!couponDetails.isEmpty()) {
@@ -387,12 +390,24 @@ public class OrderService {
                 .anyMatch(coupon -> coupon.isFirstOrderOnly());
     }
 
+    private boolean isFirstOrderCouponUnavailableForOrderCreation(Long customerId) {
+        if (orderRepository.existsByCustomerIdAndStatus(customerId, OrderStatus.COMPLETED)) {
+            return true;
+        }
+
+        return !issuedCouponRepository.findFirstOrderCouponReservationsForUpdate(
+                customerId,
+                IssuedCouponStatus.RESERVED,
+                OrderStatus.PAYMENT_PENDING
+        ).isEmpty();
+    }
+
     private List<ErrorDetail> validateIssuedCoupon(
             Long requestedCouponId,
             IssuedCoupon issuedCoupon,
             Long customerId,
             LocalDateTime now,
-            boolean hasCompletedOrder
+            boolean firstOrderCouponUnavailable
     ) {
         if (issuedCoupon == null || !issuedCoupon.isOwnedBy(customerId)) {
             return List.of(ErrorDetail.coupon(requestedCouponId, "COUPON_NOT_OWNED"));
@@ -400,11 +415,27 @@ public class OrderService {
         if (!issuedCoupon.isAvailableAt(now)) {
             return List.of(ErrorDetail.coupon(requestedCouponId, issuedCoupon.unavailableReason(now)));
         }
-        if (!issuedCoupon.getCoupon().isEligibleForCustomer(hasCompletedOrder)) {
+        if (issuedCoupon.getCoupon().isFirstOrderOnly() && firstOrderCouponUnavailable) {
             return List.of(ErrorDetail.coupon(requestedCouponId, "FIRST_ORDER_COUPON_NOT_AVAILABLE"));
         }
 
         return List.of();
+    }
+
+    private void validateFirstOrderCouponPayment(Order order, List<IssuedCoupon> reservedCoupons) {
+        reservedCoupons.stream()
+                .filter(issuedCoupon -> issuedCoupon.getCoupon().isFirstOrderOnly())
+                .findFirst()
+                .ifPresent(issuedCoupon -> validateFirstOrderCouponPayment(order, issuedCoupon));
+    }
+
+    private void validateFirstOrderCouponPayment(Order order, IssuedCoupon firstOrderCoupon) {
+        if (orderRepository.existsByCustomerIdAndStatus(order.getCustomerId(), OrderStatus.COMPLETED)) {
+            throw new OrderValidationException(List.of(ErrorDetail.coupon(
+                    firstOrderCoupon.getId(),
+                    "FIRST_ORDER_COUPON_NOT_AVAILABLE"
+            )));
+        }
     }
 
     private Map<Long, BigDecimal> calculateProductCouponDiscounts(
@@ -456,9 +487,8 @@ public class OrderService {
                 .forEach(issuedCoupon -> issuedCoupon.reserve(order, reservedAt));
     }
 
-    private void useReservedCoupons(Order order, LocalDateTime usedAt) {
-        issuedCouponRepository.findAllByOrderIdForUpdate(order.getId())
-                .forEach(issuedCoupon -> issuedCoupon.use(usedAt));
+    private void useReservedCoupons(List<IssuedCoupon> reservedCoupons, LocalDateTime usedAt) {
+        reservedCoupons.forEach(issuedCoupon -> issuedCoupon.use(usedAt));
     }
 
     private void releaseReservedCoupons(Order order) {

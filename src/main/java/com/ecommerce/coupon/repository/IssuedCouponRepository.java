@@ -1,6 +1,8 @@
 package com.ecommerce.coupon.repository;
 
 import com.ecommerce.coupon.entity.IssuedCoupon;
+import com.ecommerce.coupon.entity.IssuedCouponStatus;
+import com.ecommerce.order.entity.OrderStatus;
 import jakarta.persistence.LockModeType;
 import java.util.Collection;
 import java.util.List;
@@ -32,4 +34,23 @@ public interface IssuedCouponRepository extends JpaRepository<IssuedCoupon, Long
     @EntityGraph(attributePaths = {"coupon", "coupon.targetProduct"})
     @Query("select ic from IssuedCoupon ic where ic.order.id = :orderId")
     List<IssuedCoupon> findAllByOrderIdForUpdate(@Param("orderId") Long orderId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @EntityGraph(attributePaths = {"coupon"})
+    @Query("""
+            select ic
+            from IssuedCoupon ic
+            join ic.coupon c
+            join ic.order o
+            where ic.customerId = :customerId
+              and ic.status = :couponStatus
+              and c.firstOrderOnly = true
+              and o.status = :orderStatus
+            order by ic.id asc
+            """)
+    List<IssuedCoupon> findFirstOrderCouponReservationsForUpdate(
+            @Param("customerId") Long customerId,
+            @Param("couponStatus") IssuedCouponStatus couponStatus,
+            @Param("orderStatus") OrderStatus orderStatus
+    );
 }
