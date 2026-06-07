@@ -888,15 +888,21 @@
 
   .reportCommonPanel,
   .reportStory,
-  .experimentConditionPanel,
   .reportChartSection,
   .reportNarrativeBlock {
     @apply min-w-0 rounded-lg bg-surface-card shadow-soft;
   }
 
-  .reportCommonPanel,
-  .experimentConditionPanel {
+  .reportPage .eyebrow {
+    word-spacing: 1em;
+  }
+
+  .reportCommonPanel {
     @apply grid gap-4 p-5;
+  }
+
+  .experimentConditionPanel {
+    @apply grid gap-3 rounded-lg border border-black/5 bg-surface-subtle p-4;
   }
 
   .reportCommonPanel .panelHeader > svg,
@@ -906,21 +912,43 @@
     @apply shrink-0 text-ridi-blue;
   }
 
-  .commonFactGrid {
+  .commonConditionLayout {
     @apply grid gap-3;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: minmax(320px, 1fr) minmax(320px, 0.9fr);
   }
 
-  .commonFact {
-    @apply grid min-h-20 content-center gap-1 rounded-lg bg-surface-subtle px-4 py-3;
+  .commonEnvironment,
+  .commonSideFacts section {
+    @apply grid rounded-lg bg-surface-subtle px-4 py-3;
   }
 
-  .commonFact span {
-    @apply text-[13px] leading-[18px] text-fg-secondary;
+  .commonEnvironment {
+    @apply gap-2;
   }
 
-  .commonFact strong {
-    @apply text-[15px] leading-5;
+  .commonSideFacts {
+    @apply grid gap-3;
+  }
+
+  .commonSideFacts section {
+    @apply content-center gap-1;
+  }
+
+  .commonEnvironment h3,
+  .commonSideFacts h3 {
+    @apply m-0 text-[13px] font-bold leading-[18px] text-ridi-blue;
+  }
+
+  .commonEnvironment ul {
+    @apply m-0 grid gap-1.5 pl-4 text-[15px] leading-5 text-fg-primary;
+  }
+
+  .commonEnvironment li {
+    @apply pl-0.5;
+  }
+
+  .commonSideFacts p {
+    @apply m-0 text-[15px] leading-5 text-fg-primary;
     word-break: keep-all;
   }
 
@@ -937,13 +965,13 @@
   }
 
   .reportStoryHero h2 {
-    @apply m-0 max-w-[860px] text-[28px] font-bold leading-9;
+    @apply m-0 max-w-[940px] rounded-lg bg-highlight px-5 py-4 text-[30px] font-bold leading-10;
     word-break: keep-all;
   }
 
   .reportStorySummary {
     @apply grid gap-3;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .reportStorySummary article {
@@ -972,7 +1000,7 @@
   }
 
   .experimentConditionShared {
-    @apply grid gap-0 rounded-lg bg-surface-subtle px-4 py-2;
+    @apply grid gap-0 rounded-lg bg-surface-card px-4 py-2;
   }
 
   .experimentConditionShared div {
@@ -1000,7 +1028,7 @@
   }
 
   .experimentScenarioGrid article {
-    @apply grid min-h-[76px] content-center gap-1 rounded-lg bg-surface-subtle px-4 py-3;
+    @apply grid min-h-[76px] content-center gap-1 rounded-lg bg-surface-card px-4 py-3;
   }
 
   .reportChartSection {
@@ -1050,8 +1078,7 @@
   }
 
   .throughputSummary span,
-  .throughputSummary strong,
-  .throughputSummary p {
+  .throughputSummary strong {
     @apply block;
   }
 
@@ -1063,16 +1090,12 @@
     @apply mt-1 text-[26px] leading-9 text-success;
   }
 
-  .throughputSummary p {
-    @apply m-0 mt-1 text-sm leading-5 text-fg-secondary;
-  }
-
   .throughputSummary > svg {
     @apply text-success;
   }
 
   .throughputColumnChart {
-    @apply grid min-h-[224px] items-end gap-5 rounded-lg bg-surface-card p-4 shadow-soft;
+    @apply grid min-h-[312px] items-end gap-5 rounded-lg bg-surface-card p-4 shadow-soft;
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -1081,7 +1104,7 @@
   }
 
   .throughputColumnTrack {
-    @apply flex h-32 w-full max-w-20 items-end justify-center rounded-t-lg bg-surface-muted;
+    @apply flex h-56 w-full max-w-20 items-end justify-center rounded-t-lg bg-surface-muted;
   }
 
   .throughputColumn {
@@ -1174,15 +1197,24 @@
   }
 
   .measurementDetails summary {
-    @apply flex min-h-12 items-center gap-2 px-4 text-sm font-bold text-fg-primary;
+    @apply flex min-h-12 cursor-pointer list-none items-center justify-between gap-2 px-4 text-sm font-bold text-fg-primary;
   }
 
-  .measurementDetails summary > svg {
+  .measurementDetails summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .measurementChevron {
     @apply text-ridi-blue;
+    transition: transform 150ms ease;
+  }
+
+  .measurementDetails[open] .measurementChevron {
+    transform: rotate(180deg);
   }
 
   .measurementDetailsBody {
-    @apply grid gap-5 border-t border-black/5 p-4;
+    @apply grid gap-4 border-t border-black/5 p-4;
   }
 
   .measurementTableBlock {
@@ -1190,16 +1222,16 @@
   }
 
   .measurementTableWrap {
-    @apply overflow-x-auto rounded-lg bg-surface-subtle;
+    @apply w-fit max-w-full overflow-x-auto rounded-lg bg-surface-subtle;
   }
 
   .measurementTable {
-    @apply w-full min-w-[680px] border-collapse text-left text-sm;
+    @apply w-auto min-w-[520px] border-collapse text-left text-[13px];
   }
 
   .measurementTable th,
   .measurementTable td {
-    @apply border-b border-black/5 px-3 py-3;
+    @apply border-b border-black/5 px-2.5 py-2;
   }
 
   .measurementTable thead th {
@@ -1543,18 +1575,13 @@
     grid-column: 1 / -1;
   }
 
-  .commonFactGrid {
+  .commonConditionLayout {
     grid-template-columns: repeat(1, minmax(0, 1fr));
   }
 
   .experimentConditionLayout {
     grid-template-columns: minmax(0, 1fr);
   }
-
-  .reportStorySummary {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
 }
 
 @media (max-width: 720px) {
