@@ -1,6 +1,4 @@
 import {
-  BarChart3,
-  ChevronDown,
   CheckCircle2,
   Database,
   Gauge,
@@ -12,14 +10,14 @@ import {
 } from 'lucide-react';
 
 const commonFacts = {
-  environment: ['로컬 Windows', 'Spring Boot', 'PostgreSQL Docker Compose'],
+  environment: 'Windows, Spring Boot, PostgreSQL Docker Compose',
   tool: 'k6',
   comparison: '같은 데이터와 부하 조건에서 개선 전후 비교'
 };
 
 const report = {
   tabLabel: '성능개선 1',
-  headline: '초과 판매 0건 유지하며 주문 생성 처리량 34.8% 개선',
+  headline: '주문 생성 처리량 34.8% 개선, 초과 판매 0건 유지',
   problem:
     '인기 상품 주문이 같은 stocks 행에 몰리면 row-level lock 대기로 주문 생성 API 응답 시간이 길어질 수 있음.',
   improvement:
@@ -72,17 +70,13 @@ const latencyMetrics = [
 
 const latencyDomain = [800, 1700];
 
-const experimentConditions = {
-  shared: [
-    { label: '대상 상품', value: '상품 10001' },
-    { label: '부하 방식', value: 'k6 shared-iterations, VU 100' },
-    { label: '주문 단위', value: '고객별 장바구니 1개, 주문 수량 1개, 쿠폰 없음' }
-  ],
-  scenarios: [
-    { label: '충분한 재고 조건', value: '초기 재고 1000개, 주문 생성 500건' },
-    { label: '재고 소진 조건', value: '초기 재고 100개, 주문 생성 200건' }
-  ]
-};
+const experimentConditions = [
+  { label: '대상 상품', value: '상품 10001' },
+  { label: '부하 방식', value: 'k6 shared-iterations, VU 100' },
+  { label: '주문 데이터', value: '고객별 장바구니 1개, 주문 수량 1개, 쿠폰 없음' },
+  { label: '충분한 재고', value: '초기 재고 1000개, 주문 생성 500건' },
+  { label: '재고 소진', value: '초기 재고 100개, 주문 생성 200건' }
+];
 
 const sufficientStockRows = [
   { metric: '성공 요청', before: '500건', after: '500건', change: '유지' },
@@ -109,8 +103,8 @@ const stockOutRows = [
 const consistencyChecks = [
   { label: '충분한 재고 조건', result: '주문 500건 성공, 최종 재고 500' },
   { label: '재고 소진 조건', result: '성공 100건, 실패 100건' },
-  { label: '초과 판매', result: '0건' },
-  { label: '저장 주문 수', result: '성공 요청 수와 일치' }
+  { label: '초과 판매', result: '두 조건 모두 0건' },
+  { label: '저장 주문 수', result: '재고 소진 조건 성공 요청 수와 일치' }
 ];
 
 function formatMetric(value, unit = '') {
@@ -143,7 +137,6 @@ function ThroughputHighlightChart({ metric }) {
           <span>{metric.label}</span>
           <strong>{changePercent.toFixed(1)}% 증가</strong>
         </div>
-        <TrendingUp aria-hidden="true" size={20} />
       </div>
       <div className="throughputColumnChart" aria-label={`${metric.label} 개선 전후 비교`}>
         <div className="throughputColumnGroup">
@@ -175,7 +168,6 @@ function LatencyComparison({ metrics }) {
         <div>
           <h3>주문 생성 API 응답 시간</h3>
         </div>
-        <Timer aria-hidden="true" size={20} />
       </div>
       <div className="latencyCompareRows">
         {metrics.map((metric) => (
@@ -279,24 +271,18 @@ export default function ReportPage() {
           <h2 id="common-panel-title">공통 측정 조건</h2>
         </div>
         <div className="commonConditionLayout">
-          <section className="commonEnvironment" aria-labelledby="common-environment-title">
+          <section className="commonFactCard commonEnvironment" aria-labelledby="common-environment-title">
             <h3 id="common-environment-title">측정 환경</h3>
-            <ul>
-              {commonFacts.environment.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
+            <p>{commonFacts.environment}</p>
           </section>
-          <div className="commonSideFacts">
-            <section>
-              <h3>측정 도구</h3>
-              <p>{commonFacts.tool}</p>
-            </section>
-            <section>
-              <h3>비교 방식</h3>
-              <p>{commonFacts.comparison}</p>
-            </section>
-          </div>
+          <section className="commonFactCard">
+            <h3>측정 도구</h3>
+            <p>{commonFacts.tool}</p>
+          </section>
+          <section className="commonFactCard">
+            <h3>비교 방식</h3>
+            <p>{commonFacts.comparison}</p>
+          </section>
         </div>
       </section>
 
@@ -332,23 +318,13 @@ export default function ReportPage() {
             <Database aria-hidden="true" size={18} />
             <h2 id="experiment-condition-title">측정 조건</h2>
           </div>
-          <div className="experimentConditionLayout">
-            <div className="experimentConditionShared">
-              {experimentConditions.shared.map((condition) => (
-                <div key={condition.label}>
-                  <span>{condition.label}</span>
-                  <strong>{condition.value}</strong>
-                </div>
-              ))}
-            </div>
-            <div className="experimentScenarioGrid">
-              {experimentConditions.scenarios.map((scenario) => (
-                <article key={scenario.label}>
-                  <span>{scenario.label}</span>
-                  <strong>{scenario.value}</strong>
-                </article>
-              ))}
-            </div>
+          <div className="experimentConditionList">
+            {experimentConditions.map((condition) => (
+              <div key={condition.label}>
+                <span className="conditionLabel">{condition.label}</span>
+                <span className="conditionValue">{condition.value}</span>
+              </div>
+            ))}
           </div>
         </section>
 
@@ -357,7 +333,6 @@ export default function ReportPage() {
             <div>
               <h2 id="chart-section-title">핵심 지표 비교</h2>
             </div>
-            <BarChart3 aria-hidden="true" size={22} />
           </div>
 
           <div className="reportChartLayout">
@@ -366,7 +341,6 @@ export default function ReportPage() {
                 <div>
                   <h3>대표 지표</h3>
                 </div>
-                <Gauge aria-hidden="true" size={20} />
               </div>
               <ThroughputHighlightChart metric={throughputMetric} />
             </section>
@@ -383,12 +357,12 @@ export default function ReportPage() {
 
           <details className="measurementDetails">
             <summary>
+              <span className="measurementToggleIcon" aria-hidden="true" />
               <span>상세 측정값 보기</span>
-              <ChevronDown className="measurementChevron" aria-hidden="true" size={18} />
             </summary>
             <div className="measurementDetailsBody">
-              <MeasurementTable rows={sufficientStockRows} title="충분한 재고 조건" />
-              <MeasurementTable rows={stockOutRows} title="재고 소진 조건" />
+              <MeasurementTable rows={sufficientStockRows} title="충분한 재고 조건 측정값" />
+              <MeasurementTable rows={stockOutRows} title="재고 소진 조건 측정값" />
             </div>
           </details>
         </section>
