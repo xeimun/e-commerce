@@ -6,9 +6,9 @@ import CheckoutPage from './pages/CheckoutPage.jsx';
 import CouponPage from './pages/CouponPage.jsx';
 import OrderDetailPage from './pages/OrderDetailPage.jsx';
 import OrderListPage from './pages/OrderListPage.jsx';
-import PlaceholderPage from './pages/PlaceholderPage.jsx';
 import ProductDetailPage from './pages/ProductDetailPage.jsx';
 import ProductListPage from './pages/ProductListPage.jsx';
+import ReportPage from './pages/ReportPage.jsx';
 
 const CUSTOMER_ID_STORAGE_KEY = 'ecommerce-demo-customer-id';
 
@@ -73,7 +73,7 @@ export default function App() {
           path="/orders/:orderId"
           element={<OrderDetailPage customerId={customerId} onApiEvent={recordApiEvent} />}
         />
-        <Route path="/report" element={<PlaceholderPage title="성능 리포트" />} />
+        <Route path="/report" element={<ReportPage />} />
         <Route path="*" element={<Navigate to="/products" replace />} />
       </Routes>
     </AppShell>

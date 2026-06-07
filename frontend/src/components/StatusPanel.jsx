@@ -19,6 +19,10 @@ const emptySnapshot = {
   coupons: []
 };
 
+function asArray(value) {
+  return Array.isArray(value) ? value : [];
+}
+
 function formatShortTime() {
   return new Date().toLocaleTimeString('ko-KR', {
     hour: '2-digit',
@@ -86,9 +90,9 @@ export default function StatusPanel({ apiEvents, customerId }) {
         }
 
         setSnapshot({
-          products: products || [],
-          cartItems: cart?.items || [],
-          coupons: coupons || []
+          products: asArray(products),
+          cartItems: asArray(cart?.items),
+          coupons: asArray(coupons)
         });
         setLastSyncedAt(formatShortTime());
         setSnapshotStatus('success');
@@ -109,8 +113,11 @@ export default function StatusPanel({ apiEvents, customerId }) {
     };
   }, [customerId, latestApiEventId, refreshKey]);
 
-  const availableCouponCount = snapshot.coupons.filter((coupon) => coupon.status === 'AVAILABLE').length;
-  const stockAttentionCount = snapshot.products.filter((product) => {
+  const products = asArray(snapshot.products);
+  const cartItems = asArray(snapshot.cartItems);
+  const coupons = asArray(snapshot.coupons);
+  const availableCouponCount = coupons.filter((coupon) => coupon.status === 'AVAILABLE').length;
+  const stockAttentionCount = products.filter((product) => {
     const stockQuantity = Number(product.stockQuantity || 0);
     return product.status !== 'ON_SALE' || stockQuantity <= 10;
   }).length;
@@ -152,12 +159,12 @@ export default function StatusPanel({ apiEvents, customerId }) {
             <StatusSummaryCard
               icon={Package}
               label="상품 재고"
-              value={isSnapshotLoading ? '확인 중' : `${snapshot.products.length}종`}
+              value={isSnapshotLoading ? '확인 중' : `${products.length}종`}
             />
             <StatusSummaryCard
               icon={ShoppingCart}
               label="장바구니"
-              value={isSnapshotLoading ? '확인 중' : `${snapshot.cartItems.length}개`}
+              value={isSnapshotLoading ? '확인 중' : `${cartItems.length}개`}
             />
             <StatusSummaryCard
               icon={Ticket}
