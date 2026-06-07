@@ -277,6 +277,26 @@
     @apply grid content-start gap-5;
   }
 
+  .detailMetaBlock {
+    @apply grid gap-4 border-b border-black/5 pb-5;
+  }
+
+  .detailCategory {
+    @apply text-sm font-semibold leading-5 text-ridi-blue;
+  }
+
+  .detailMetaRow {
+    @apply flex min-h-5 items-center justify-between gap-4 text-[15px] leading-5;
+  }
+
+  .detailMetaRow span {
+    @apply text-fg-secondary;
+  }
+
+  .detailMetaRow strong {
+    @apply text-right font-bold;
+  }
+
   .detailInfo h1 {
     @apply m-0 text-[28px] font-bold leading-9;
   }
@@ -287,7 +307,7 @@
   }
 
   .detailPrice {
-    @apply grid gap-1;
+    @apply grid gap-1 py-2;
   }
 
   .detailPrice strong {
@@ -302,33 +322,40 @@
     @apply font-bold not-italic text-danger;
   }
 
-  .detailFacts,
   .stateList {
     @apply m-0 grid gap-2;
-  }
-
-  .detailFacts div {
-    @apply flex min-h-12 items-center justify-between rounded-lg bg-surface-subtle px-4;
   }
 
   .stateList div {
     @apply flex min-h-10 items-center justify-between rounded-lg bg-surface-subtle px-3;
   }
 
-  .detailFacts dt {
-    @apply inline-flex items-center gap-1.5 text-[15px] font-semibold leading-[22px] text-fg-secondary;
-  }
-
   .stateList dt {
     @apply inline-flex items-center gap-1.5 text-[13px] text-fg-secondary;
   }
 
-  .detailFacts dd {
-    @apply m-0 text-base font-bold leading-[22px];
-  }
-
   .stateList dd {
     @apply m-0 text-sm font-bold;
+  }
+
+  .detailRows {
+    @apply m-0 grid border-y border-black/5;
+  }
+
+  .detailRows > div {
+    @apply flex min-h-16 items-center justify-between gap-4 border-b border-black/5 py-4;
+  }
+
+  .detailRows > div:last-child {
+    @apply border-b-0;
+  }
+
+  .detailRows dt {
+    @apply text-[15px] leading-5 text-fg-secondary;
+  }
+
+  .detailRows dd {
+    @apply m-0 text-[15px] font-bold leading-5;
   }
 
   .purchaseBar,
@@ -337,30 +364,8 @@
     @apply flex flex-wrap items-center gap-3;
   }
 
-  .detailPurchaseBar {
-    @apply grid min-w-0 rounded-lg bg-surface-subtle p-3;
-    grid-template-columns: auto minmax(180px, 1fr);
-  }
-
-  .quantityControl {
-    @apply grid min-w-0 items-center gap-3 rounded-lg bg-surface-card px-4 py-3 shadow-soft;
-    grid-template-columns: minmax(0, 1fr) auto;
-  }
-
-  .quantityMeta {
-    @apply grid min-w-0 gap-0.5;
-  }
-
-  .quantityMeta span {
-    @apply text-[15px] font-semibold leading-[22px] text-fg-primary;
-  }
-
-  .quantityMeta small {
-    @apply text-xs leading-4 text-fg-tertiary;
-  }
-
   .detailCartButton {
-    @apply min-h-12 px-5;
+    @apply min-h-14 w-full px-5 text-base font-bold;
   }
 
   .stepper {
@@ -386,20 +391,24 @@
   }
 
   .detailStepper {
-    @apply min-h-10 rounded-full border-0 bg-surface-subtle p-1;
-    grid-template-columns: 36px 44px 36px;
+    @apply min-h-9 overflow-visible rounded-none border-0 bg-transparent;
+    grid-template-columns: 40px 44px 40px;
   }
 
   .detailStepper button {
-    @apply rounded-full bg-surface-card shadow-soft transition-colors;
+    @apply rounded-lg bg-transparent text-ridi-blue shadow-none transition-colors;
   }
 
   .detailStepper button:not(:disabled):hover {
-    @apply bg-highlight;
+    @apply bg-blue-50;
+  }
+
+  .detailStepper button:disabled {
+    @apply bg-transparent text-fg-disabled;
   }
 
   .detailStepper span {
-    @apply border-0 text-[15px] leading-5;
+    @apply border-0 text-[15px] font-bold leading-5;
   }
 
   .inlineNotice {
@@ -1078,16 +1087,6 @@
 @keyframes spin {
   to {
     transform: rotate(360deg);
-  }
-}
-
-@media (max-width: 1200px) {
-  .detailPurchaseBar {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .quantityControl {
-    @apply w-full;
   }
 }
 
