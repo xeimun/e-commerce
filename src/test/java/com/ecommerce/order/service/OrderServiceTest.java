@@ -3,6 +3,7 @@ package com.ecommerce.order.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -86,7 +87,7 @@ class OrderServiceTest {
         CartItem cartItem = cart.addItem(product, 2);
         ReflectionTestUtils.setField(cartItem, "id", 10L);
         when(cartRepository.findForOrderByCustomerId(7L)).thenReturn(Optional.of(cart));
-        when(stockRepository.findAllByProductIdInForUpdate(any())).thenReturn(List.of(product.getStock()));
+        when(stockRepository.decreaseQuantityIfEnough(1L, 2L)).thenReturn(1);
         when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> {
             Order order = invocation.getArgument(0);
             ReflectionTestUtils.setField(order, "id", 1L);
@@ -99,8 +100,7 @@ class OrderServiceTest {
         assertThat(response.status()).isEqualTo(OrderStatus.PAYMENT_PENDING);
         assertThat(response.totalProductAmount()).isEqualByComparingTo("70000.00");
         assertThat(response.finalPaymentAmount()).isEqualByComparingTo("70000.00");
-        assertThat(product.getStock().getQuantity()).isEqualTo(3);
-        verify(entityManager).refresh(product.getStock(), LockModeType.PESSIMISTIC_WRITE);
+        verify(stockRepository).decreaseQuantityIfEnough(1L, 2L);
         verify(orderRepository).save(any(Order.class));
     }
 
@@ -124,7 +124,6 @@ class OrderServiceTest {
         CartItem cartItem = cart.addItem(product, 2);
         ReflectionTestUtils.setField(cartItem, "id", 10L);
         when(cartRepository.findForOrderByCustomerId(7L)).thenReturn(Optional.of(cart));
-        when(stockRepository.findAllByProductIdInForUpdate(any())).thenReturn(List.of(product.getStock()));
 
         assertThatThrownBy(() -> orderService.createOrder(7L, new OrderCreateRequest(List.of(10L), null, List.of())))
                 .isInstanceOfSatisfying(OrderValidationException.class, exception -> {
@@ -132,7 +131,7 @@ class OrderServiceTest {
                     assertThat(exception.getDetails().get(0).reason()).isEqualTo("PRODUCT_NOT_ON_SALE");
                 });
         assertThat(product.getStock().getQuantity()).isEqualTo(5);
-        verify(entityManager).refresh(product.getStock(), LockModeType.PESSIMISTIC_WRITE);
+        verify(stockRepository, never()).decreaseQuantityIfEnough(any(), anyLong());
         verify(orderRepository, never()).save(any());
     }
 
@@ -143,7 +142,8 @@ class OrderServiceTest {
         CartItem cartItem = cart.addItem(product, 2);
         ReflectionTestUtils.setField(cartItem, "id", 10L);
         when(cartRepository.findForOrderByCustomerId(7L)).thenReturn(Optional.of(cart));
-        when(stockRepository.findAllByProductIdInForUpdate(any())).thenReturn(List.of(product.getStock()));
+        when(stockRepository.decreaseQuantityIfEnough(1L, 2L)).thenReturn(0);
+        when(stockRepository.findQuantityByProductId(1L)).thenReturn(Optional.of(1L));
 
         assertThatThrownBy(() -> orderService.createOrder(7L, new OrderCreateRequest(List.of(10L), null, List.of())))
                 .isInstanceOfSatisfying(OrderValidationException.class, exception -> {
@@ -152,7 +152,6 @@ class OrderServiceTest {
                     assertThat(exception.getDetails().get(0).currentStock()).isEqualTo(1);
                 });
         assertThat(product.getStock().getQuantity()).isEqualTo(1);
-        verify(entityManager).refresh(product.getStock(), LockModeType.PESSIMISTIC_WRITE);
         verify(orderRepository, never()).save(any());
     }
 
@@ -192,7 +191,7 @@ class OrderServiceTest {
         IssuedCoupon productCoupon = issuedProductCouponFixture(200L, 7L, product, new BigDecimal("5000.00"));
         when(cartRepository.findForOrderByCustomerId(7L)).thenReturn(Optional.of(cart));
         when(issuedCouponRepository.findAllByIdInForUpdate(any())).thenReturn(List.of(orderCoupon, productCoupon));
-        when(stockRepository.findAllByProductIdInForUpdate(any())).thenReturn(List.of(product.getStock()));
+        when(stockRepository.decreaseQuantityIfEnough(1L, 2L)).thenReturn(1);
         when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> {
             Order order = invocation.getArgument(0);
             ReflectionTestUtils.setField(order, "id", 1L);
@@ -211,7 +210,7 @@ class OrderServiceTest {
         assertThat(response.totalProductAmount()).isEqualByComparingTo("70000.00");
         assertThat(response.totalCouponDiscountAmount()).isEqualByComparingTo("15000.00");
         assertThat(response.finalPaymentAmount()).isEqualByComparingTo("55000.00");
-        assertThat(product.getStock().getQuantity()).isEqualTo(3);
+        verify(stockRepository).decreaseQuantityIfEnough(1L, 2L);
         assertThat(orderCoupon.getStatus()).isEqualTo(IssuedCouponStatus.RESERVED);
         assertThat(orderCoupon.getOrder().getId()).isEqualTo(1L);
         assertThat(orderCoupon.getReservedAt()).isNotNull();
@@ -233,7 +232,7 @@ class OrderServiceTest {
         CartItem cartItem = cart.addItem(product, 2);
         ReflectionTestUtils.setField(cartItem, "id", 10L);
         when(cartRepository.findForOrderByCustomerId(7L)).thenReturn(Optional.of(cart));
-        when(stockRepository.findAllByProductIdInForUpdate(any())).thenReturn(List.of(product.getStock()));
+        when(stockRepository.decreaseQuantityIfEnough(1L, 2L)).thenReturn(1);
         when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> {
             Order order = invocation.getArgument(0);
             ReflectionTestUtils.setField(order, "id", 1L);
@@ -262,7 +261,7 @@ class OrderServiceTest {
         IssuedCoupon productCoupon = issuedProductCouponFixture(200L, 7L, product, new BigDecimal("50000.00"));
         when(cartRepository.findForOrderByCustomerId(7L)).thenReturn(Optional.of(cart));
         when(issuedCouponRepository.findAllByIdInForUpdate(any())).thenReturn(List.of(productCoupon));
-        when(stockRepository.findAllByProductIdInForUpdate(any())).thenReturn(List.of(product.getStock()));
+        when(stockRepository.decreaseQuantityIfEnough(1L, 2L)).thenReturn(1);
         when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> {
             Order order = invocation.getArgument(0);
             ReflectionTestUtils.setField(order, "id", 1L);

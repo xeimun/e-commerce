@@ -87,19 +87,17 @@ public class OrderService {
         }
 
         CouponApplication couponApplication = validateCouponApplication(validCustomerId, validRequest, selectedItems, now);
-        Map<Long, Stock> lockedStocksByProductId = lockStocks(selectedItems);
-        List<ErrorDetail> stockDetails = validateOrderableItems(selectedItems, lockedStocksByProductId);
-        if (!stockDetails.isEmpty()) {
-            throw new OrderValidationException(stockDetails);
+        List<ErrorDetail> productStatusDetails = validateOrderableItemStatuses(selectedItems);
+        if (!productStatusDetails.isEmpty()) {
+            throw new OrderValidationException(productStatusDetails);
         }
 
         Map<Long, BigDecimal> instantDiscountsByCartItemId = calculateInstantDiscounts(selectedItems, now);
         Map<Long, BigDecimal> productCouponDiscountsByCartItemId =
                 calculateProductCouponDiscounts(selectedItems, couponApplication, now);
         List<OrderItem> orderItems = selectedItems.stream()
-                .map(cartItem -> reserveStockAndCreateOrderItem(
+                .map(cartItem -> createOrderItem(
                         cartItem,
-                        lockedStocksByProductId,
                         instantDiscountsByCartItemId.getOrDefault(cartItem.getId(), BigDecimal.ZERO),
                         productCouponDiscountsByCartItemId.getOrDefault(cartItem.getId(), BigDecimal.ZERO)
                 ))
@@ -111,6 +109,7 @@ public class OrderService {
                 orderItems,
                 orderCouponDiscountAmount
         );
+        reserveStocks(selectedItems);
         Order savedOrder = orderRepository.save(order);
         reserveCoupons(couponApplication, savedOrder, now);
 
@@ -452,46 +451,46 @@ public class OrderService {
                 .forEach(IssuedCoupon::releaseReservation);
     }
 
-    private Map<Long, Stock> lockStocks(List<CartItem> selectedItems) {
-        Set<Long> productIds = selectedItems.stream()
-                .map(CartItem::getProduct)
-                .map(Product::getId)
-                .collect(Collectors.toSet());
-
-        Map<Long, Stock> lockedStocksByProductId = stockRepository.findAllByProductIdInForUpdate(productIds)
-                .stream()
-                .collect(Collectors.toMap(stock -> stock.getProduct().getId(), Function.identity()));
-        lockedStocksByProductId.values()
-                .forEach(stock -> entityManager.refresh(stock, LockModeType.PESSIMISTIC_WRITE));
-
-        return lockedStocksByProductId;
-    }
-
-    private List<ErrorDetail> validateOrderableItems(List<CartItem> selectedItems, Map<Long, Stock> lockedStocksByProductId) {
+    private List<ErrorDetail> validateOrderableItemStatuses(List<CartItem> selectedItems) {
         List<ErrorDetail> details = new ArrayList<>();
         for (CartItem cartItem : selectedItems) {
             Product product = cartItem.getProduct();
-            Stock stock = lockedStocksByProductId.get(product.getId());
             if (product.getStatus() != ProductStatus.ON_SALE) {
                 details.add(ErrorDetail.product(product.getId(), "PRODUCT_NOT_ON_SALE"));
-            }
-            if (stock == null || !stock.hasEnough(cartItem.getQuantity())) {
-                long currentStock = stock == null ? 0 : stock.getQuantity();
-                details.add(ErrorDetail.productStock(product.getId(), "OUT_OF_STOCK", currentStock));
             }
         }
 
         return details;
     }
 
-    private OrderItem reserveStockAndCreateOrderItem(
+    private void reserveStocks(List<CartItem> selectedItems) {
+        Map<Long, Long> quantitiesByProductId = selectedItems.stream()
+                .collect(Collectors.groupingBy(
+                        cartItem -> cartItem.getProduct().getId(),
+                        LinkedHashMap::new,
+                        Collectors.summingLong(CartItem::getQuantity)
+                ));
+
+        List<ErrorDetail> details = new ArrayList<>();
+        quantitiesByProductId.forEach((productId, quantity) -> {
+            int updatedCount = stockRepository.decreaseQuantityIfEnough(productId, quantity);
+            if (updatedCount == 0) {
+                long currentStock = stockRepository.findQuantityByProductId(productId).orElse(0L);
+                details.add(ErrorDetail.productStock(productId, "OUT_OF_STOCK", currentStock));
+            }
+        });
+
+        if (!details.isEmpty()) {
+            throw new OrderValidationException(details);
+        }
+    }
+
+    private OrderItem createOrderItem(
             CartItem cartItem,
-            Map<Long, Stock> lockedStocksByProductId,
             BigDecimal instantDiscountAmount,
             BigDecimal productCouponDiscountAmount
     ) {
         Product product = cartItem.getProduct();
-        lockedStocksByProductId.get(product.getId()).decrease(cartItem.getQuantity());
 
         return OrderItem.create(
                 product,
