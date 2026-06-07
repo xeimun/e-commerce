@@ -105,7 +105,14 @@ export default function ProductDetailPage({ customerId, onApiEvent }) {
         <ProductArtwork product={product} className="detailCover" />
 
         <div className="detailInfo">
-          <p className="eyebrow">{product.category || '한정판 굿즈'}</p>
+          <div className="detailMetaBlock">
+            <span className="detailCategory">{product.category || '한정판 굿즈'}</span>
+            <div className="detailMetaRow">
+              <span>IP 라이선스</span>
+              <strong>{product.contentTitle || '-'}</strong>
+            </div>
+          </div>
+
           <h1>{product.name}</h1>
           <p className="detailDescription">{product.description}</p>
 
@@ -119,58 +126,46 @@ export default function ProductDetailPage({ customerId, onApiEvent }) {
             )}
           </div>
 
-          <dl className="detailFacts">
-            <div>
-              <dt>상태</dt>
-              <dd>{product.status === 'ON_SALE' ? '판매 중' : '판매 중지'}</dd>
-            </div>
+          <dl className="detailRows">
             <div>
               <dt>재고</dt>
               <dd>{product.stockQuantity}개</dd>
             </div>
             <div>
-              <dt>콘텐츠</dt>
-              <dd>{product.contentTitle || '-'}</dd>
+              <dt>수량</dt>
+              <dd>
+                <div className="stepper detailStepper" aria-label="수량">
+                  <button
+                    aria-label="수량 줄이기"
+                    disabled={quantity <= 1}
+                    type="button"
+                    onClick={() => setQuantity((current) => Math.max(current - 1, 1))}
+                  >
+                    <Minus aria-hidden="true" size={18} />
+                  </button>
+                  <span>{quantity}</span>
+                  <button
+                    aria-label="수량 늘리기"
+                    disabled={quantity >= maxQuantity}
+                    type="button"
+                    onClick={() => setQuantity((current) => Math.min(current + 1, maxQuantity))}
+                  >
+                    <Plus aria-hidden="true" size={18} />
+                  </button>
+                </div>
+              </dd>
             </div>
           </dl>
 
-          <div className="purchaseBar detailPurchaseBar">
-            <div className="quantityControl">
-              <div className="quantityMeta">
-                <span>수량</span>
-                <small>최대 {maxQuantity}개</small>
-              </div>
-              <div className="stepper detailStepper" aria-label="수량">
-                <button
-                  aria-label="수량 줄이기"
-                  disabled={quantity <= 1}
-                  type="button"
-                  onClick={() => setQuantity((current) => Math.max(current - 1, 1))}
-                >
-                  <Minus aria-hidden="true" size={18} />
-                </button>
-                <span>{quantity}</span>
-                <button
-                  aria-label="수량 늘리기"
-                  disabled={quantity >= maxQuantity}
-                  type="button"
-                  onClick={() => setQuantity((current) => Math.min(current + 1, maxQuantity))}
-                >
-                  <Plus aria-hidden="true" size={18} />
-                </button>
-              </div>
-            </div>
-
-            <button
-              className="primaryButton detailCartButton"
-              disabled={!canBuy || mutationStatus === 'pending'}
-              type="button"
-              onClick={addToCart}
-            >
-              <ShoppingCart aria-hidden="true" size={18} />
-              {canBuy ? '장바구니 담기' : '구매 불가'}
-            </button>
-          </div>
+          <button
+            className="primaryButton detailCartButton"
+            disabled={!canBuy || mutationStatus === 'pending'}
+            type="button"
+            onClick={addToCart}
+          >
+            <ShoppingCart aria-hidden="true" size={18} />
+            {canBuy ? '장바구니 담기' : '구매 불가'}
+          </button>
 
           {message && (
             <div className={mutationStatus === 'error' ? 'inlineNotice error' : 'inlineNotice'}>
