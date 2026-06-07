@@ -12,11 +12,11 @@ const report = {
   title: '인기 상품 주문 생성과 재고 차감',
   completedCount: 1,
   measuredAt: '2026-06-07',
-  headline: '초과 판매 0건을 유지하면서 p95 응답 시간을 1,097.51ms에서 962.91ms로 개선',
+  headline: '초과 판매 0건을 유지하면서 p95 응답 시간을 1,610.89ms에서 1,342.18ms로 개선',
   context: [
     '한정판 굿즈 판매 시작 직후 여러 고객이 같은 상품을 동시에 주문하는 상황',
     '쿠폰 없는 단건 주문으로 stocks hot row의 재고 차감 병목만 분리',
-    '상품 10001, 재고 1000개, 주문 생성 500건, 동시성 100 조건'
+    'k6 기준 상품 10001, 재고 1000개, 주문 생성 500건, VU 100 조건'
   ],
   bottleneck: [
     '기존 흐름은 stocks 행을 PESSIMISTIC_WRITE로 조회한 뒤 재고 검증과 차감을 처리했다.',
@@ -25,15 +25,15 @@ const report = {
   ],
   interviewSummary: [
     '인기 상품 주문 집중 상황에서 비관적 락 기반 재고 차감을 조건부 업데이트로 바꾸어 초과 판매 0건을 유지했다.',
-    '로컬 동시성 100 측정에서 주문 생성 p95 응답 시간을 1,097.51ms에서 962.91ms로 낮추고 처리량을 5,647.27건/분에서 7,114.73건/분으로 개선했다.'
+    'k6 VU 100 측정에서 주문 생성 p95 응답 시간을 1,610.89ms에서 1,342.18ms로 낮추고 주문 구간 처리량을 76.97건/초에서 103.76건/초로 개선했다.'
   ]
 };
 
 const throughputMetric = {
   label: '처리량',
-  unit: '건/분',
-  before: 5647.27,
-  after: 7114.73,
+  unit: '건/초',
+  before: 76.97,
+  after: 103.76,
   direction: 'higher'
 };
 
@@ -41,22 +41,22 @@ const latencyMetrics = [
   {
     label: '평균',
     unit: 'ms',
-    before: 963.63,
-    after: 763.62,
+    before: 1179.77,
+    after: 870.26,
     direction: 'lower'
   },
   {
     label: 'p95',
     unit: 'ms',
-    before: 1097.51,
-    after: 962.91,
+    before: 1610.89,
+    after: 1342.18,
     direction: 'lower'
   },
   {
     label: 'p99',
     unit: 'ms',
-    before: 1117.01,
-    after: 1077.76,
+    before: 1630.56,
+    after: 1450.14,
     direction: 'lower'
   }
 ];
@@ -66,15 +66,15 @@ const consistencyChecks = [
   { label: '최종 재고', result: '기대 재고 500, 실제 재고 500' },
   { label: '재고 소진 조건', result: '주문 200건 중 성공 100건, 실패 100건' },
   { label: '초과 판매', result: '0건' },
-  { label: '실패 고객 주문 저장 흔적', result: '없음' }
+  { label: '재고 소진 저장 주문', result: '성공 수와 같은 100건' }
 ];
 
 const limitations = [
   '로컬 개발 장비와 Docker Compose 환경에서 측정했다.',
-  'k6가 설치되어 있지 않아 Node.js 내장 fetch 기반 스크립트로 측정했다.',
-  '기동 직후 첫 고부하 재측정 값이 튀어 반복 측정의 필요성이 있다.',
+  'k6 setup 단계에서 장바구니를 준비하고, 주문 생성 구간만 커스텀 메트릭으로 비교했다.',
+  'k6와 애플리케이션 서버가 같은 로컬 장비에서 실행되어 클라이언트와 서버 자원 사용이 완전히 분리되지는 않는다.',
   'DB 락 대기 시간과 커넥션 풀 대기 시간은 별도 지표로 수집하지 못했다.',
-  '부하 테스트 데이터가 누적되면 주문 저장 비용이 달라질 수 있다.'
+  '각 조건은 단발 측정이므로 운영 처리량 보장이 아니라 같은 조건의 상대 비교 근거로 사용한다.'
 ];
 
 function formatMetric(value, unit = '') {
