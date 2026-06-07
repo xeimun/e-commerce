@@ -1,59 +1,68 @@
 import {
-  AlertCircle,
   BarChart3,
   CheckCircle2,
+  Database,
+  FileText,
+  Gauge,
   ShieldCheck,
   Timer,
   TrendingDown,
   TrendingUp
 } from 'lucide-react';
 
+const commonFacts = [
+  { label: '측정 환경', value: '로컬 Windows, Spring Boot, PostgreSQL Docker Compose' },
+  { label: '측정 도구', value: 'k6' },
+  { label: '비교 방식', value: '같은 데이터와 부하 조건에서 개선 전후 비교' }
+];
+
 const report = {
-  title: '인기 상품 주문 생성과 재고 차감',
-  completedCount: 1,
-  measuredAt: '2026-06-07',
-  headline: '초과 판매 0건을 유지하면서 p95 응답 시간을 1,610.89ms에서 1,342.18ms로 개선',
-  context: [
-    '한정판 굿즈 판매 시작 직후 여러 고객이 같은 상품을 동시에 주문하는 상황',
-    '쿠폰 없는 단건 주문으로 stocks hot row의 재고 차감 병목만 분리',
-    'k6 기준 상품 10001, 재고 1000개, 주문 생성 500건, VU 100 조건'
-  ],
-  bottleneck: [
-    '기존 흐름은 stocks 행을 PESSIMISTIC_WRITE로 조회한 뒤 재고 검증과 차감을 처리했다.',
-    '같은 상품에 요청이 몰리면 하나의 row-level lock을 기준으로 뒤 요청이 대기한다.',
-    '재고를 잠근 뒤 주문 상품 생성과 주문 저장까지 이어져 lock hold time이 응답 지연에 영향을 준다.'
-  ],
-  interviewSummary: [
-    '인기 상품 주문 집중 상황에서 비관적 락 기반 재고 차감을 조건부 업데이트로 바꾸어 초과 판매 0건을 유지했다.',
-    'k6 VU 100 측정에서 주문 생성 p95 응답 시간을 1,610.89ms에서 1,342.18ms로 낮추고 주문 구간 처리량을 76.97건/초에서 103.76건/초로 개선했다.'
-  ]
+  tabLabel: '성능개선 1',
+  topic: '인기 상품 주문 생성과 재고 차감',
+  headline: '재고 차감 임계 구역을 줄여 주문 생성 처리량 34.8% 증가',
+  summary:
+    '기존 주문 생성은 인기 상품 주문이 몰릴 때 stocks 행을 비관적 락으로 잡고 재고 검증과 차감을 처리해 p95 응답 시간이 증가했습니다.',
+  appliedConcept:
+    'critical section 최소화를 적용해 재고 검증과 차감을 PostgreSQL 조건부 업데이트 한 문장으로 처리했습니다.',
+  resultNote:
+    '처리량은 증가했고 p95 응답 시간은 감소했지만, p99 개선폭은 상대적으로 작아 꼬리 지연 요인은 일부 남아 있을 가능성이 있습니다.',
+  hypothesis:
+    '기준 측정에서 주문은 모두 성공했고 최종 재고도 기대값과 일치했습니다. 다만 p95, p99 응답 시간이 높게 나타났고, 모든 요청이 같은 상품의 stocks 행을 차감하는 조건이었기 때문에 row-level lock 대기가 응답 지연에 영향을 줬을 것으로 가정했습니다.',
+  method:
+    '기존 방식은 stocks 행을 비관적 락으로 조회한 뒤 재고를 검증하고 차감했습니다. 개선 후에는 quantity >= 주문 수량 조건을 가진 UPDATE 한 문장으로 재고 검증과 차감을 처리했습니다. 락을 없애는 것이 아니라, 재고 차감이 필요한 구간을 짧게 만들기 위한 선택입니다.',
+  limitation:
+    'DB 락 대기 시간과 커넥션 풀 대기 시간을 별도 지표로 수집하지 못해, 병목 원인은 응답 시간 변화와 코드 흐름을 근거로 한 가설로 남아 있습니다.'
 };
 
 const throughputMetric = {
-  label: '처리량',
+  label: '주문 생성 처리량',
   unit: '건/초',
   before: 76.97,
   after: 103.76,
-  direction: 'higher'
+  direction: 'higher',
+  domain: [70, 110]
 };
 
 const latencyMetrics = [
   {
-    label: '평균',
+    label: '평균 응답 시간',
+    shortLabel: '평균',
     unit: 'ms',
     before: 1179.77,
     after: 870.26,
     direction: 'lower'
   },
   {
-    label: 'p95',
+    label: 'p95 응답 시간',
+    shortLabel: 'p95',
     unit: 'ms',
     before: 1610.89,
     after: 1342.18,
     direction: 'lower'
   },
   {
-    label: 'p99',
+    label: 'p99 응답 시간',
+    shortLabel: 'p99',
     unit: 'ms',
     before: 1630.56,
     after: 1450.14,
@@ -61,20 +70,35 @@ const latencyMetrics = [
   }
 ];
 
-const consistencyChecks = [
-  { label: '충분한 재고 조건', result: '주문 500건 성공, 실패 0건' },
-  { label: '최종 재고', result: '기대 재고 500, 실제 재고 500' },
-  { label: '재고 소진 조건', result: '주문 200건 중 성공 100건, 실패 100건' },
-  { label: '초과 판매', result: '0건' },
-  { label: '재고 소진 저장 주문', result: '성공 수와 같은 100건' }
+const latencyDomain = [800, 1700];
+
+const sufficientStockRows = [
+  { metric: '성공 요청', before: '500건', after: '500건', change: '유지' },
+  { metric: '실패 요청', before: '0건', after: '0건', change: '유지' },
+  { metric: '주문 생성 구간', before: '6.50초', after: '4.82초', change: '25.8% 감소' },
+  { metric: '처리량', before: '76.97건/초', after: '103.76건/초', change: '34.8% 증가' },
+  { metric: '평균 응답 시간', before: '1,179.77ms', after: '870.26ms', change: '26.2% 감소' },
+  { metric: 'p95 응답 시간', before: '1,610.89ms', after: '1,342.18ms', change: '16.7% 감소' },
+  { metric: 'p99 응답 시간', before: '1,630.56ms', after: '1,450.14ms', change: '11.1% 감소' },
+  { metric: '최종 재고', before: '500', after: '500', change: '유지' }
 ];
 
-const limitations = [
-  '로컬 개발 장비와 Docker Compose 환경에서 측정했다.',
-  'k6 setup 단계에서 장바구니를 준비하고, 주문 생성 구간만 커스텀 메트릭으로 비교했다.',
-  'k6와 애플리케이션 서버가 같은 로컬 장비에서 실행되어 클라이언트와 서버 자원 사용이 완전히 분리되지는 않는다.',
-  'DB 락 대기 시간과 커넥션 풀 대기 시간은 별도 지표로 수집하지 못했다.',
-  '각 조건은 단발 측정이므로 운영 처리량 보장이 아니라 같은 조건의 상대 비교 근거로 사용한다.'
+const stockOutRows = [
+  { metric: '성공 요청', before: '100건', after: '100건', change: '유지' },
+  { metric: '실패 요청', before: '100건', after: '100건', change: '유지' },
+  { metric: '주문 생성 구간', before: '1.91초', after: '1.19초', change: '37.7% 감소' },
+  { metric: '처리량', before: '104.93건/초', after: '168.49건/초', change: '60.6% 증가' },
+  { metric: '평균 응답 시간', before: '865.31ms', after: '515.47ms', change: '40.4% 감소' },
+  { metric: 'p95 응답 시간', before: '1,470.79ms', after: '858.91ms', change: '41.6% 감소' },
+  { metric: 'p99 응답 시간', before: '1,498.78ms', after: '918.53ms', change: '38.7% 감소' },
+  { metric: '최종 재고', before: '0', after: '0', change: '유지' }
+];
+
+const consistencyChecks = [
+  { label: '충분한 재고 조건', result: '주문 500건 성공, 최종 재고 500' },
+  { label: '재고 소진 조건', result: '성공 100건, 실패 100건' },
+  { label: '초과 판매', result: '0건' },
+  { label: '저장 주문 수', result: '성공 요청 수와 일치' }
 ];
 
 function formatMetric(value, unit = '') {
@@ -89,210 +113,254 @@ function getChangePercent(metric) {
   return metric.direction === 'lower' ? Math.abs(change) : change;
 }
 
-function MetricCard({ icon: Icon, label, tone = 'neutral', value, subline }) {
-  return (
-    <article className={`reportKpiCard ${tone}`}>
-      <div className="reportKpiIcon" aria-hidden="true">
-        <Icon size={20} />
-      </div>
-      <div>
-        <span>{label}</span>
-        <strong>{value}</strong>
-        <p>{subline}</p>
-      </div>
-    </article>
-  );
+function getScaledPercent(value, domain) {
+  const [min, max] = domain;
+  const percent = ((value - min) / (max - min)) * 100;
+  return Math.min(100, Math.max(0, percent));
 }
 
-function ThroughputChart({ metric }) {
-  const maxValue = Math.max(metric.before, metric.after);
-  const beforePercent = (metric.before / maxValue) * 100;
-  const afterPercent = (metric.after / maxValue) * 100;
-  const changePercent = getChangePercent(metric);
-
+function ScaledBar({ metric, tone = 'blue' }) {
   return (
-    <section className="reportCard" aria-labelledby="throughput-title">
-      <div className="sectionTitle">
-        <h2 id="throughput-title">처리량</h2>
-        <span>높을수록 좋음</span>
+    <div className="scaledMetric">
+      <div className="scaledMetricHeader">
+        <div>
+          <span>{metric.label}</span>
+          <strong>{getChangePercent(metric).toFixed(1)}% 증가</strong>
+        </div>
+        <TrendingUp aria-hidden="true" size={20} />
       </div>
-      <div
-        className="metricDelta success"
-        aria-label={`처리량 ${changePercent.toFixed(1)}퍼센트 증가`}
-      >
-        <TrendingUp aria-hidden="true" size={18} />
-        <strong>{changePercent.toFixed(1)}% 증가</strong>
-      </div>
-      <div className="barCompareChart">
-        <div className="barCompareRow">
+      <div className="scaledRows">
+        <div className="scaledRow">
           <span>개선 전</span>
-          <div className="barTrack" aria-hidden="true">
+          <div className="scaledTrack" aria-hidden="true">
             <div
-              className="barFill before"
-              style={{ '--bar-size': `${beforePercent}%` }}
+              className="scaledFill before"
+              style={{ '--bar-size': `${getScaledPercent(metric.before, metric.domain)}%` }}
             />
           </div>
           <strong>{formatMetric(metric.before, metric.unit)}</strong>
         </div>
-        <div className="barCompareRow">
+        <div className="scaledRow">
           <span>개선 후</span>
-          <div className="barTrack" aria-hidden="true">
+          <div className="scaledTrack" aria-hidden="true">
             <div
-              className="barFill after positive"
-              style={{ '--bar-size': `${afterPercent}%` }}
+              className={`scaledFill after ${tone}`}
+              style={{ '--bar-size': `${getScaledPercent(metric.after, metric.domain)}%` }}
             />
           </div>
           <strong>{formatMetric(metric.after, metric.unit)}</strong>
         </div>
       </div>
-    </section>
+      <div className="chartAxisNote">
+        축 범위 {metric.domain[0]}-{metric.domain[1]}{metric.unit}
+      </div>
+    </div>
   );
 }
 
-function LatencyChart({ metrics }) {
-  const maxValue = Math.max(...metrics.flatMap((metric) => [metric.before, metric.after]));
-
+function LatencyComparison({ metrics }) {
   return (
-    <section className="reportCard" aria-labelledby="latency-title">
-      <div className="sectionTitle">
-        <h2 id="latency-title">응답 시간</h2>
-        <span>낮을수록 좋음</span>
+    <div className="latencyComparePanel">
+      <div className="chartPanelHeader">
+        <div>
+          <h3>응답 시간</h3>
+          <p>낮을수록 좋음</p>
+        </div>
+        <Timer aria-hidden="true" size={20} />
       </div>
-      <div className="latencyChart">
-        {metrics.map((metric) => {
-          const beforePercent = (metric.before / maxValue) * 100;
-          const afterPercent = (metric.after / maxValue) * 100;
-          const changePercent = getChangePercent(metric);
-
-          return (
-            <article className="latencyMetric" key={metric.label}>
-              <div className="latencyMetricHeader">
-                <div>
-                  <strong>{metric.label}</strong>
-                  <span>{changePercent.toFixed(1)}% 감소</span>
+      <div className="latencyCompareRows">
+        {metrics.map((metric) => (
+          <article className="latencyCompareItem" key={metric.label}>
+            <div className="latencyCompareTitle">
+              <strong>{metric.shortLabel}</strong>
+              <span>{getChangePercent(metric).toFixed(1)}% 감소</span>
+            </div>
+            <div className="scaledRows">
+              <div className="scaledRow compact">
+                <span>전</span>
+                <div className="scaledTrack" aria-hidden="true">
+                  <div
+                    className="scaledFill before"
+                    style={{ '--bar-size': `${getScaledPercent(metric.before, latencyDomain)}%` }}
+                  />
                 </div>
-                <TrendingDown aria-hidden="true" size={18} />
+                <strong>{formatMetric(metric.before, metric.unit)}</strong>
               </div>
-              <div className="latencyBars">
-                <div className="latencyBarGroup">
-                  <div className="latencyBar before" style={{ '--bar-size': `${beforePercent}%` }}>
-                    <span>{formatMetric(metric.before, metric.unit)}</span>
-                  </div>
-                  <small>개선 전</small>
+              <div className="scaledRow compact">
+                <span>후</span>
+                <div className="scaledTrack" aria-hidden="true">
+                  <div
+                    className="scaledFill after blue"
+                    style={{ '--bar-size': `${getScaledPercent(metric.after, latencyDomain)}%` }}
+                  />
                 </div>
-                <div className="latencyBarGroup">
-                  <div className="latencyBar after" style={{ '--bar-size': `${afterPercent}%` }}>
-                    <span>{formatMetric(metric.after, metric.unit)}</span>
-                  </div>
-                  <small>개선 후</small>
-                </div>
+                <strong>{formatMetric(metric.after, metric.unit)}</strong>
               </div>
-            </article>
-          );
-        })}
-      </div>
-    </section>
-  );
-}
-
-function BulletSection({ icon: Icon, items, title }) {
-  return (
-    <section className="reportCard">
-      <div className="panelHeader">
-        <Icon aria-hidden="true" size={18} />
-        <h2>{title}</h2>
-      </div>
-      <ul className="reportBulletList">
-        {items.map((item) => (
-          <li key={item}>{item}</li>
+            </div>
+          </article>
         ))}
-      </ul>
+      </div>
+      <div className="chartAxisNote">
+        축 범위 {latencyDomain[0]}-{latencyDomain[1]}ms
+      </div>
+    </div>
+  );
+}
+
+function MeasurementTable({ rows, title }) {
+  return (
+    <section className="measurementTableBlock">
+      <h3>{title}</h3>
+      <div className="measurementTableWrap">
+        <table className="measurementTable">
+          <thead>
+            <tr>
+              <th scope="col">지표</th>
+              <th scope="col">개선 전</th>
+              <th scope="col">개선 후</th>
+              <th scope="col">변화</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={`${title}-${row.metric}`}>
+                <th scope="row">{row.metric}</th>
+                <td>{row.before}</td>
+                <td>{row.after}</td>
+                <td>{row.change}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
+
+function NumberedSection({ children, icon: Icon, number, title }) {
+  return (
+    <section className="reportNarrativeBlock">
+      <div className="reportNarrativeIndex">
+        <span>{number}</span>
+      </div>
+      <div className="reportNarrativeBody">
+        <div className="reportNarrativeTitle">
+          <Icon aria-hidden="true" size={18} />
+          <h2>{title}</h2>
+        </div>
+        {children}
+      </div>
     </section>
   );
 }
 
 export default function ReportPage() {
-  const throughputChange = getChangePercent(throughputMetric);
-  const p95Metric = latencyMetrics.find((metric) => metric.label === 'p95');
-  const p95Change = getChangePercent(p95Metric);
-
   return (
     <section className="pageStack reportPage">
       <div className="pageHeader">
         <p className="eyebrow">Performance Report</p>
         <div>
           <h1>성능 리포트</h1>
-          <p>완료된 성능 개선의 측정 조건, 병목 가설, 개선 전후 수치와 정합성 검증을 함께 확인합니다.</p>
+          <p>완료된 성능 개선의 문제 상황, 적용한 CS 개념, 개선 전후 지표와 정합성 검증을 비교합니다.</p>
         </div>
       </div>
 
-      <section className="reportHero" aria-labelledby="report-hero-title">
-        <div className="reportHeroCopy">
-          <span>첫 번째 개선 결과</span>
-          <h2 id="report-hero-title">{report.headline}</h2>
-          <p>
-            PostgreSQL 조건부 업데이트로 재고 검증과 차감을 하나의 DB 문장에 묶어
-            재고 차감 임계 구역을 줄였습니다.
-          </p>
+      <section className="reportCommonPanel" aria-labelledby="common-panel-title">
+        <div className="panelHeader">
+          <Database aria-hidden="true" size={18} />
+          <h2 id="common-panel-title">공통 측정 조건</h2>
         </div>
-        <div className="reportHeroBadge" aria-label="측정 일자">
-          <BarChart3 aria-hidden="true" size={22} />
-          <span>측정일</span>
-          <strong>{report.measuredAt}</strong>
+        <div className="commonFactGrid">
+          {commonFacts.map((fact) => (
+            <div className="commonFact" key={fact.label}>
+              <span>{fact.label}</span>
+              <strong>{fact.value}</strong>
+            </div>
+          ))}
         </div>
       </section>
 
-      <div className="reportKpiGrid">
-        <MetricCard
-          icon={TrendingUp}
-          label="처리량"
-          tone="success"
-          value={`${throughputChange.toFixed(1)}% 증가`}
-          subline={`${formatMetric(throughputMetric.before, throughputMetric.unit)} → ${formatMetric(throughputMetric.after, throughputMetric.unit)}`}
-        />
-        <MetricCard
-          icon={Timer}
-          label="p95 응답 시간"
-          tone="info"
-          value={`${p95Change.toFixed(1)}% 감소`}
-          subline={`${formatMetric(p95Metric.before, p95Metric.unit)} → ${formatMetric(p95Metric.after, p95Metric.unit)}`}
-        />
-        <MetricCard
-          icon={ShieldCheck}
-          label="초과 판매"
-          tone="success"
-          value="0건"
-          subline="재고 소진 조건에서도 초과 판매 없음"
-        />
-        <MetricCard
-          icon={CheckCircle2}
-          label="완료된 개선"
-          value={`${report.completedCount}건`}
-          subline="완료된 성능 개선만 리포트에 노출"
-        />
-      </div>
-
       <div className="reportTabs" role="tablist" aria-label="성능 개선 리포트">
         <button className="segmentedTab active" type="button" role="tab" aria-selected="true">
-          인기 상품 주문 생성
+          {report.tabLabel}
         </button>
       </div>
 
-      <div className="reportDetailGrid">
-        <div className="reportDetailMain">
-          <BulletSection icon={BarChart3} title="상황" items={report.context} />
-          <BulletSection icon={Timer} title="병목 가설" items={report.bottleneck} />
+      <article className="reportStory" aria-labelledby="report-story-title">
+        <div className="reportStoryHero">
+          <div>
+            <span>{report.topic}</span>
+            <h2 id="report-story-title">{report.headline}</h2>
+          </div>
+          <div className="reportStorySummary">
+            <p>{report.summary}</p>
+            <p>{report.appliedConcept}</p>
+          </div>
+        </div>
 
-          <div className="reportChartGrid">
-            <ThroughputChart metric={throughputMetric} />
-            <LatencyChart metrics={latencyMetrics} />
+        <section className="reportChartSection" aria-labelledby="chart-section-title">
+          <div className="sectionTitle">
+            <div>
+              <h2 id="chart-section-title">핵심 지표 비교</h2>
+              <span>개선 차이를 읽기 쉽도록 관찰 구간 기준 축을 사용합니다.</span>
+            </div>
+            <BarChart3 aria-hidden="true" size={22} />
           </div>
 
-          <section className="reportCard" aria-labelledby="consistency-title">
-            <div className="panelHeader">
-              <ShieldCheck aria-hidden="true" size={18} />
-              <h2 id="consistency-title">정합성 검증</h2>
+          <div className="reportChartLayout">
+            <section className="reportFeaturedMetric" aria-label="주문 생성 처리량 비교">
+              <div className="chartPanelHeader">
+                <div>
+                  <h3>대표 지표</h3>
+                  <p>높을수록 좋음</p>
+                </div>
+                <Gauge aria-hidden="true" size={20} />
+              </div>
+              <ScaledBar metric={throughputMetric} tone="green" />
+            </section>
+
+            <LatencyComparison metrics={latencyMetrics} />
+          </div>
+
+          {report.resultNote && (
+            <p className="chartReadingNote">
+              <TrendingDown aria-hidden="true" size={18} />
+              {report.resultNote}
+            </p>
+          )}
+
+          <details className="measurementDetails">
+            <summary>
+              <FileText aria-hidden="true" size={18} />
+              상세 측정값 보기
+            </summary>
+            <div className="measurementDetailsBody">
+              <MeasurementTable rows={sufficientStockRows} title="충분한 재고 조건" />
+              <MeasurementTable rows={stockOutRows} title="재고 소진 조건" />
             </div>
+          </details>
+        </section>
+
+        <div className="reportNarrativeList">
+          <NumberedSection icon={TrendingDown} number="1" title="병목 가설">
+            <p>{report.hypothesis}</p>
+          </NumberedSection>
+
+          <NumberedSection icon={TrendingUp} number="2" title="개선 방법과 이유">
+            <p>{report.method}</p>
+            <div className="methodCompare">
+              <div>
+                <span>기존</span>
+                <strong>비관적 락 조회 후 검증과 차감</strong>
+              </div>
+              <div>
+                <span>개선</span>
+                <strong>조건부 UPDATE로 검증과 차감을 한 번에 처리</strong>
+              </div>
+            </div>
+          </NumberedSection>
+
+          <NumberedSection icon={ShieldCheck} number="3" title="정합성 검증">
             <div className="consistencyGrid">
               {consistencyChecks.map((check) => (
                 <div className="consistencyItem" key={check.label}>
@@ -302,33 +370,15 @@ export default function ReportPage() {
                 </div>
               ))}
             </div>
-          </section>
+          </NumberedSection>
+
+          {report.limitation && (
+            <NumberedSection icon={Timer} number="4" title="측정 한계">
+              <p>{report.limitation}</p>
+            </NumberedSection>
+          )}
         </div>
-
-        <aside className="reportAside">
-          <section className="reportCard">
-            <div className="panelHeader">
-              <AlertCircle aria-hidden="true" size={18} />
-              <h2>한계</h2>
-            </div>
-            <ul className="reportLimitList">
-              {limitations.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-          </section>
-
-          <section className="reportCard interviewSummary">
-            <div className="panelHeader">
-              <CheckCircle2 aria-hidden="true" size={18} />
-              <h2>면접용 요약</h2>
-            </div>
-            {report.interviewSummary.map((item) => (
-              <p key={item}>{item}</p>
-            ))}
-          </section>
-        </aside>
-      </div>
+      </article>
     </section>
   );
 }
