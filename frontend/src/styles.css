@@ -878,12 +878,14 @@
   }
 
   .statusPanel {
-    @apply sticky top-24 grid self-start gap-3 rounded-lg bg-surface-card p-3 shadow-panel;
+    @apply sticky top-24 grid self-start gap-3 overflow-hidden rounded-lg bg-surface-card p-3 shadow-panel;
     max-height: calc(100vh - 112px);
+    grid-template-rows: auto minmax(0, 1fr);
   }
 
   .statusPanel.isCollapsed {
-    @apply gap-0;
+    @apply gap-0 overflow-visible;
+    grid-template-rows: auto;
   }
 
   .panelHeader {
@@ -904,7 +906,9 @@
   }
 
   .statusPanelBody {
-    @apply grid gap-2.5;
+    @apply grid min-h-0 gap-2.5 overflow-x-hidden overflow-y-auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
   }
 
   .statusSyncedAt {
@@ -1105,7 +1109,12 @@
   }
 
   .statusPanel {
-    @apply static max-h-none;
+    @apply static max-h-none overflow-visible;
+  }
+
+  .statusPanelBody {
+    @apply overflow-visible;
+    scrollbar-gutter: auto;
   }
 }
 
