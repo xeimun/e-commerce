@@ -914,12 +914,13 @@
 
   .commonConditionLayout {
     @apply grid gap-3;
-    grid-template-columns: minmax(420px, 1.35fr) minmax(120px, 0.42fr) minmax(340px, 1fr);
+    grid-template-columns: minmax(320px, 1.35fr) minmax(96px, 0.35fr) minmax(260px, 1fr);
   }
 
   .commonFactCard {
     @apply content-center gap-1 rounded-lg bg-surface-subtle px-4 py-3;
     display: grid;
+    min-width: 0;
   }
 
   .commonFactCard h3 {
