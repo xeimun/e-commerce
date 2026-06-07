@@ -36,13 +36,15 @@
 - `docs/api-spec.md`는 API 요청, 응답, 에러 형식을 정리한다.
 - `docs/decision-log.md`는 면접 답변에 활용할 수 있도록 중요한 선택의 배경과 대안을 함께 기록한다.
 - `docs/learning-notes.md`는 실제 구현에 연결되는 개념을 이해하기 쉽게 정리한다.
-- `docs/performance-report.md`는 성능 측정, 병목 가설, 개선 내용, 재측정 결과를 정리한다.
+- `docs/performance/plan.md`는 성능 개선 후보, 우선순위, 측정 기준을 정리한다.
+- `docs/performance/report.md`는 성능 측정, 병목 가설, 개선 내용, 재측정 결과를 정리한다.
 - 요구사항 변경은 `docs/requirements.md`에 반영한다.
 - 도메인 변경은 `docs/domain-model.md`에 반영한다.
 - API 변경은 `docs/api-spec.md`에 반영한다.
 - 중요한 기술 선택은 `docs/decision-log.md`에 기록한다.
 - 학습 내용은 `docs/learning-notes.md`에 기록한다.
-- 성능 측정과 개선 결과는 `docs/performance-report.md`에 기록하고, `README.md`에는 요약만 반영한다.
+- 성능 개선 후보와 계획은 `docs/performance/plan.md`에 기록한다.
+- 성능 측정과 개선 결과는 `docs/performance/report.md`에 기록하고, `README.md`에는 요약만 반영한다.
 - 기능 구현이 완료되면 다음 기능 구현 때 참고할 수 있도록 관련 문서를 함께 갱신한다.
 - 구현 변경에 따라 요구사항, 도메인, API, 결정, 학습, 성능 문서 중 관련 문서를 선택해 반영한다.
 - 문서 파일명을 변경하면 이 문서의 경로도 함께 갱신한다.
@@ -141,7 +143,8 @@ product/
 
 - 개선 전후 수치를 기록해 포트폴리오와 이력서에 활용한다.
 - 성능 개선 과정에서는 처리량, 응답 시간, 실패율, DB 쿼리, 락 대기 등 측정 가능한 지표를 우선한다.
-- 성능 측정과 개선 과정은 `docs/performance-report.md`에 기록한다.
+- 성능 개선 후보와 계획은 `docs/performance/plan.md`에 기록한다.
+- 성능 측정과 개선 과정은 `docs/performance/report.md`에 기록한다.
 
 ## 13. 기능 구현 워크플로우 원칙
 
