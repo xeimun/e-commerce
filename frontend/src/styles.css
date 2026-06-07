@@ -110,6 +110,11 @@
     width: min(100%, 1440px);
   }
 
+  .appFrame.reportFrame {
+    grid-template-columns: minmax(0, 1fr);
+    width: min(100%, 1320px);
+  }
+
   .mainPane {
     @apply min-w-0;
   }
@@ -878,248 +883,370 @@
   }
 
   .reportPage {
-    @apply gap-6;
+    @apply gap-5;
   }
 
-  .reportHero {
-    @apply grid items-center gap-6 rounded-lg bg-surface-card p-6 shadow-soft;
-    grid-template-columns: minmax(0, 1fr) minmax(180px, 220px);
+  .reportCommonPanel,
+  .reportStory,
+  .experimentConditionPanel,
+  .reportChartSection,
+  .reportNarrativeBlock {
+    @apply min-w-0 rounded-lg bg-surface-card shadow-soft;
   }
 
-  .reportHeroCopy {
-    @apply grid gap-3;
+  .reportCommonPanel,
+  .experimentConditionPanel {
+    @apply grid gap-4 p-5;
   }
 
-  .reportHeroCopy span {
-    @apply text-sm font-bold leading-5 text-ridi-blue;
+  .reportCommonPanel .panelHeader > svg,
+  .experimentConditionPanel .panelHeader > svg,
+  .reportChartSection .sectionTitle > svg,
+  .reportNarrativeTitle > svg {
+    @apply shrink-0 text-ridi-blue;
   }
 
-  .reportHeroCopy h2 {
-    @apply m-0 max-w-[860px] text-[26px] font-bold leading-9;
-    word-break: keep-all;
-  }
-
-  .reportHeroCopy p {
-    @apply m-0 max-w-[720px] text-[15px] leading-6 text-fg-secondary;
-    word-break: keep-all;
-  }
-
-  .reportHeroBadge {
-    @apply grid min-h-28 content-center gap-1 border-l border-black/5 pl-6 text-fg-secondary;
-  }
-
-  .reportHeroBadge > svg {
-    @apply text-ridi-blue;
-  }
-
-  .reportHeroBadge span {
-    @apply text-[13px] leading-[18px];
-  }
-
-  .reportHeroBadge strong {
-    @apply text-[22px] leading-[30px] text-fg-primary;
-  }
-
-  .reportKpiGrid {
-    @apply grid gap-3;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-
-  .reportKpiCard {
-    @apply grid min-h-[132px] gap-4 rounded-lg bg-surface-card p-4 shadow-soft;
-    grid-template-columns: 44px minmax(0, 1fr);
-  }
-
-  .reportKpiIcon {
-    @apply grid h-11 w-11 place-items-center rounded-lg bg-surface-subtle text-brand;
-  }
-
-  .reportKpiCard.success .reportKpiIcon {
-    @apply bg-green-50 text-success;
-  }
-
-  .reportKpiCard.info .reportKpiIcon {
-    @apply bg-blue-50 text-ridi-blue;
-  }
-
-  .reportKpiCard span,
-  .reportKpiCard strong,
-  .reportKpiCard p {
-    @apply m-0 block min-w-0;
-  }
-
-  .reportKpiCard span {
-    @apply text-[13px] leading-[18px] text-fg-secondary;
-  }
-
-  .reportKpiCard strong {
-    @apply mt-1 text-[22px] leading-[30px];
-  }
-
-  .reportKpiCard p {
-    @apply mt-2 text-[13px] leading-[18px] text-fg-secondary;
-    word-break: keep-all;
-  }
-
-  .reportTabs {
-    @apply inline-grid w-full max-w-[360px] grid-cols-1 gap-1 rounded-lg bg-surface-muted p-1;
-  }
-
-  .reportDetailGrid {
-    @apply grid items-start gap-6;
-    grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
-  }
-
-  .reportDetailMain,
-  .reportAside {
-    @apply grid min-w-0 gap-4;
-  }
-
-  .reportAside {
-    @apply sticky top-24 self-start;
-  }
-
-  .reportCard {
-    @apply grid min-w-0 gap-4 rounded-lg bg-surface-card p-4 shadow-soft;
-  }
-
-  .reportCard .panelHeader {
-    @apply justify-start;
-  }
-
-  .reportCard .panelHeader > svg {
-    @apply text-ridi-blue;
-  }
-
-  .reportBulletList,
-  .reportLimitList {
-    @apply m-0 grid gap-2.5 pl-5 text-[15px] leading-6 text-fg-secondary;
-  }
-
-  .reportBulletList li,
-  .reportLimitList li {
-    @apply pl-1;
-    word-break: keep-all;
-  }
-
-  .reportChartGrid {
-    @apply grid gap-4;
-    grid-template-columns: minmax(280px, 0.85fr) minmax(420px, 1.15fr);
-  }
-
-  .metricDelta {
-    @apply inline-flex min-h-8 w-fit items-center gap-1.5 rounded-full bg-surface-subtle px-3 text-sm font-bold text-fg-primary;
-  }
-
-  .metricDelta.success {
-    @apply bg-green-50 text-success;
-  }
-
-  .barCompareChart {
-    @apply grid gap-3;
-  }
-
-  .barCompareRow {
-    @apply grid min-h-12 items-center gap-3;
-    grid-template-columns: 56px minmax(0, 1fr) minmax(128px, auto);
-  }
-
-  .barCompareRow span {
-    @apply text-[13px] leading-[18px] text-fg-secondary;
-  }
-
-  .barCompareRow strong {
-    @apply text-right text-sm leading-5;
-  }
-
-  .barTrack {
-    @apply h-4 overflow-hidden rounded-full bg-surface-muted;
-  }
-
-  .barFill {
-    @apply h-full rounded-full bg-fg-tertiary;
-    min-width: 36px;
-    width: var(--bar-size);
-  }
-
-  .barFill.after {
-    @apply bg-ridi-blue;
-  }
-
-  .barFill.positive {
-    @apply bg-success;
-  }
-
-  .latencyChart {
+  .commonFactGrid {
     @apply grid gap-3;
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .latencyMetric {
-    @apply grid min-h-[284px] gap-3 rounded-lg bg-surface-subtle p-3;
+  .commonFact {
+    @apply grid min-h-20 content-center gap-1 rounded-lg bg-surface-subtle px-4 py-3;
   }
 
-  .latencyMetricHeader {
-    @apply flex min-h-10 items-start justify-between gap-3;
+  .commonFact span {
+    @apply text-[13px] leading-[18px] text-fg-secondary;
   }
 
-  .latencyMetricHeader div {
-    @apply grid gap-0.5;
+  .commonFact strong {
+    @apply text-[15px] leading-5;
+    word-break: keep-all;
   }
 
-  .latencyMetricHeader strong,
-  .latencyMetricHeader span {
-    @apply block;
+  .reportTabs {
+    @apply inline-grid w-full max-w-[180px] grid-cols-1 gap-1 rounded-lg bg-surface-muted p-1;
   }
 
-  .latencyMetricHeader strong {
-    @apply text-base leading-[22px];
+  .reportStory {
+    @apply grid gap-6 p-6;
   }
 
-  .latencyMetricHeader span {
-    @apply text-[13px] font-bold leading-[18px] text-ridi-blue;
+  .reportStoryHero {
+    @apply grid gap-5;
   }
 
-  .latencyMetricHeader > svg {
-    @apply shrink-0 text-ridi-blue;
+  .reportStoryHero h2 {
+    @apply m-0 max-w-[860px] text-[28px] font-bold leading-9;
+    word-break: keep-all;
   }
 
-  .latencyBars {
-    @apply grid items-end gap-3;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .latencyBarGroup {
-    @apply grid items-end gap-2;
-    height: 196px;
-    grid-template-rows: minmax(0, 1fr) auto;
-  }
-
-  .latencyBar {
-    @apply flex min-h-12 items-start justify-center rounded-t-lg px-1.5 pt-2 text-center text-[12px] font-bold leading-4 text-white;
-    align-self: end;
-    height: var(--bar-size);
-  }
-
-  .latencyBar.before {
-    @apply bg-fg-tertiary;
-  }
-
-  .latencyBar.after {
-    @apply bg-ridi-blue;
-  }
-
-  .latencyBarGroup small {
-    @apply text-center text-xs leading-4 text-fg-secondary;
-  }
-
-  .consistencyGrid {
+  .reportStorySummary {
     @apply grid gap-3;
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .reportStorySummary article {
+    @apply grid gap-3 rounded-lg bg-surface-subtle p-4;
+    grid-template-columns: 24px minmax(0, 1fr);
+  }
+
+  .reportStorySummary svg {
+    @apply mt-0.5 text-ridi-blue;
+  }
+
+  .reportStorySummary h3 {
+    @apply m-0 text-[15px] font-bold leading-5;
+  }
+
+  .reportStorySummary p,
+  .reportNarrativeBody p,
+  .chartReadingNote {
+    @apply m-0 text-[15px] leading-6 text-fg-secondary;
+    word-break: keep-all;
+  }
+
+  .experimentConditionLayout {
+    @apply grid gap-3;
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 0.75fr);
+  }
+
+  .experimentConditionShared {
+    @apply grid gap-0 rounded-lg bg-surface-subtle px-4 py-2;
+  }
+
+  .experimentConditionShared div {
+    @apply grid min-h-12 items-center gap-3 border-b border-black/5 py-2;
+    grid-template-columns: 96px minmax(0, 1fr);
+  }
+
+  .experimentConditionShared div:last-child {
+    @apply border-b-0;
+  }
+
+  .experimentConditionShared span,
+  .experimentScenarioGrid span {
+    @apply text-[13px] font-bold leading-[18px] text-fg-secondary;
+  }
+
+  .experimentConditionShared strong,
+  .experimentScenarioGrid strong {
+    @apply text-[15px] leading-5 text-fg-primary;
+    word-break: keep-all;
+  }
+
+  .experimentScenarioGrid {
+    @apply grid gap-3;
+  }
+
+  .experimentScenarioGrid article {
+    @apply grid min-h-[76px] content-center gap-1 rounded-lg bg-surface-subtle px-4 py-3;
+  }
+
+  .reportChartSection {
+    @apply grid gap-5 p-5;
+  }
+
+  .reportChartSection .sectionTitle {
+    @apply items-start;
+  }
+
+  .reportChartLayout {
+    @apply grid gap-4;
+    grid-template-columns: minmax(320px, 0.9fr) minmax(420px, 1.1fr);
+  }
+
+  .reportFeaturedMetric,
+  .latencyComparePanel {
+    @apply grid min-w-0 gap-4 rounded-lg bg-surface-subtle p-4;
+    align-content: start;
+  }
+
+  .chartPanelHeader {
+    @apply flex items-start justify-between gap-4;
+  }
+
+  .chartPanelHeader h3,
+  .measurementTableBlock h3,
+  .reportNarrativeTitle h2 {
+    @apply m-0 text-base font-bold leading-[22px];
+  }
+
+  .chartPanelHeader p {
+    @apply m-0 mt-0.5 text-[13px] leading-[18px] text-fg-secondary;
+  }
+
+  .chartPanelHeader > svg {
+    @apply shrink-0 text-ridi-blue;
+  }
+
+  .throughputHighlight,
+  .latencyCompareRows {
+    @apply grid gap-4;
+  }
+
+  .throughputSummary {
+    @apply flex items-center justify-between gap-4 rounded-lg bg-surface-card p-4 shadow-soft;
+  }
+
+  .throughputSummary span,
+  .throughputSummary strong,
+  .throughputSummary p {
+    @apply block;
+  }
+
+  .throughputSummary span {
+    @apply text-[13px] leading-[18px] text-fg-secondary;
+  }
+
+  .throughputSummary strong {
+    @apply mt-1 text-[26px] leading-9 text-success;
+  }
+
+  .throughputSummary p {
+    @apply m-0 mt-1 text-sm leading-5 text-fg-secondary;
+  }
+
+  .throughputSummary > svg {
+    @apply text-success;
+  }
+
+  .throughputColumnChart {
+    @apply grid min-h-[224px] items-end gap-5 rounded-lg bg-surface-card p-4 shadow-soft;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .throughputColumnGroup {
+    @apply grid justify-items-center gap-2;
+  }
+
+  .throughputColumnTrack {
+    @apply flex h-32 w-full max-w-20 items-end justify-center rounded-t-lg bg-surface-muted;
+  }
+
+  .throughputColumn {
+    @apply w-full rounded-t-lg bg-fg-tertiary;
+    min-height: 20px;
+    height: var(--bar-size);
+  }
+
+  .throughputColumn.after {
+    @apply bg-success;
+  }
+
+  .throughputColumnGroup span {
+    @apply text-[13px] leading-[18px] text-fg-secondary;
+  }
+
+  .throughputColumnGroup strong {
+    @apply text-sm leading-5;
+  }
+
+  .scaledRows {
+    @apply grid gap-3;
+  }
+
+  .scaledRow {
+    @apply grid min-h-11 items-center gap-3;
+    grid-template-columns: 56px minmax(0, 1fr) minmax(128px, auto);
+  }
+
+  .scaledRow.compact {
+    grid-template-columns: 24px minmax(0, 1fr) minmax(118px, auto);
+  }
+
+  .scaledRow span {
+    @apply text-[13px] leading-[18px] text-fg-secondary;
+  }
+
+  .scaledRow strong {
+    @apply text-right text-sm leading-5;
+  }
+
+  .scaledTrack {
+    @apply h-3 overflow-hidden rounded-full bg-surface-muted;
+  }
+
+  .scaledFill {
+    @apply h-full rounded-full bg-fg-tertiary;
+    min-width: 24px;
+    width: var(--bar-size);
+  }
+
+  .scaledFill.after.blue {
+    @apply bg-ridi-blue;
+  }
+
+  .scaledFill.after.green {
+    @apply bg-success;
+  }
+
+  .chartAxisNote {
+    @apply text-right text-xs leading-4 text-fg-tertiary;
+  }
+
+  .latencyCompareItem {
+    @apply grid gap-3 rounded-lg bg-surface-card p-3 shadow-soft;
+  }
+
+  .latencyCompareTitle {
+    @apply flex items-center justify-between gap-3;
+  }
+
+  .latencyCompareTitle strong {
+    @apply text-base leading-[22px];
+  }
+
+  .latencyCompareTitle span {
+    @apply text-[13px] font-bold leading-[18px] text-ridi-blue;
+  }
+
+  .chartReadingNote {
+    @apply inline-flex items-start gap-2 rounded-lg bg-highlight p-3 text-fg-primary;
+  }
+
+  .chartReadingNote > svg {
+    @apply mt-0.5 shrink-0 text-ridi-blue;
+  }
+
+  .measurementDetails {
+    @apply rounded-lg bg-surface-card shadow-soft;
+  }
+
+  .measurementDetails summary {
+    @apply flex min-h-12 items-center gap-2 px-4 text-sm font-bold text-fg-primary;
+  }
+
+  .measurementDetails summary > svg {
+    @apply text-ridi-blue;
+  }
+
+  .measurementDetailsBody {
+    @apply grid gap-5 border-t border-black/5 p-4;
+  }
+
+  .measurementTableBlock {
+    @apply grid gap-3;
+  }
+
+  .measurementTableWrap {
+    @apply overflow-x-auto rounded-lg bg-surface-subtle;
+  }
+
+  .measurementTable {
+    @apply w-full min-w-[680px] border-collapse text-left text-sm;
+  }
+
+  .measurementTable th,
+  .measurementTable td {
+    @apply border-b border-black/5 px-3 py-3;
+  }
+
+  .measurementTable thead th {
+    @apply bg-surface-muted text-[13px] leading-[18px] text-fg-secondary;
+  }
+
+  .measurementTable tbody th {
+    @apply font-semibold text-fg-primary;
+  }
+
+  .measurementTable tbody td {
+    @apply text-right text-fg-secondary;
+  }
+
+  .measurementTable tbody tr:last-child th,
+  .measurementTable tbody tr:last-child td {
+    @apply border-b-0;
+  }
+
+  .reportNarrativeList {
+    @apply grid gap-4;
+  }
+
+  .reportNarrativeBlock {
+    @apply grid gap-4 p-5;
+    grid-template-columns: 40px minmax(0, 1fr);
+  }
+
+  .reportNarrativeIndex {
+    @apply grid h-10 w-10 place-items-center rounded-lg bg-blue-50 text-sm font-bold text-ridi-blue;
+  }
+
+  .reportNarrativeBody {
+    @apply grid min-w-0 gap-3;
+  }
+
+  .reportNarrativeTitle {
+    @apply flex items-center gap-2;
+  }
+
+  .consistencyGrid {
+    @apply grid gap-3;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
   .consistencyItem {
-    @apply grid min-h-[92px] gap-1 rounded-lg bg-surface-subtle p-3;
+    @apply grid min-h-[96px] gap-1 rounded-lg bg-surface-subtle p-3;
     grid-template-columns: 22px minmax(0, 1fr);
   }
 
@@ -1138,19 +1265,6 @@
 
   .consistencyItem strong {
     @apply text-[15px] leading-5;
-    word-break: keep-all;
-  }
-
-  .interviewSummary {
-    @apply bg-highlight;
-  }
-
-  .interviewSummary .panelHeader > svg {
-    @apply text-success;
-  }
-
-  .interviewSummary p {
-    @apply m-0 text-[15px] leading-6 text-fg-primary;
     word-break: keep-all;
   }
 
@@ -1394,12 +1508,13 @@
     scrollbar-gutter: auto;
   }
 
-  .reportDetailGrid {
+  .reportStoryHero,
+  .reportChartLayout {
     @apply grid-cols-1;
   }
 
-  .reportAside {
-    @apply static;
+  .consistencyGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -1428,13 +1543,18 @@
     grid-column: 1 / -1;
   }
 
-  .reportKpiGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .commonFactGrid {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
   }
 
-  .reportChartGrid {
-    @apply grid-cols-1;
+  .experimentConditionLayout {
+    grid-template-columns: minmax(0, 1fr);
   }
+
+  .reportStorySummary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
 }
 
 @media (max-width: 720px) {
@@ -1566,35 +1686,36 @@
     @apply justify-items-start;
   }
 
-  .reportHero,
-  .reportKpiGrid,
-  .latencyChart,
   .consistencyGrid {
     @apply grid-cols-1;
   }
 
-  .reportHero {
+  .reportCommonPanel,
+  .reportStory,
+  .experimentConditionPanel,
+  .reportChartSection,
+  .reportNarrativeBlock {
     @apply p-4;
   }
 
-  .reportHeroCopy h2 {
+  .reportStoryHero h2 {
     @apply text-[22px] leading-[30px];
   }
 
-  .reportHeroBadge {
-    @apply min-h-0 border-l-0 border-t border-black/5 pt-4 pl-0;
+  .reportNarrativeBlock {
+    grid-template-columns: minmax(0, 1fr);
   }
 
-  .reportKpiCard,
-  .latencyMetric {
-    @apply min-h-0;
+  .reportNarrativeIndex {
+    @apply h-8 w-8;
   }
 
-  .barCompareRow {
-    grid-template-columns: 56px minmax(0, 1fr);
+  .scaledRow,
+  .scaledRow.compact {
+    grid-template-columns: 48px minmax(0, 1fr);
   }
 
-  .barCompareRow strong {
+  .scaledRow strong {
     grid-column: 2;
     @apply text-left;
   }

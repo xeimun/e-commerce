@@ -6,7 +6,7 @@ import {
   Ticket,
   UserRound
 } from 'lucide-react';
-import { NavLink } from 'react-router-dom';
+import { matchPath, NavLink, useLocation } from 'react-router-dom';
 import dropGoodsLogo from '../assets/brand/drop-goods-logo.png';
 import StatusPanel from './StatusPanel.jsx';
 
@@ -19,6 +19,9 @@ const navigationItems = [
 ];
 
 export default function AppShell({ apiEvents, children, customerId, onCustomerIdChange }) {
+  const location = useLocation();
+  const isReportPage = Boolean(matchPath('/report', location.pathname));
+
   return (
     <div className="app">
       <header className="topbar">
@@ -50,9 +53,9 @@ export default function AppShell({ apiEvents, children, customerId, onCustomerId
         </label>
       </header>
 
-      <div className="appFrame">
+      <div className={`appFrame${isReportPage ? ' reportFrame' : ''}`}>
         <main className="mainPane">{children}</main>
-        <StatusPanel apiEvents={apiEvents} customerId={customerId} />
+        {!isReportPage && <StatusPanel apiEvents={apiEvents} customerId={customerId} />}
       </div>
     </div>
   );
