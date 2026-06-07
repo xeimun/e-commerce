@@ -1,11 +1,12 @@
 import {
-  Database,
-  Gauge,
-  Network,
+  BadgeAlert,
+  Construction,
+  Lightbulb,
+  Megaphone,
+  NotebookPen,
+  Shapes,
   ShieldCheck,
-  Timer,
-  TrendingDown,
-  TrendingUp
+  Wrench
 } from 'lucide-react';
 
 const commonFacts = {
@@ -279,7 +280,7 @@ export default function ReportPage() {
 
       <section className="reportCommonPanel" aria-labelledby="common-panel-title">
         <div className="panelHeader">
-          <Database aria-hidden="true" size={18} />
+          <Shapes aria-hidden="true" size={18} />
           <h2 id="common-panel-title">공통 측정 조건</h2>
         </div>
         <div className="commonConditionLayout">
@@ -309,14 +310,14 @@ export default function ReportPage() {
           <h2 id="report-story-title">{report.headline}</h2>
           <div className="reportStorySummary" aria-label="성능 개선 요약">
             <article>
-              <Network aria-hidden="true" size={18} />
+              <BadgeAlert aria-hidden="true" size={18} />
               <div>
                 <h3>문제</h3>
                 <p>{report.problem}</p>
               </div>
             </article>
             <article>
-              <Gauge aria-hidden="true" size={18} />
+              <Wrench aria-hidden="true" size={18} />
               <div>
                 <h3>개선</h3>
                 <p>{report.improvement}</p>
@@ -347,7 +348,7 @@ export default function ReportPage() {
 
           {report.resultNote && (
             <p className="chartReadingNote">
-              <TrendingDown aria-hidden="true" size={18} />
+              <Megaphone aria-hidden="true" size={18} />
               {report.resultNote}
             </p>
           )}
@@ -387,11 +388,11 @@ export default function ReportPage() {
         </section>
 
         <div className="reportNarrativeList">
-          <NumberedSection icon={TrendingDown} number="1" title="병목 가설">
+          <NumberedSection icon={NotebookPen} number="1" title="병목 가설">
             <p>{report.hypothesis}</p>
           </NumberedSection>
 
-          <NumberedSection icon={TrendingUp} number="2" title="개선 방법과 이유">
+          <NumberedSection icon={Lightbulb} number="2" title="개선 방법과 이유">
             <p>{report.method}</p>
           </NumberedSection>
 
@@ -400,7 +401,7 @@ export default function ReportPage() {
           </NumberedSection>
 
           {report.limitation && (
-            <NumberedSection icon={Timer} number="4" title="측정 한계">
+            <NumberedSection icon={Construction} number="4" title="측정 한계">
               <p>{report.limitation}</p>
             </NumberedSection>
           )}

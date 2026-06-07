@@ -1171,28 +1171,28 @@
   }
 
   .experimentConditionGroup h3 {
-    @apply m-0 border-b border-black/10 pb-3 text-base font-bold leading-[22px] text-fg-primary;
+    @apply m-0 border-b border-black/10 pb-3 text-center text-[18px] font-bold leading-[26px] text-fg-primary;
   }
 
   .experimentConditionGroup dl {
-    @apply m-0 grid gap-4;
+    @apply m-0 grid gap-3;
   }
 
   .experimentConditionGroup div {
-    @apply grid gap-1.5;
+    @apply grid gap-2 rounded-lg bg-surface-card p-3 shadow-soft;
   }
 
   .experimentConditionGroup dt {
-    @apply text-[14px] font-bold leading-5 text-fg-secondary;
+    @apply text-[15px] font-bold leading-5 text-fg-primary;
   }
 
   .experimentConditionGroup dd {
-    @apply m-0 text-[14px] font-normal leading-5 text-fg-primary;
+    @apply m-0 text-[14px] font-normal leading-5 text-fg-secondary;
     word-break: keep-all;
   }
 
   .experimentConditionGroup:first-child dt {
-    @apply text-[15px] leading-5;
+    @apply text-base leading-[22px];
   }
 
   .experimentConditionGroup:first-child dd {
