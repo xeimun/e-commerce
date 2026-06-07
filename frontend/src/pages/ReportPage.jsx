@@ -72,6 +72,18 @@ const latencyMetrics = [
 
 const latencyDomain = [800, 1700];
 
+const experimentConditions = {
+  shared: [
+    { label: '대상 상품', value: '상품 10001' },
+    { label: '부하 방식', value: 'k6 shared-iterations, VU 100' },
+    { label: '주문 단위', value: '고객별 장바구니 1개, 주문 수량 1개, 쿠폰 없음' }
+  ],
+  scenarios: [
+    { label: '충분한 재고 조건', value: '초기 재고 1000개, 주문 생성 500건' },
+    { label: '재고 소진 조건', value: '초기 재고 100개, 주문 생성 200건' }
+  ]
+};
+
 const sufficientStockRows = [
   { metric: '성공 요청', before: '500건', after: '500건', change: '유지' },
   { metric: '실패 요청', before: '0건', after: '0건', change: '유지' },
@@ -309,6 +321,31 @@ export default function ReportPage() {
             </article>
           </div>
         </div>
+
+        <section className="experimentConditionPanel" aria-labelledby="experiment-condition-title">
+          <div className="panelHeader">
+            <Database aria-hidden="true" size={18} />
+            <h2 id="experiment-condition-title">성능개선 1 측정 조건</h2>
+          </div>
+          <div className="experimentConditionLayout">
+            <div className="experimentConditionShared">
+              {experimentConditions.shared.map((condition) => (
+                <div key={condition.label}>
+                  <span>{condition.label}</span>
+                  <strong>{condition.value}</strong>
+                </div>
+              ))}
+            </div>
+            <div className="experimentScenarioGrid">
+              {experimentConditions.scenarios.map((scenario) => (
+                <article key={scenario.label}>
+                  <span>{scenario.label}</span>
+                  <strong>{scenario.value}</strong>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
 
         <section className="reportChartSection" aria-labelledby="chart-section-title">
           <div className="sectionTitle">

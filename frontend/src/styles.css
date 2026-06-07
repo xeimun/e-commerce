@@ -888,16 +888,19 @@
 
   .reportCommonPanel,
   .reportStory,
+  .experimentConditionPanel,
   .reportChartSection,
   .reportNarrativeBlock {
     @apply min-w-0 rounded-lg bg-surface-card shadow-soft;
   }
 
-  .reportCommonPanel {
+  .reportCommonPanel,
+  .experimentConditionPanel {
     @apply grid gap-4 p-5;
   }
 
   .reportCommonPanel .panelHeader > svg,
+  .experimentConditionPanel .panelHeader > svg,
   .reportChartSection .sectionTitle > svg,
   .reportNarrativeTitle > svg {
     @apply shrink-0 text-ridi-blue;
@@ -961,6 +964,43 @@
   .chartReadingNote {
     @apply m-0 text-[15px] leading-6 text-fg-secondary;
     word-break: keep-all;
+  }
+
+  .experimentConditionLayout {
+    @apply grid gap-3;
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 0.75fr);
+  }
+
+  .experimentConditionShared {
+    @apply grid gap-0 rounded-lg bg-surface-subtle px-4 py-2;
+  }
+
+  .experimentConditionShared div {
+    @apply grid min-h-12 items-center gap-3 border-b border-black/5 py-2;
+    grid-template-columns: 96px minmax(0, 1fr);
+  }
+
+  .experimentConditionShared div:last-child {
+    @apply border-b-0;
+  }
+
+  .experimentConditionShared span,
+  .experimentScenarioGrid span {
+    @apply text-[13px] font-bold leading-[18px] text-fg-secondary;
+  }
+
+  .experimentConditionShared strong,
+  .experimentScenarioGrid strong {
+    @apply text-[15px] leading-5 text-fg-primary;
+    word-break: keep-all;
+  }
+
+  .experimentScenarioGrid {
+    @apply grid gap-3;
+  }
+
+  .experimentScenarioGrid article {
+    @apply grid min-h-[76px] content-center gap-1 rounded-lg bg-surface-subtle px-4 py-3;
   }
 
   .reportChartSection {
@@ -1507,6 +1547,10 @@
     grid-template-columns: repeat(1, minmax(0, 1fr));
   }
 
+  .experimentConditionLayout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .reportStorySummary {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -1648,6 +1692,7 @@
 
   .reportCommonPanel,
   .reportStory,
+  .experimentConditionPanel,
   .reportChartSection,
   .reportNarrativeBlock {
     @apply p-4;
