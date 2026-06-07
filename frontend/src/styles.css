@@ -975,7 +975,11 @@
   }
 
   .reportChartSection .sectionTitle {
-    @apply items-start;
+    @apply items-start font-bold;
+  }
+
+  .reportChartSection .sectionTitle h2 {
+    @apply font-bold;
   }
 
   .reportChartLayout {
@@ -1158,37 +1162,45 @@
   }
 
   .experimentDetailsBody {
-    @apply grid gap-3 border-t border-black/5 p-5;
+    @apply grid gap-4 border-t border-black/5 p-5;
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .experimentConditionGroup {
-    @apply grid content-start gap-3 rounded-lg bg-surface-subtle p-4;
+    @apply grid content-start gap-4 rounded-lg bg-surface-subtle p-4;
   }
 
   .experimentConditionGroup h3 {
-    @apply m-0 text-[15px] font-bold leading-5 text-fg-primary;
+    @apply m-0 border-b border-black/10 pb-3 text-base font-bold leading-[22px] text-fg-primary;
   }
 
   .experimentConditionGroup dl {
-    @apply m-0 grid gap-2;
+    @apply m-0 grid gap-4;
   }
 
   .experimentConditionGroup div {
-    @apply grid gap-1;
+    @apply grid gap-1.5;
   }
 
   .experimentConditionGroup dt {
-    @apply text-xs font-bold leading-4 text-fg-secondary;
+    @apply text-[14px] font-bold leading-5 text-fg-secondary;
   }
 
   .experimentConditionGroup dd {
-    @apply m-0 text-[13px] font-normal leading-[18px] text-fg-primary;
+    @apply m-0 text-[14px] font-normal leading-5 text-fg-primary;
     word-break: keep-all;
   }
 
+  .experimentConditionGroup:first-child dt {
+    @apply text-[15px] leading-5;
+  }
+
+  .experimentConditionGroup:first-child dd {
+    @apply text-[15px] leading-5;
+  }
+
   .measurementDetailsBody {
-    @apply grid gap-6 border-t border-black/5 p-5;
+    @apply grid gap-8 border-t border-black/5 p-5;
   }
 
   .measurementTableBlock {
@@ -1230,7 +1242,7 @@
   }
 
   .reportNarrativeBlock {
-    @apply grid gap-4 p-5;
+    @apply grid items-center gap-4 p-5;
     grid-template-columns: 40px minmax(0, 1fr);
   }
 
@@ -1244,34 +1256,6 @@
 
   .reportNarrativeTitle {
     @apply flex items-center gap-2;
-  }
-
-  .consistencyGrid {
-    @apply grid gap-3;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-
-  .consistencyItem {
-    @apply grid min-h-[112px] items-center gap-1 rounded-lg bg-surface-subtle p-3;
-    grid-template-columns: 22px minmax(0, 1fr);
-  }
-
-  .consistencyItem > svg {
-    @apply row-span-2 self-center text-success;
-  }
-
-  .consistencyItem span,
-  .consistencyItem strong {
-    @apply block min-w-0;
-  }
-
-  .consistencyItem span {
-    @apply text-[13px] leading-[18px] text-fg-secondary;
-  }
-
-  .consistencyItem strong {
-    @apply text-[15px] leading-5;
-    word-break: keep-all;
   }
 
   .statusPanel {
@@ -1525,9 +1509,6 @@
     @apply grid-cols-1;
   }
 
-  .consistencyGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 
 @media (max-width: 900px) {
@@ -1688,10 +1669,6 @@
   .orderItemPrice {
     grid-column: 2;
     @apply justify-items-start;
-  }
-
-  .consistencyGrid {
-    @apply grid-cols-1;
   }
 
   .reportCommonPanel,

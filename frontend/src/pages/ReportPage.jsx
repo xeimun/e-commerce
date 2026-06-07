@@ -1,5 +1,4 @@
 import {
-  CheckCircle2,
   Database,
   Gauge,
   Network,
@@ -117,12 +116,8 @@ const stockOutRows = [
   { metric: '최종 재고', before: '0', after: '0', change: '유지' }
 ];
 
-const consistencyChecks = [
-  { label: '충분한 재고', result: '500건 모두 성공, 최종 재고 500' },
-  { label: '재고 소진', result: '성공 100건, 실패 100건, 최종 재고 0' },
-  { label: '초과 판매', result: '두 조건 모두 0건' },
-  { label: '저장 주문', result: '재고 소진 조건에서 성공 요청 100건과 일치' }
-];
+const consistencyText =
+  '성능 개선 후에도 주문과 재고 정합성이 깨지지 않는지 함께 확인했습니다. 충분한 재고 조건에서는 주문 500건이 모두 성공하고 최종 재고가 500으로 남았고, 재고 소진 조건에서는 성공 100건과 실패 100건, 최종 재고 0을 확인했습니다. 두 조건 모두 초과 판매는 0건이었습니다.';
 
 function formatMetric(value, unit = '') {
   return `${value.toLocaleString('ko-KR', {
@@ -401,18 +396,7 @@ export default function ReportPage() {
           </NumberedSection>
 
           <NumberedSection icon={ShieldCheck} number="3" title="정합성 검증">
-            <p className="consistencyIntro">
-              성능 개선 후에도 주문 성공 수, 최종 재고, 저장 주문 수가 부하 조건과 일치하는지 확인했습니다. 처리량이 늘어도 초과 판매나 저장 누락이 있으면 실패한 개선입니다.
-            </p>
-            <div className="consistencyGrid">
-              {consistencyChecks.map((check) => (
-                <div className="consistencyItem" key={check.label}>
-                  <CheckCircle2 aria-hidden="true" size={18} />
-                  <span>{check.label}</span>
-                  <strong>{check.result}</strong>
-                </div>
-              ))}
-            </div>
+            <p>{consistencyText}</p>
           </NumberedSection>
 
           {report.limitation && (
