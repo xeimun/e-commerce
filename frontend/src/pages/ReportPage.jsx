@@ -17,19 +17,19 @@ const commonFacts = {
 
 const report = {
   tabLabel: '성능개선 1',
-  headline: '주문 생성 처리량 34.8% 개선, 초과 판매 0건 유지',
+  headline: '재고 차감 임계 구역을 줄여 주문 생성 처리량 34.8% 개선',
   problem:
-    '인기 상품 주문이 같은 stocks 행에 몰리면 row-level lock 대기로 주문 생성 API 응답 시간이 길어질 수 있음.',
+    '인기 상품 주문이 같은 stocks 행에 몰리면 row-level lock 대기로 주문 생성 API 응답 시간이 길어질 수 있음',
   improvement:
-    'critical section 최소화 관점에서 조건부 UPDATE를 적용해 재고 검증과 차감을 한 문장으로 처리함.',
+    'critical section 최소화 관점에서 조건부 UPDATE를 적용해 재고 검증과 차감을 한 문장으로 처리함',
   resultNote:
-    '처리량과 p95는 개선됐지만 p99 개선폭은 작아 꼬리 지연 요인은 남아 있을 수 있음.',
+    '처리량과 p95는 개선됐지만 p99 개선폭은 작아 꼬리 지연 요인은 남아 있을 수 있음',
   hypothesis:
-    '기준 측정에서 주문은 모두 성공했고 최종 재고도 기대값과 일치함. 다만 p95, p99 응답 시간이 높게 나타났고, 모든 요청이 같은 상품의 stocks 행을 차감하는 조건이었기 때문에 row-level lock 대기가 응답 지연에 영향을 줬을 것으로 가정함.',
+    '기준 측정에서 주문은 모두 성공했고 최종 재고도 기대값과 일치했습니다. 다만 p95, p99 응답 시간이 높게 나타났습니다. 모든 요청이 같은 상품의 stocks 행을 차감하는 조건이었기 때문에 row-level lock 대기가 응답 지연에 영향을 줬을 것으로 가정했습니다.',
   method:
-    '기존 방식은 stocks 행을 비관적 락으로 조회한 뒤 재고를 검증하고 차감함. 개선 후에는 quantity >= 주문 수량 조건을 가진 UPDATE 한 문장으로 재고 검증과 차감을 처리함. 락을 없애는 것이 아니라, 재고 차감이 필요한 구간을 짧게 만들기 위한 선택임.',
+    '기존 방식은 stocks 행을 비관적 락으로 조회한 뒤 재고를 검증하고 차감했습니다. 개선 후에는 quantity >= 주문 수량 조건을 가진 UPDATE 한 문장으로 재고 검증과 차감을 처리했습니다. 락을 없애는 것이 아니라, 재고 차감이 필요한 구간을 짧게 만들기 위한 선택이었습니다.',
   limitation:
-    'DB 락 대기 시간과 커넥션 풀 대기 시간을 별도 지표로 수집하지 못해, 병목 원인은 응답 시간 변화와 코드 흐름을 근거로 한 가설로 남아 있음.'
+    'DB 락 대기 시간과 커넥션 풀 대기 시간을 별도 지표로 수집하지 못했습니다. 따라서 병목 원인은 응답 시간 변화와 코드 흐름을 근거로 한 가설로 남아 있습니다.'
 };
 
 const throughputMetric = {
@@ -70,12 +70,29 @@ const latencyMetrics = [
 
 const latencyDomain = [800, 1700];
 
-const experimentConditions = [
-  { label: '대상 상품', value: '상품 10001' },
-  { label: '부하 방식', value: 'k6 shared-iterations, VU 100' },
-  { label: '주문 데이터', value: '고객별 장바구니 1개, 주문 수량 1개, 쿠폰 없음' },
-  { label: '충분한 재고', value: '초기 재고 1000개, 주문 생성 500건' },
-  { label: '재고 소진', value: '초기 재고 100개, 주문 생성 200건' }
+const experimentConditionGroups = [
+  {
+    title: '부하 대상',
+    items: [
+      { label: '대상 상품', value: '상품 10001' },
+      { label: '부하 방식', value: 'k6 shared-iterations, VU 100' }
+    ]
+  },
+  {
+    title: '주문 데이터',
+    items: [
+      { label: '장바구니', value: '고객별 1개' },
+      { label: '주문 수량', value: '1개' },
+      { label: '쿠폰', value: '없음' }
+    ]
+  },
+  {
+    title: '비교 시나리오',
+    items: [
+      { label: '충분한 재고', value: '초기 재고 1000개, 주문 생성 500건' },
+      { label: '재고 소진', value: '초기 재고 100개, 주문 생성 200건' }
+    ]
+  }
 ];
 
 const sufficientStockRows = [
@@ -101,10 +118,10 @@ const stockOutRows = [
 ];
 
 const consistencyChecks = [
-  { label: '충분한 재고 조건', result: '주문 500건 성공, 최종 재고 500' },
-  { label: '재고 소진 조건', result: '성공 100건, 실패 100건' },
+  { label: '충분한 재고', result: '500건 모두 성공, 최종 재고 500' },
+  { label: '재고 소진', result: '성공 100건, 실패 100건, 최종 재고 0' },
   { label: '초과 판매', result: '두 조건 모두 0건' },
-  { label: '저장 주문 수', result: '재고 소진 조건 성공 요청 수와 일치' }
+  { label: '저장 주문', result: '재고 소진 조건에서 성공 요청 100건과 일치' }
 ];
 
 function formatMetric(value, unit = '') {
@@ -299,34 +316,19 @@ export default function ReportPage() {
             <article>
               <Network aria-hidden="true" size={18} />
               <div>
-                <h3>문제 상황</h3>
+                <h3>문제</h3>
                 <p>{report.problem}</p>
               </div>
             </article>
             <article>
               <Gauge aria-hidden="true" size={18} />
               <div>
-                <h3>개선 접근</h3>
+                <h3>개선</h3>
                 <p>{report.improvement}</p>
               </div>
             </article>
           </div>
         </div>
-
-        <section className="experimentConditionPanel" aria-labelledby="experiment-condition-title">
-          <div className="panelHeader">
-            <Database aria-hidden="true" size={18} />
-            <h2 id="experiment-condition-title">측정 조건</h2>
-          </div>
-          <div className="experimentConditionList">
-            {experimentConditions.map((condition) => (
-              <div key={condition.label}>
-                <span className="conditionLabel">{condition.label}</span>
-                <span className="conditionValue">{condition.value}</span>
-              </div>
-            ))}
-          </div>
-        </section>
 
         <section className="reportChartSection" aria-labelledby="chart-section-title">
           <div className="sectionTitle">
@@ -355,9 +357,31 @@ export default function ReportPage() {
             </p>
           )}
 
-          <details className="measurementDetails">
+          <details className="reportDetails experimentDetails">
             <summary>
-              <span className="measurementToggleIcon" aria-hidden="true" />
+              <span className="detailsToggleIcon" aria-hidden="true" />
+              <span>측정 조건 보기</span>
+            </summary>
+            <div className="experimentDetailsBody">
+              {experimentConditionGroups.map((group) => (
+                <section className="experimentConditionGroup" key={group.title}>
+                  <h3>{group.title}</h3>
+                  <dl>
+                    {group.items.map((item) => (
+                      <div key={`${group.title}-${item.label}`}>
+                        <dt>{item.label}</dt>
+                        <dd>{item.value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </section>
+              ))}
+            </div>
+          </details>
+
+          <details className="reportDetails measurementDetails">
+            <summary>
+              <span className="detailsToggleIcon" aria-hidden="true" />
               <span>상세 측정값 보기</span>
             </summary>
             <div className="measurementDetailsBody">
@@ -377,6 +401,9 @@ export default function ReportPage() {
           </NumberedSection>
 
           <NumberedSection icon={ShieldCheck} number="3" title="정합성 검증">
+            <p className="consistencyIntro">
+              성능 개선 후에도 주문 성공 수, 최종 재고, 저장 주문 수가 부하 조건과 일치하는지 확인했습니다. 처리량이 늘어도 초과 판매나 저장 누락이 있으면 실패한 개선입니다.
+            </p>
             <div className="consistencyGrid">
               {consistencyChecks.map((check) => (
                 <div className="consistencyItem" key={check.label}>
