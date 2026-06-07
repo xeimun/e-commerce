@@ -73,6 +73,7 @@ const latencyDomain = [800, 1700];
 const experimentConditions = [
   { label: '대상 상품', value: '상품 10001' },
   { label: '부하 방식', value: 'k6 shared-iterations, VU 100' },
+  { label: '주문 데이터', value: '고객별 장바구니 1개, 주문 수량 1개, 쿠폰 없음' },
   { label: '충분한 재고', value: '초기 재고 1000개, 주문 생성 500건' },
   { label: '재고 소진', value: '초기 재고 100개, 주문 생성 200건' }
 ];
