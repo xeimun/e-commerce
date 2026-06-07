@@ -102,7 +102,7 @@ export default function ProductDetailPage({ customerId, onApiEvent }) {
       </Link>
 
       <div className="productDetail">
-        <ProductArtwork product={product} className="detailCover" />
+        <ProductArtwork product={product} className="detailCover" showBadges={false} />
 
         <div className="detailInfo">
           <div className="detailMetaBlock">

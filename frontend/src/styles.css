@@ -266,7 +266,7 @@
   .productDetail,
   .detailSkeleton {
     @apply grid items-start gap-10;
-    grid-template-columns: minmax(220px, 320px) minmax(0, 1fr);
+    grid-template-columns: minmax(280px, min(42vw, 420px)) minmax(0, 1fr);
   }
 
   .detailCover {
