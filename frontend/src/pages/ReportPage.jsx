@@ -1,8 +1,8 @@
 import {
   BarChart3,
+  ChevronDown,
   CheckCircle2,
   Database,
-  FileText,
   Gauge,
   Network,
   ShieldCheck,
@@ -11,11 +11,11 @@ import {
   TrendingUp
 } from 'lucide-react';
 
-const commonFacts = [
-  { label: '측정 환경', value: '로컬 Windows, Spring Boot, PostgreSQL Docker Compose' },
-  { label: '측정 도구', value: 'k6' },
-  { label: '비교 방식', value: '같은 데이터와 부하 조건에서 개선 전후 비교' }
-];
+const commonFacts = {
+  environment: ['로컬 Windows', 'Spring Boot', 'PostgreSQL Docker Compose'],
+  tool: 'k6',
+  comparison: '같은 데이터와 부하 조건에서 개선 전후 비교'
+};
 
 const report = {
   tabLabel: '성능개선 1',
@@ -142,11 +142,6 @@ function ThroughputHighlightChart({ metric }) {
         <div>
           <span>{metric.label}</span>
           <strong>{changePercent.toFixed(1)}% 증가</strong>
-          <p>
-            {formatMetric(metric.before, metric.unit)}
-            {' -> '}
-            {formatMetric(metric.after, metric.unit)}
-          </p>
         </div>
         <TrendingUp aria-hidden="true" size={20} />
       </div>
@@ -179,7 +174,6 @@ function LatencyComparison({ metrics }) {
       <div className="chartPanelHeader">
         <div>
           <h3>주문 생성 API 응답 시간</h3>
-          <p>k6 커스텀 Trend인 order_create_duration 기준</p>
         </div>
         <Timer aria-hidden="true" size={20} />
       </div>
@@ -276,7 +270,6 @@ export default function ReportPage() {
         <p className="eyebrow">Performance Report</p>
         <div>
           <h1>성능 리포트</h1>
-          <p>완료된 성능 개선의 문제 상황, 적용한 CS 개념, 개선 전후 지표와 정합성 검증을 비교함.</p>
         </div>
       </div>
 
@@ -285,13 +278,25 @@ export default function ReportPage() {
           <Database aria-hidden="true" size={18} />
           <h2 id="common-panel-title">공통 측정 조건</h2>
         </div>
-        <div className="commonFactGrid">
-          {commonFacts.map((fact) => (
-            <div className="commonFact" key={fact.label}>
-              <span>{fact.label}</span>
-              <strong>{fact.value}</strong>
-            </div>
-          ))}
+        <div className="commonConditionLayout">
+          <section className="commonEnvironment" aria-labelledby="common-environment-title">
+            <h3 id="common-environment-title">측정 환경</h3>
+            <ul>
+              {commonFacts.environment.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </section>
+          <div className="commonSideFacts">
+            <section>
+              <h3>측정 도구</h3>
+              <p>{commonFacts.tool}</p>
+            </section>
+            <section>
+              <h3>비교 방식</h3>
+              <p>{commonFacts.comparison}</p>
+            </section>
+          </div>
         </div>
       </section>
 
@@ -325,7 +330,7 @@ export default function ReportPage() {
         <section className="experimentConditionPanel" aria-labelledby="experiment-condition-title">
           <div className="panelHeader">
             <Database aria-hidden="true" size={18} />
-            <h2 id="experiment-condition-title">성능개선 1 측정 조건</h2>
+            <h2 id="experiment-condition-title">측정 조건</h2>
           </div>
           <div className="experimentConditionLayout">
             <div className="experimentConditionShared">
@@ -378,8 +383,8 @@ export default function ReportPage() {
 
           <details className="measurementDetails">
             <summary>
-              <FileText aria-hidden="true" size={18} />
-              상세 측정값 보기
+              <span>상세 측정값 보기</span>
+              <ChevronDown className="measurementChevron" aria-hidden="true" size={18} />
             </summary>
             <div className="measurementDetailsBody">
               <MeasurementTable rows={sufficientStockRows} title="충분한 재고 조건" />
