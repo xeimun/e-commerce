@@ -877,6 +877,283 @@
     @apply w-full;
   }
 
+  .reportPage {
+    @apply gap-6;
+  }
+
+  .reportHero {
+    @apply grid items-center gap-6 rounded-lg bg-surface-card p-6 shadow-soft;
+    grid-template-columns: minmax(0, 1fr) minmax(180px, 220px);
+  }
+
+  .reportHeroCopy {
+    @apply grid gap-3;
+  }
+
+  .reportHeroCopy span {
+    @apply text-sm font-bold leading-5 text-ridi-blue;
+  }
+
+  .reportHeroCopy h2 {
+    @apply m-0 max-w-[860px] text-[26px] font-bold leading-9;
+    word-break: keep-all;
+  }
+
+  .reportHeroCopy p {
+    @apply m-0 max-w-[720px] text-[15px] leading-6 text-fg-secondary;
+    word-break: keep-all;
+  }
+
+  .reportHeroBadge {
+    @apply grid min-h-28 content-center gap-1 border-l border-black/5 pl-6 text-fg-secondary;
+  }
+
+  .reportHeroBadge > svg {
+    @apply text-ridi-blue;
+  }
+
+  .reportHeroBadge span {
+    @apply text-[13px] leading-[18px];
+  }
+
+  .reportHeroBadge strong {
+    @apply text-[22px] leading-[30px] text-fg-primary;
+  }
+
+  .reportKpiGrid {
+    @apply grid gap-3;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .reportKpiCard {
+    @apply grid min-h-[132px] gap-4 rounded-lg bg-surface-card p-4 shadow-soft;
+    grid-template-columns: 44px minmax(0, 1fr);
+  }
+
+  .reportKpiIcon {
+    @apply grid h-11 w-11 place-items-center rounded-lg bg-surface-subtle text-brand;
+  }
+
+  .reportKpiCard.success .reportKpiIcon {
+    @apply bg-green-50 text-success;
+  }
+
+  .reportKpiCard.info .reportKpiIcon {
+    @apply bg-blue-50 text-ridi-blue;
+  }
+
+  .reportKpiCard span,
+  .reportKpiCard strong,
+  .reportKpiCard p {
+    @apply m-0 block min-w-0;
+  }
+
+  .reportKpiCard span {
+    @apply text-[13px] leading-[18px] text-fg-secondary;
+  }
+
+  .reportKpiCard strong {
+    @apply mt-1 text-[22px] leading-[30px];
+  }
+
+  .reportKpiCard p {
+    @apply mt-2 text-[13px] leading-[18px] text-fg-secondary;
+    word-break: keep-all;
+  }
+
+  .reportTabs {
+    @apply inline-grid w-full max-w-[360px] grid-cols-1 gap-1 rounded-lg bg-surface-muted p-1;
+  }
+
+  .reportDetailGrid {
+    @apply grid items-start gap-6;
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+  }
+
+  .reportDetailMain,
+  .reportAside {
+    @apply grid min-w-0 gap-4;
+  }
+
+  .reportAside {
+    @apply sticky top-24 self-start;
+  }
+
+  .reportCard {
+    @apply grid min-w-0 gap-4 rounded-lg bg-surface-card p-4 shadow-soft;
+  }
+
+  .reportCard .panelHeader {
+    @apply justify-start;
+  }
+
+  .reportCard .panelHeader > svg {
+    @apply text-ridi-blue;
+  }
+
+  .reportBulletList,
+  .reportLimitList {
+    @apply m-0 grid gap-2.5 pl-5 text-[15px] leading-6 text-fg-secondary;
+  }
+
+  .reportBulletList li,
+  .reportLimitList li {
+    @apply pl-1;
+    word-break: keep-all;
+  }
+
+  .reportChartGrid {
+    @apply grid gap-4;
+    grid-template-columns: minmax(280px, 0.85fr) minmax(420px, 1.15fr);
+  }
+
+  .metricDelta {
+    @apply inline-flex min-h-8 w-fit items-center gap-1.5 rounded-full bg-surface-subtle px-3 text-sm font-bold text-fg-primary;
+  }
+
+  .metricDelta.success {
+    @apply bg-green-50 text-success;
+  }
+
+  .barCompareChart {
+    @apply grid gap-3;
+  }
+
+  .barCompareRow {
+    @apply grid min-h-12 items-center gap-3;
+    grid-template-columns: 56px minmax(0, 1fr) minmax(128px, auto);
+  }
+
+  .barCompareRow span {
+    @apply text-[13px] leading-[18px] text-fg-secondary;
+  }
+
+  .barCompareRow strong {
+    @apply text-right text-sm leading-5;
+  }
+
+  .barTrack {
+    @apply h-4 overflow-hidden rounded-full bg-surface-muted;
+  }
+
+  .barFill {
+    @apply h-full rounded-full bg-fg-tertiary;
+    min-width: 36px;
+    width: var(--bar-size);
+  }
+
+  .barFill.after {
+    @apply bg-ridi-blue;
+  }
+
+  .barFill.positive {
+    @apply bg-success;
+  }
+
+  .latencyChart {
+    @apply grid gap-3;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .latencyMetric {
+    @apply grid min-h-[284px] gap-3 rounded-lg bg-surface-subtle p-3;
+  }
+
+  .latencyMetricHeader {
+    @apply flex min-h-10 items-start justify-between gap-3;
+  }
+
+  .latencyMetricHeader div {
+    @apply grid gap-0.5;
+  }
+
+  .latencyMetricHeader strong,
+  .latencyMetricHeader span {
+    @apply block;
+  }
+
+  .latencyMetricHeader strong {
+    @apply text-base leading-[22px];
+  }
+
+  .latencyMetricHeader span {
+    @apply text-[13px] font-bold leading-[18px] text-ridi-blue;
+  }
+
+  .latencyMetricHeader > svg {
+    @apply shrink-0 text-ridi-blue;
+  }
+
+  .latencyBars {
+    @apply grid items-end gap-3;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .latencyBarGroup {
+    @apply grid items-end gap-2;
+    height: 196px;
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+
+  .latencyBar {
+    @apply flex min-h-12 items-start justify-center rounded-t-lg px-1.5 pt-2 text-center text-[12px] font-bold leading-4 text-white;
+    align-self: end;
+    height: var(--bar-size);
+  }
+
+  .latencyBar.before {
+    @apply bg-fg-tertiary;
+  }
+
+  .latencyBar.after {
+    @apply bg-ridi-blue;
+  }
+
+  .latencyBarGroup small {
+    @apply text-center text-xs leading-4 text-fg-secondary;
+  }
+
+  .consistencyGrid {
+    @apply grid gap-3;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .consistencyItem {
+    @apply grid min-h-[92px] gap-1 rounded-lg bg-surface-subtle p-3;
+    grid-template-columns: 22px minmax(0, 1fr);
+  }
+
+  .consistencyItem > svg {
+    @apply row-span-2 mt-0.5 text-success;
+  }
+
+  .consistencyItem span,
+  .consistencyItem strong {
+    @apply block min-w-0;
+  }
+
+  .consistencyItem span {
+    @apply text-[13px] leading-[18px] text-fg-secondary;
+  }
+
+  .consistencyItem strong {
+    @apply text-[15px] leading-5;
+    word-break: keep-all;
+  }
+
+  .interviewSummary {
+    @apply bg-highlight;
+  }
+
+  .interviewSummary .panelHeader > svg {
+    @apply text-success;
+  }
+
+  .interviewSummary p {
+    @apply m-0 text-[15px] leading-6 text-fg-primary;
+    word-break: keep-all;
+  }
+
   .statusPanel {
     @apply sticky top-24 grid self-start gap-3 overflow-hidden rounded-lg bg-surface-card p-3 shadow-panel;
     max-height: calc(100vh - 112px);
@@ -1116,6 +1393,14 @@
     @apply overflow-visible;
     scrollbar-gutter: auto;
   }
+
+  .reportDetailGrid {
+    @apply grid-cols-1;
+  }
+
+  .reportAside {
+    @apply static;
+  }
 }
 
 @media (max-width: 900px) {
@@ -1141,6 +1426,14 @@
 
   .checkoutItemAction .fieldLabel {
     grid-column: 1 / -1;
+  }
+
+  .reportKpiGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .reportChartGrid {
+    @apply grid-cols-1;
   }
 }
 
@@ -1271,6 +1564,39 @@
   .orderItemPrice {
     grid-column: 2;
     @apply justify-items-start;
+  }
+
+  .reportHero,
+  .reportKpiGrid,
+  .latencyChart,
+  .consistencyGrid {
+    @apply grid-cols-1;
+  }
+
+  .reportHero {
+    @apply p-4;
+  }
+
+  .reportHeroCopy h2 {
+    @apply text-[22px] leading-[30px];
+  }
+
+  .reportHeroBadge {
+    @apply min-h-0 border-l-0 border-t border-black/5 pt-4 pl-0;
+  }
+
+  .reportKpiCard,
+  .latencyMetric {
+    @apply min-h-0;
+  }
+
+  .barCompareRow {
+    grid-template-columns: 56px minmax(0, 1fr);
+  }
+
+  .barCompareRow strong {
+    grid-column: 2;
+    @apply text-left;
   }
 }
 
