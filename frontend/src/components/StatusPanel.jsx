@@ -1,14 +1,14 @@
 import {
+  Activity,
   ChevronDown,
   ChevronUp,
-  Gauge,
+  ClipboardList,
   Package,
   RefreshCw,
   ShoppingCart,
   Ticket,
   TriangleAlert,
-  UserRound,
-  Webhook
+  UserRound
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { api } from '../api/client.js';
@@ -121,7 +121,7 @@ export default function StatusPanel({ apiEvents, customerId }) {
     <aside className={isOpen ? 'statusPanel' : 'statusPanel isCollapsed'} aria-label="상태 요약 패널">
       <div className="panelHeader">
         <div className="panelTitle">
-          <Gauge aria-hidden="true" size={18} />
+          <ClipboardList aria-hidden="true" size={18} />
           <h2>상태 요약</h2>
         </div>
         <div className="panelActions">
@@ -179,7 +179,7 @@ export default function StatusPanel({ apiEvents, customerId }) {
             </div>
           )}
 
-          <StatusSection count={apiEvents.length ? `${apiEvents.length}건` : '대기'} icon={Webhook} id="api-events" title="호출 API">
+          <StatusSection count={apiEvents.length ? `${apiEvents.length}건` : '대기'} icon={Activity} id="api-events" title="호출 API">
             <div className="apiTimeline">
               {apiEvents.length === 0 ? (
                 <EmptyPanelRow text="호출 기록이 아직 없어요." />
