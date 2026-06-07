@@ -930,21 +930,30 @@
   }
 
   .reportStoryHero {
-    @apply grid items-start gap-5;
-    grid-template-columns: minmax(0, 0.95fr) minmax(320px, 0.75fr);
-  }
-
-  .reportStoryHero span {
-    @apply text-sm font-bold leading-5 text-ridi-blue;
+    @apply grid gap-5;
   }
 
   .reportStoryHero h2 {
-    @apply mt-2 mb-0 max-w-[780px] text-[28px] font-bold leading-9;
+    @apply m-0 max-w-[860px] text-[28px] font-bold leading-9;
     word-break: keep-all;
   }
 
   .reportStorySummary {
+    @apply grid gap-3;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .reportStorySummary article {
     @apply grid gap-3 rounded-lg bg-surface-subtle p-4;
+    grid-template-columns: 24px minmax(0, 1fr);
+  }
+
+  .reportStorySummary svg {
+    @apply mt-0.5 text-ridi-blue;
+  }
+
+  .reportStorySummary h3 {
+    @apply m-0 text-[15px] font-bold leading-5;
   }
 
   .reportStorySummary p,
@@ -952,10 +961,6 @@
   .chartReadingNote {
     @apply m-0 text-[15px] leading-6 text-fg-secondary;
     word-break: keep-all;
-  }
-
-  .reportStorySummary p:last-child {
-    @apply font-semibold text-fg-primary;
   }
 
   .reportChartSection {
@@ -974,6 +979,7 @@
   .reportFeaturedMetric,
   .latencyComparePanel {
     @apply grid min-w-0 gap-4 rounded-lg bg-surface-subtle p-4;
+    align-content: start;
   }
 
   .chartPanelHeader {
@@ -994,30 +1000,66 @@
     @apply shrink-0 text-ridi-blue;
   }
 
-  .scaledMetric,
+  .throughputHighlight,
   .latencyCompareRows {
     @apply grid gap-4;
   }
 
-  .scaledMetricHeader {
+  .throughputSummary {
     @apply flex items-center justify-between gap-4 rounded-lg bg-surface-card p-4 shadow-soft;
   }
 
-  .scaledMetricHeader span,
-  .scaledMetricHeader strong {
+  .throughputSummary span,
+  .throughputSummary strong,
+  .throughputSummary p {
     @apply block;
   }
 
-  .scaledMetricHeader span {
+  .throughputSummary span {
     @apply text-[13px] leading-[18px] text-fg-secondary;
   }
 
-  .scaledMetricHeader strong {
+  .throughputSummary strong {
     @apply mt-1 text-[26px] leading-9 text-success;
   }
 
-  .scaledMetricHeader > svg {
+  .throughputSummary p {
+    @apply m-0 mt-1 text-sm leading-5 text-fg-secondary;
+  }
+
+  .throughputSummary > svg {
     @apply text-success;
+  }
+
+  .throughputColumnChart {
+    @apply grid min-h-[224px] items-end gap-5 rounded-lg bg-surface-card p-4 shadow-soft;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .throughputColumnGroup {
+    @apply grid justify-items-center gap-2;
+  }
+
+  .throughputColumnTrack {
+    @apply flex h-32 w-full max-w-20 items-end justify-center rounded-t-lg bg-surface-muted;
+  }
+
+  .throughputColumn {
+    @apply w-full rounded-t-lg bg-fg-tertiary;
+    min-height: 20px;
+    height: var(--bar-size);
+  }
+
+  .throughputColumn.after {
+    @apply bg-success;
+  }
+
+  .throughputColumnGroup span {
+    @apply text-[13px] leading-[18px] text-fg-secondary;
+  }
+
+  .throughputColumnGroup strong {
+    @apply text-sm leading-5;
   }
 
   .scaledRows {
@@ -1156,24 +1198,6 @@
 
   .reportNarrativeTitle {
     @apply flex items-center gap-2;
-  }
-
-  .methodCompare {
-    @apply grid gap-3;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .methodCompare div {
-    @apply grid gap-1 rounded-lg bg-surface-subtle p-3;
-  }
-
-  .methodCompare span {
-    @apply text-[13px] leading-[18px] text-fg-secondary;
-  }
-
-  .methodCompare strong {
-    @apply text-[15px] leading-5;
-    word-break: keep-all;
   }
 
   .consistencyGrid {
@@ -1483,9 +1507,10 @@
     grid-template-columns: repeat(1, minmax(0, 1fr));
   }
 
-  .methodCompare {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .reportStorySummary {
+    grid-template-columns: minmax(0, 1fr);
   }
+
 }
 
 @media (max-width: 720px) {
@@ -1617,7 +1642,6 @@
     @apply justify-items-start;
   }
 
-  .methodCompare,
   .consistencyGrid {
     @apply grid-cols-1;
   }

@@ -4,6 +4,7 @@ import {
   Database,
   FileText,
   Gauge,
+  Network,
   ShieldCheck,
   Timer,
   TrendingDown,
@@ -18,20 +19,19 @@ const commonFacts = [
 
 const report = {
   tabLabel: '성능개선 1',
-  topic: '인기 상품 주문 생성과 재고 차감',
-  headline: '재고 차감 임계 구역을 줄여 주문 생성 처리량 34.8% 증가',
-  summary:
-    '기존 주문 생성은 인기 상품 주문이 몰릴 때 stocks 행을 비관적 락으로 잡고 재고 검증과 차감을 처리해 p95 응답 시간이 증가했습니다.',
-  appliedConcept:
-    'critical section 최소화를 적용해 재고 검증과 차감을 PostgreSQL 조건부 업데이트 한 문장으로 처리했습니다.',
+  headline: '초과 판매 0건 유지하며 주문 생성 처리량 34.8% 개선',
+  problem:
+    '인기 상품 주문이 같은 stocks 행에 몰리면 row-level lock 대기로 주문 생성 API 응답 시간이 길어질 수 있음.',
+  improvement:
+    'critical section 최소화 관점에서 조건부 UPDATE를 적용해 재고 검증과 차감을 한 문장으로 처리함.',
   resultNote:
-    '처리량은 증가했고 p95 응답 시간은 감소했지만, p99 개선폭은 상대적으로 작아 꼬리 지연 요인은 일부 남아 있을 가능성이 있습니다.',
+    '처리량과 p95는 개선됐지만 p99 개선폭은 작아 꼬리 지연 요인은 남아 있을 수 있음.',
   hypothesis:
-    '기준 측정에서 주문은 모두 성공했고 최종 재고도 기대값과 일치했습니다. 다만 p95, p99 응답 시간이 높게 나타났고, 모든 요청이 같은 상품의 stocks 행을 차감하는 조건이었기 때문에 row-level lock 대기가 응답 지연에 영향을 줬을 것으로 가정했습니다.',
+    '기준 측정에서 주문은 모두 성공했고 최종 재고도 기대값과 일치함. 다만 p95, p99 응답 시간이 높게 나타났고, 모든 요청이 같은 상품의 stocks 행을 차감하는 조건이었기 때문에 row-level lock 대기가 응답 지연에 영향을 줬을 것으로 가정함.',
   method:
-    '기존 방식은 stocks 행을 비관적 락으로 조회한 뒤 재고를 검증하고 차감했습니다. 개선 후에는 quantity >= 주문 수량 조건을 가진 UPDATE 한 문장으로 재고 검증과 차감을 처리했습니다. 락을 없애는 것이 아니라, 재고 차감이 필요한 구간을 짧게 만들기 위한 선택입니다.',
+    '기존 방식은 stocks 행을 비관적 락으로 조회한 뒤 재고를 검증하고 차감함. 개선 후에는 quantity >= 주문 수량 조건을 가진 UPDATE 한 문장으로 재고 검증과 차감을 처리함. 락을 없애는 것이 아니라, 재고 차감이 필요한 구간을 짧게 만들기 위한 선택임.',
   limitation:
-    'DB 락 대기 시간과 커넥션 풀 대기 시간을 별도 지표로 수집하지 못해, 병목 원인은 응답 시간 변화와 코드 흐름을 근거로 한 가설로 남아 있습니다.'
+    'DB 락 대기 시간과 커넥션 풀 대기 시간을 별도 지표로 수집하지 못해, 병목 원인은 응답 시간 변화와 코드 흐름을 근거로 한 가설로 남아 있음.'
 };
 
 const throughputMetric = {
@@ -119,35 +119,38 @@ function getScaledPercent(value, domain) {
   return Math.min(100, Math.max(0, percent));
 }
 
-function ScaledBar({ metric, tone = 'blue' }) {
+function ThroughputHighlightChart({ metric }) {
+  const changePercent = getChangePercent(metric);
+  const beforeHeight = getScaledPercent(metric.before, metric.domain);
+  const afterHeight = getScaledPercent(metric.after, metric.domain);
+
   return (
-    <div className="scaledMetric">
-      <div className="scaledMetricHeader">
+    <div className="throughputHighlight">
+      <div className="throughputSummary">
         <div>
           <span>{metric.label}</span>
-          <strong>{getChangePercent(metric).toFixed(1)}% 증가</strong>
+          <strong>{changePercent.toFixed(1)}% 증가</strong>
+          <p>
+            {formatMetric(metric.before, metric.unit)}
+            {' -> '}
+            {formatMetric(metric.after, metric.unit)}
+          </p>
         </div>
         <TrendingUp aria-hidden="true" size={20} />
       </div>
-      <div className="scaledRows">
-        <div className="scaledRow">
-          <span>개선 전</span>
-          <div className="scaledTrack" aria-hidden="true">
-            <div
-              className="scaledFill before"
-              style={{ '--bar-size': `${getScaledPercent(metric.before, metric.domain)}%` }}
-            />
+      <div className="throughputColumnChart" aria-label={`${metric.label} 개선 전후 비교`}>
+        <div className="throughputColumnGroup">
+          <div className="throughputColumnTrack" aria-hidden="true">
+            <div className="throughputColumn before" style={{ '--bar-size': `${beforeHeight}%` }} />
           </div>
+          <span>개선 전</span>
           <strong>{formatMetric(metric.before, metric.unit)}</strong>
         </div>
-        <div className="scaledRow">
-          <span>개선 후</span>
-          <div className="scaledTrack" aria-hidden="true">
-            <div
-              className={`scaledFill after ${tone}`}
-              style={{ '--bar-size': `${getScaledPercent(metric.after, metric.domain)}%` }}
-            />
+        <div className="throughputColumnGroup">
+          <div className="throughputColumnTrack" aria-hidden="true">
+            <div className="throughputColumn after" style={{ '--bar-size': `${afterHeight}%` }} />
           </div>
+          <span>개선 후</span>
           <strong>{formatMetric(metric.after, metric.unit)}</strong>
         </div>
       </div>
@@ -163,8 +166,8 @@ function LatencyComparison({ metrics }) {
     <div className="latencyComparePanel">
       <div className="chartPanelHeader">
         <div>
-          <h3>응답 시간</h3>
-          <p>낮을수록 좋음</p>
+          <h3>주문 생성 API 응답 시간</h3>
+          <p>k6 커스텀 Trend인 order_create_duration 기준</p>
         </div>
         <Timer aria-hidden="true" size={20} />
       </div>
@@ -261,7 +264,7 @@ export default function ReportPage() {
         <p className="eyebrow">Performance Report</p>
         <div>
           <h1>성능 리포트</h1>
-          <p>완료된 성능 개선의 문제 상황, 적용한 CS 개념, 개선 전후 지표와 정합성 검증을 비교합니다.</p>
+          <p>완료된 성능 개선의 문제 상황, 적용한 CS 개념, 개선 전후 지표와 정합성 검증을 비교함.</p>
         </div>
       </div>
 
@@ -288,13 +291,22 @@ export default function ReportPage() {
 
       <article className="reportStory" aria-labelledby="report-story-title">
         <div className="reportStoryHero">
-          <div>
-            <span>{report.topic}</span>
-            <h2 id="report-story-title">{report.headline}</h2>
-          </div>
-          <div className="reportStorySummary">
-            <p>{report.summary}</p>
-            <p>{report.appliedConcept}</p>
+          <h2 id="report-story-title">{report.headline}</h2>
+          <div className="reportStorySummary" aria-label="성능 개선 요약">
+            <article>
+              <Network aria-hidden="true" size={18} />
+              <div>
+                <h3>문제 상황</h3>
+                <p>{report.problem}</p>
+              </div>
+            </article>
+            <article>
+              <Gauge aria-hidden="true" size={18} />
+              <div>
+                <h3>개선 접근</h3>
+                <p>{report.improvement}</p>
+              </div>
+            </article>
           </div>
         </div>
 
@@ -302,7 +314,6 @@ export default function ReportPage() {
           <div className="sectionTitle">
             <div>
               <h2 id="chart-section-title">핵심 지표 비교</h2>
-              <span>개선 차이를 읽기 쉽도록 관찰 구간 기준 축을 사용합니다.</span>
             </div>
             <BarChart3 aria-hidden="true" size={22} />
           </div>
@@ -312,11 +323,10 @@ export default function ReportPage() {
               <div className="chartPanelHeader">
                 <div>
                   <h3>대표 지표</h3>
-                  <p>높을수록 좋음</p>
                 </div>
                 <Gauge aria-hidden="true" size={20} />
               </div>
-              <ScaledBar metric={throughputMetric} tone="green" />
+              <ThroughputHighlightChart metric={throughputMetric} />
             </section>
 
             <LatencyComparison metrics={latencyMetrics} />
@@ -348,16 +358,6 @@ export default function ReportPage() {
 
           <NumberedSection icon={TrendingUp} number="2" title="개선 방법과 이유">
             <p>{report.method}</p>
-            <div className="methodCompare">
-              <div>
-                <span>기존</span>
-                <strong>비관적 락 조회 후 검증과 차감</strong>
-              </div>
-              <div>
-                <span>개선</span>
-                <strong>조건부 UPDATE로 검증과 차감을 한 번에 처리</strong>
-              </div>
-            </div>
           </NumberedSection>
 
           <NumberedSection icon={ShieldCheck} number="3" title="정합성 검증">
