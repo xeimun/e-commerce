@@ -901,12 +901,7 @@
     @apply grid gap-4 p-5;
   }
 
-  .experimentConditionPanel {
-    @apply grid gap-2 rounded-lg bg-surface-subtle px-4 py-3;
-  }
-
   .reportCommonPanel .panelHeader > svg,
-  .experimentConditionPanel .panelHeader > svg,
   .reportChartSection .sectionTitle > svg,
   .reportNarrativeTitle > svg {
     @apply shrink-0 text-ridi-blue;
@@ -914,7 +909,7 @@
 
   .commonConditionLayout {
     @apply grid gap-3;
-    grid-template-columns: minmax(320px, 1.35fr) minmax(96px, 0.35fr) minmax(260px, 1fr);
+    grid-template-columns: minmax(300px, 1fr) minmax(220px, 0.75fr) minmax(300px, 1fr);
   }
 
   .commonFactCard {
@@ -956,12 +951,12 @@
   }
 
   .reportStorySummary article {
-    @apply grid gap-3 rounded-lg bg-surface-subtle p-4;
+    @apply grid items-center gap-3 rounded-lg bg-surface-subtle p-4;
     grid-template-columns: 24px minmax(0, 1fr);
   }
 
   .reportStorySummary svg {
-    @apply mt-0.5 text-ridi-blue;
+    @apply text-ridi-blue;
   }
 
   .reportStorySummary h3 {
@@ -972,31 +967,6 @@
   .reportNarrativeBody p,
   .chartReadingNote {
     @apply m-0 text-[15px] leading-6 text-fg-secondary;
-    word-break: keep-all;
-  }
-
-  .experimentConditionPanel .panelHeader {
-    @apply gap-1.5;
-  }
-
-  .experimentConditionPanel .panelHeader h2 {
-    @apply text-[13px] leading-[18px] text-fg-secondary;
-  }
-
-  .experimentConditionList {
-    @apply flex flex-wrap gap-x-4 gap-y-2;
-  }
-
-  .experimentConditionList div {
-    @apply inline-flex items-baseline gap-1.5;
-  }
-
-  .conditionLabel {
-    @apply text-xs font-bold leading-4 text-fg-secondary;
-  }
-
-  .conditionValue {
-    @apply text-[13px] font-normal leading-[18px] text-fg-primary;
     word-break: keep-all;
   }
 
@@ -1154,26 +1124,26 @@
   }
 
   .chartReadingNote {
-    @apply inline-flex items-start gap-2 rounded-lg bg-highlight p-3 text-fg-primary;
+    @apply inline-flex items-center gap-2 rounded-lg bg-highlight p-3 text-fg-primary;
   }
 
   .chartReadingNote > svg {
-    @apply mt-0.5 shrink-0 text-ridi-blue;
+    @apply shrink-0 text-ridi-blue;
   }
 
-  .measurementDetails {
+  .reportDetails {
     @apply rounded-lg bg-surface-card shadow-soft;
   }
 
-  .measurementDetails summary {
+  .reportDetails summary {
     @apply flex min-h-12 cursor-pointer list-none items-center gap-2 px-4 text-sm font-bold text-fg-primary;
   }
 
-  .measurementDetails summary::-webkit-details-marker {
+  .reportDetails summary::-webkit-details-marker {
     display: none;
   }
 
-  .measurementToggleIcon {
+  .detailsToggleIcon {
     width: 0;
     height: 0;
     border-bottom: 5px solid transparent;
@@ -1183,8 +1153,38 @@
     transition: transform 150ms ease;
   }
 
-  .measurementDetails[open] .measurementToggleIcon {
+  .reportDetails[open] .detailsToggleIcon {
     transform: rotate(90deg);
+  }
+
+  .experimentDetailsBody {
+    @apply grid gap-3 border-t border-black/5 p-5;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .experimentConditionGroup {
+    @apply grid content-start gap-3 rounded-lg bg-surface-subtle p-4;
+  }
+
+  .experimentConditionGroup h3 {
+    @apply m-0 text-[15px] font-bold leading-5 text-fg-primary;
+  }
+
+  .experimentConditionGroup dl {
+    @apply m-0 grid gap-2;
+  }
+
+  .experimentConditionGroup div {
+    @apply grid gap-1;
+  }
+
+  .experimentConditionGroup dt {
+    @apply text-xs font-bold leading-4 text-fg-secondary;
+  }
+
+  .experimentConditionGroup dd {
+    @apply m-0 text-[13px] font-normal leading-[18px] text-fg-primary;
+    word-break: keep-all;
   }
 
   .measurementDetailsBody {
@@ -1252,12 +1252,12 @@
   }
 
   .consistencyItem {
-    @apply grid min-h-[96px] gap-1 rounded-lg bg-surface-subtle p-3;
+    @apply grid min-h-[112px] items-center gap-1 rounded-lg bg-surface-subtle p-3;
     grid-template-columns: 22px minmax(0, 1fr);
   }
 
   .consistencyItem > svg {
-    @apply row-span-2 mt-0.5 text-success;
+    @apply row-span-2 self-center text-success;
   }
 
   .consistencyItem span,
@@ -1491,6 +1491,12 @@
   }
 }
 
+@media (max-width: 980px) {
+  .commonConditionLayout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 @media (max-width: 1080px) {
   .topbar {
     @apply gap-4 px-6;
@@ -1549,8 +1555,8 @@
     grid-column: 1 / -1;
   }
 
-  .commonConditionLayout {
-    grid-template-columns: repeat(1, minmax(0, 1fr));
+  .experimentDetailsBody {
+    grid-template-columns: minmax(0, 1fr);
   }
 
 }
@@ -1690,7 +1696,6 @@
 
   .reportCommonPanel,
   .reportStory,
-  .experimentConditionPanel,
   .reportChartSection,
   .reportNarrativeBlock {
     @apply p-4;
